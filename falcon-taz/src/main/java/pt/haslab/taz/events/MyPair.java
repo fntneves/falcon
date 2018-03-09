@@ -1,4 +1,4 @@
-package pt.haslab.causalSolver.events;
+package pt.haslab.taz.events;
 
 /**
  * Created by nunomachado on 31/03/17.
@@ -62,6 +62,9 @@ public class MyPair<First,Second> {
 
     @Override
     public String toString() {
-        return "(" + (first != null ? first.toString() : "") + "," + (second != null ? second.toString() : "") + ")";
+        String fst, snd;
+        fst = (first != null)? first.toString() : " ";
+        snd = (second != null)? second.toString() : " ";
+        return "(" + fst.toString() + ", " + snd.toString() + ")";
     }
 }

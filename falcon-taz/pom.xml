@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>pt.haslab</groupId>
-    <artifactId>causalSolver</artifactId>
+    <artifactId>falcon-taz</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <dependencies>
@@ -23,9 +23,10 @@
         </dependency>
 
         <dependency>
-            <groupId>pt.haslab</groupId>
-            <artifactId>falcon-taz</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -38,7 +39,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>pt.haslab.causalSolver.CausalSolver</mainClass>
+                            <mainClass>pt.haslab.taz.TraceProcessor</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
@@ -58,7 +59,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>pt.haslab.causalSolver.CausalSolver</mainClass>
+                            <mainClass>pt.haslab.taz.TraceProcessor</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

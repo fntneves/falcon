@@ -13,7 +13,6 @@ public class Z3Solver implements Solver {
     private static Process z3Process;
     private static BufferedReader reader;
     private static BufferedWriter writer;
-    //private static Logger tracer = LoggerFactory.getLogger("pt.minha.z3");
     private static FileWriter outfile;
 
     private Z3Solver(){}

@@ -1,7 +1,7 @@
-package pt.haslab.causalSolver.events;
+package pt.haslab.taz.events;
 
 /**
- * Created by nunomachado on 30/03/17.
+ * Created by nunomachado on 05/03/18.
  */
 public enum EventType {
     //thread events
@@ -23,11 +23,18 @@ public enum EventType {
     CONNECT("CONNECT"),
     ACCEPT("ACCEPT"),
 
-    //socket handling partial-order events
+    //message handlers
     HNDLBEG("HANDLERBEGIN"),
-    HNDLEND("HANDLEREND");
+    HNDLEND("HANDLEREND"),
 
+    // lock and unlock events
+    LOCK("LOCK"),
+    UNLOCK("UNLOCK"),
 
+    //thread synchronization events
+    WAIT("WAIT"),
+    NOTIFY("NOTIFY"),
+    NOTIFYALL("NOTIFYALL");
 
     private final String desc;
 
@@ -42,7 +49,7 @@ public enum EventType {
 
 
     /**
-     * Translates a string representing the type of child
+     * Translates a string representing the type of event
      * the corresponding EventType enum element.
      * @param type
      * @return
@@ -57,8 +64,6 @@ public enum EventType {
             return EventType.END;
         else if(type.equals("JOIN"))
             return EventType.JOIN;
-        else if(type.equals("LOG"))
-            return EventType.LOG;
         else if(type.equals("R"))
             return EventType.READ;
         else if(type.equals("W"))
@@ -79,7 +84,19 @@ public enum EventType {
             return EventType.HNDLBEG;
         else if(type.equals("HANDLEREND"))
             return EventType.HNDLEND;
+        else if(type.equals("LOCK"))
+            return EventType.LOCK;
+        else if(type.equals("UNLOCK"))
+            return EventType.UNLOCK;
+        else if(type.equals("WAIT"))
+            return EventType.WAIT;
+        else if(type.equals("NOTIFY"))
+            return EventType.NOTIFY;
+        else if(type.equals("NOTIFYALL"))
+            return EventType.NOTIFYALL;
+        else if(type.equals("LOG"))
+            return EventType.LOG;
         else
-            return null;
+        return null;
     }
 }

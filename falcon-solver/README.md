@@ -17,7 +17,7 @@ CausalSolver i) receives an input file with a set of events in JSON format, ii) 
 
 Change the following parameters in properties file `$HOME/src/main/resources/causalSolver.properties` accordingly:
 
-* `child-file` indicates the path to the input file with events in JSON format .
+* `event-file` indicates the path to the input file with events in JSON format .
 * `solver-bin` indicates the path to the Z3 solver binary. Default: `$HOME/lib/z3`.
 * `output-file` indicates the path to the output file produced by CausalSolver. The output file contains the set of events in JSON format ordered by their causal order.
 

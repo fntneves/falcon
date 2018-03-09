@@ -1,13 +1,14 @@
-package pt.haslab.causalSolver.events;
+package pt.haslab.taz.events;
 
 import java.util.Comparator;
 
 /**
- * Created by nunomachado on 19/10/17.
+ * Compares two events according to their timestamp.
+ * Created by nunomachado on 05/03/18.
  */
-public class TimestampComparator implements Comparator<TimestampedEvent> {
+public class TimestampComparator implements Comparator<Event> {
 
-    public int compare(TimestampedEvent o1, TimestampedEvent o2) {
+    public int compare(Event o1, Event o2) {
         Long ts1 = Long.valueOf(o1.getTimestamp());
         Long ts2 = Long.valueOf(o2.getTimestamp());
 
