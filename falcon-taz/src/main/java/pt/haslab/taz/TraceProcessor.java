@@ -125,6 +125,28 @@ public enum TraceProcessor {
 
     }
 
+    public SyncEvent getCorrespondingUnlock(SyncEvent lockEvent) {
+        String thread = lockEvent.getThread();
+        List<MyPair<SyncEvent, SyncEvent>> pairs = lockEvents.get(lockEvent.getVariable());
+        for(MyPair<SyncEvent, SyncEvent> se : pairs) {
+            if(se.getFirst().equals(lockEvent)) {
+                return se.getSecond();
+            }
+        }
+        return null;
+    }
+
+    public ThreadCreationEvent getCorrespondingJoin(ThreadCreationEvent tce) {
+        List<ThreadCreationEvent> joins = joinEvents.get(tce.getThread());
+        String childThread = tce.getChildThread();
+        for(ThreadCreationEvent join : joins) {
+            if(childThread.equals(join.getChildThread())) {
+                return join;
+            }
+        }
+        return null;
+    }
+
     private void parseJSONEvent(JSONObject event) throws JSONException {
         //required fields
         EventType type = EventType.getEventType(event.getString("type"));
