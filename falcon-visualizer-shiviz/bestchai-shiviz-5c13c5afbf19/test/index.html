@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+	<meta charset="UTF-8">
+	<title>ShiViz - Unit tests</title>
+	<style>
+		body {
+			background: #222;
+			color: #ddd;
+			font: 10pt/1.4em monospace;
+			margin: 1em;
+		}
+
+		#output {
+			list-style: none;
+			padding: 0;
+			margin: 1em auto;
+			width: 600px;
+		}
+
+		h1 {
+			font-size: 14pt;
+			font-weight: normal;
+			margin: 1.4em 0 .6em;
+		}
+
+		h1:before {
+			content: '\00a0\00a0\00a0\00a0\00a0\00a0\00a0';
+			font-size: 10pt;
+		}
+
+		.pass:before {
+			content: '[ OK ] ';
+			color: #8ca;
+			font-weight: bold;
+		}
+
+		.fail:before {
+			content: '[FAIL] ';
+			color: #c88;
+			font-weight: bold;
+		}
+	</style>
+    <script src="../local_scripts/d3.v4.min.js"></script>
+    <script src="../local_scripts/jquery-3.2.1.min.js"></script>
+</head>
+<body>
+	<ul id="output"></ul>
+	
+    <script type="text/javascript" src="../js/searchBar.js"></script>
+    
+    <script type="text/javascript" src="../js/graph/graphEvent.js"></script>
+    <script type="text/javascript" src="../js/graph/abstractGraph.js"></script>
+    <script type="text/javascript" src="../js/graph/abstractNode.js"></script>
+    <script type="text/javascript" src="../js/graph/graphTraversal.js"></script>
+    <script type="text/javascript" src="../js/graph/dfsGraphTraversal.js"></script>
+    
+    <script type="text/javascript" src="../js/builder/builderGraph.js"></script>
+    <script type="text/javascript" src="../js/builder/builderNode.js"></script>
+    <script type="text/javascript" src="../js/builder/graphBuilder.js"></script>
+    <script type="text/javascript" src="../js/builder/graphBuilderHost.js"></script>
+    <script type="text/javascript" src="../js/builder/graphBuilderNode.js"></script>
+
+    <script type="text/javascript" src="../js/logEventMatcher/lemAST.js"></script>
+    <script type="text/javascript" src="../js/logEventMatcher/lemInterpreter.js"></script>
+    <script type="text/javascript" src="../js/logEventMatcher/lemParser.js"></script>
+    <script type="text/javascript" src="../js/logEventMatcher/lemToken.js"></script>
+    <script type="text/javascript" src="../js/logEventMatcher/lemTokenizer.js"></script>
+    <script type="text/javascript" src="../js/logEventMatcher/logEventMatcher.js"></script>
+
+    <script type="text/javascript" src="../js/model/logEvent.js"></script>
+    <script type="text/javascript" src="../js/model/modelGraph.js"></script>
+    <script type="text/javascript" src="../js/model/modelNode.js"></script>
+    <script type="text/javascript" src="../js/model/parser.js"></script>
+    <script type="text/javascript" src="../js/model/vectorTimestamp.js"></script>
+    <script type="text/javascript" src="../js/model/vectorTimestampSerializer.js"></script>
+
+    <script type="text/javascript" src="../js/motifFinder/motif.js"></script>
+    <script type="text/javascript" src="../js/motifFinder/motifFinder.js"></script>
+    <script type="text/javascript" src="../js/motifFinder/broadcastGatherFinder.js"></script>
+    <script type="text/javascript" src="../js/motifFinder/customMotifFinder.js"></script>
+    <script type="text/javascript" src="../js/motifFinder/motifGroup.js"></script>
+    <script type="text/javascript" src="../js/motifFinder/motifNavigator.js"></script>
+    <script type="text/javascript" src="../js/motifFinder/requestResponseFinder.js"></script>
+    <script type="text/javascript" src="../js/motifFinder/textQueryMotifFinder.js"></script>
+
+    <script type="text/javascript" src="../js/transform/transformation.js"></script>
+    <script type="text/javascript" src="../js/transform/collapseSequentialNodesTransformation.js"></script>
+    <script type="text/javascript" src="../js/transform/hideHostTransformation.js"></script>
+    <script type="text/javascript" src="../js/transform/highlightHostTransformation.js"></script>
+    <script type="text/javascript" src="../js/transform/highlightMotifTransformation.js"></script>
+    <script type="text/javascript" src="../js/transform/showDiffTransformation.js"></script>
+    <script type="text/javascript" src="../js/transform/transformer.js"></script>
+
+    <script type="text/javascript" src="../js/util/exception.js"></script>
+    <script type="text/javascript" src="../js/util/regexp.js"></script>
+    <script type="text/javascript" src="../js/util/util.js"></script>
+
+    <script type="text/javascript" src="../js/visualization/controller.js"></script>
+    <script type="text/javascript" src="../js/visualization/global.js"></script>
+    <script type="text/javascript" src="../js/visualization/hostPermutation.js"></script>
+    <script type="text/javascript" src="../js/visualization/layout.js"></script>
+    <script type="text/javascript" src="../js/visualization/view.js"></script>
+    <script type="text/javascript" src="../js/visualization/visualEdge.js"></script>
+    <script type="text/javascript" src="../js/visualization/visualGraph.js"></script>
+    <script type="text/javascript" src="../js/visualization/visualNode.js"></script>
+    <script type="text/javascript" src="../js/visualization/abbreviation.js"></script>
+
+	<script type="text/javascript" src="test.js"></script>
+</body>
+</html>

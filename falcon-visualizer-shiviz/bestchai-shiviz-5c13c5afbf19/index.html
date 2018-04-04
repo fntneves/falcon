@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <link rel="canonical" href="http://bestchai.bitbucket.io/shiviz/">
+    <link rel="shortcut icon" href="images/favico.ico" type="image/x-icon" />
+    <title>ShiViz</title>
+    <link href="css/style.css" type="text/css" rel="stylesheet">
+    <!-- DEPENDENCIES -->
+
+    <!--<script src="local_scripts/d3.min.js"></script>-->
+    <script src="local_scripts/d3.v4.min.js"></script>
+    <script src="local_scripts/jquery-3.2.1.min.js"></script>
+
+    <style type="text/css">
+        #vizContainer svg line.hidden-link {
+            stroke-width: 1px;
+            stroke: url(#gedge);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="load">h</div>
+    <section class="home">
+        <header class="icon">
+            <ul class="tabs">
+                <li class="active">h</li>
+                <li>i</li>
+                <li class="disabled">a</li>
+            </ul>
+            <div id="versionContainer"></div>
+        </header>
+        <div class="content">
+            <h1>ShiViz</h1>
+            <h2>
+                The <strong>ShiViz</strong> vis&shy;ual&shy;izat&shy;ion engi&shy;ne gene&shy;r&shy;ate&shy;s inter&shy;active comm&shy;uni&shy;ca&shy;tion graphs from dis&shy;tri&shy;but&shy;ed sys&shy;tem exe&shy;cut&shy;ion logs.
+            </h2>
+
+            <button class="try">Try out ShiViz</button>
+
+            <h3>What am I looking at?</h3>
+            <p>
+                In the visualization:
+                <ul>
+                    <li>
+                        Time flows from top to bottom.
+                    </li>
+                    <li>
+                        The left panel shows the log and the middle panel displays a <a href="http://en.wikipedia.org/wiki/Directed_acyclic_graph">DAG</a> of the partially ordered vector timestamps recorded in the input log.
+                    </li>
+                    <li>
+                        A vertical line with a box at the top is a <strong>process timeline</strong>. This represents a single thread of execution (e.g., a process).
+                    </li>
+                    <li>
+                        Circles on a process timeline are <strong>events</strong> that were executed by the process.
+                    </li>
+                    <li>
+                        Diagonal lines connecting two events represent the
+                        <a href="http://en.wikipedia.org/wiki/Happened-before">happened-before</a> relation between the events: the higher of the two events happened <i>before</i> the second event.
+                    </li>
+                    <li>
+                        Dashed lines represent transitive communication edges. These only appear when a process is hidden, and two processes that are not hidden communicated indirectly through this process.
+                    </li>
+                    <li>
+                        Larger circles represent merged local events. These have a number inside of them, indicating the number of events that they represent.
+                    </li>
+                    <li>
+                        Radiating lines that fade out represent communication edges to processes that are currently hidden from view.
+                    </li>
+                    <li>
+                        Each process is associated with a unique color. Log entries in the left column have the corresponding process color. By default, the log entries are sorted in the order in which the entries appear in the graph.
+                    </li>
+                </ul>
+            </p>
+
+            <h3>How do I interact with the visualization?</h3>
+            <p>
+                The visualization supports the following actions:
+                <ul>
+                  <li>
+                        <strong>Show process name or event info</strong>
+                        <br>
+                        Click on a process box or an event circle.
+                    </li>
+                    <li>
+                        <strong>Hide a process timeline</strong>
+                        <br>
+                        Click a process box and select "hide". This
+                        will remove the process and its timeline from
+                        view. You can hide more than one process.
+                    </li>
+                    <li>
+                        <strong>Filter by communication to process(es)</strong>
+                        <br>
+                        Click a process box and select "filter". The
+                        graph will be filtered to show only those
+                        processes/events that communicate with the
+                        filtered process. You can filter by more than
+                        one process.
+                    </li>
+                  <li>
+                        <strong>Expand/collapse non-communicating events</strong>
+                        <br>
+                        ShiViz collapses adjacent process events not
+                        incident on any communication edges into
+                        larger circles. Click on one of these nodes
+                        and select "expand" to undo this collapsing.
+                    </li>
+                  <li>
+                    <strong>Search for keywords or subgraphs</strong>
+                        <br>
+                        ShiViz supports keyword search across the
+                        parsed fields. Search supports logical
+                        connectives and regular expressions. You can
+                        also search for subgraphs or communication 
+                        topologies of interest. You can search for a 
+                        pre-defined structure like broadcast
+                        or request-response, or you can define and
+                        search for a custom structure.
+                    </li>
+                 <li>
+                    <strong>Show and hide differences between executions</strong>
+                        <br>
+                        When viewing two executions side-by-side,
+                        click on "show differences" to highlight the
+                        differences between two executions. Hosts that
+                        are not common to both executions are
+                        represented as rhombuses. Processes present in
+                        both executions have their events compared by
+                        the <code>event</code> capture group. Different
+                        events are drawn as rhombuses.
+                    </li>
+
+                    <li>
+                    <strong>Explore execution clusters</strong>
+                        <br>
+                        For logs with multiple executions, click on the
+                        "clusters" tab to separate executions into 
+                        different groups based on a chosen metric.
+
+                        Cluster by the number of processes to group
+                        executions by the midpoint between the smallest 
+                        and largest number of processes.
+
+                        Cluster by execution comparison to see an overview
+                        of how executions differ from a selected base.
+                    </li>
+
+                    <li>
+                    <strong>Search for network motifs</strong>
+                        <br>
+                        Click on the "motifs" tab to find frequently
+                        occurring communication patterns within and
+                        across executions. Search for 2, 3 or 4-event
+                        motifs that occur in at least 50% of the
+                        executions or that appear at least 5 times 
+                        within a single execution.
+                    </li>
+                </ul>
+            </p>
+
+            <h3 id="helpsectiontitle">How is this tool useful?</h3>
+            <p>
+                Here are four use-cases that ShiViz helps to support:
+                <ul>
+                    <li>
+                        <strong>Understanding the communication graph.</strong>
+                        <br>
+                        Quickly scan the graph to identify the presence or absence of certain communication patterns.
+                    </li>
+                    <li>
+                        <strong>Reasoning about ordering in a concurrent or distributed setting</strong>.
+                        <br>
+                        Visualize concurrency and the happened-before relation to understand if two events occurred concurrently, or if one happened before the other.
+                    </li>
+                    <li>
+                        <strong>Analyzing activity at processes that matter</strong>.
+                        <br>
+                        Hide processes (and their log lines) for a more focused visualization. Filter by communication to a process to see only those events at other processes that were likely to have influenced the execution of a process you care about.
+                    </li>
+
+                    <li>
+                      <strong>Execution comparison and
+                      differencing</strong>
+                      <br>
+                      Use ShiViz to process logs containing multiple
+                      executions. Compare executions pairwise,
+                      side-by-side. Use ShiViz to highlight event and
+                      host differences between two executions to
+                      understand where the executions diverge.
+                    </li>
+                </ul>
+            </p>
+
+            <h3>What is the input log format to the tool?</h3>
+
+            <p>
+                You can specify the log format using a regular expression on the Input page. The regular expression must contain the following three named capture groups:
+                <ul>
+                    <li><strong><code>event</code>:</strong> the description of the event</li>
+                    <li><strong><code>host</code>:</strong> the name of the process, thread, or host that executed the event</li>
+                    <li><strong><code>clock</code>:</strong> the vector clock associated with the event, in JSON format</li>
+                </ul>
+            </p>
+            <p>
+                You can also specify other capture groups other than <code>event</code> to capture <em>fields</em> (such as date, IP, priority) which are shown in the sidebar while hovering over an event in the visualization. These fields, unless sub-groups of the <code>event</code> group, will not be displayed as part of the event message.
+            </p>
+            <p>
+                For example, for a log entry like:
+                <pre>28/07/14 01:15 PM Event executed<br>process2 {"process1" : time1, "process2" : time2, ..., "processN" : timeN}</pre>
+
+                We might have a parser RegExp like:
+                <pre>(?&lt;date&gt;\d\d/\d\d/\d\d \d\d:\d\d (AM|PM)) (?&lt;event&gt;.*)\n(?&lt;host&gt;\w+) (?&lt;clock&gt;\{.*\})</pre>
+            </p>
+            <p>
+              The capture groups in ShiViz is not standard regexp
+              syntax. We recommend using a plain
+              <a href="https://www.debuggex.com/">JS regexp tester</a>
+              with regular capture groups to develop expressions, and
+              name the capture groups afterwards.
+            </p>
+
+            <h3>How can I generate logs to use in ShiViz?</h3>
+            <p>
+                You can study the execution of any system that
+                produces logs in a format that can be parsed using the
+                RegExp mechanism above.
+            </p>
+            <p>
+              We recommend two instrumentation libraries that output
+              ShiViz-compatible logs:
+              <ul>
+                <li><a href="http://bitbucket.org/bestchai/shivector/wiki/Home">ShiVector</a>:
+                  instruments Java programs</li>
+                <li><a href="https://github.com/arcaneiceman/GoVector">GoVector</a>:
+                  instruments Go programs</li>
+              </ul>
+            </p>
+
+            <h3>More information</h3>
+              <ul>
+                <li><a href="https://bitbucket.org/bestchai/shiviz/src">ShiViz source code</a></li>
+                <li><a href="https://bitbucket.org/bestchai/shiviz/wiki/Home">ShiViz wiki</a></li>
+                <li>Contact: <a href="http://www.cs.ubc.ca/~bestchai/">Ivan Beschastnikh</a>, bestchai@cs.ubc.ca</li>
+                <li><a href="http://homes.cs.washington.edu/~mernst/pubs/debug-distributed-cacm2016-abstract.html">How to cite</a></li>
+              </ul>
+        </div>
+        <div class="shivizexample">
+            <img src="images/shiviz-example.png" style="padding-top: 0px;"/><br/>
+            <img src="images/event-selection.png"/><br/>
+            <img src="images/process-selection.png"/><br/>
+            <img src="images/event-expand-menu.png"/><br/>
+            <img src="images/search.png"/><br/>
+            <img src="images/diff.png"/><br/>
+            <img id="clusterImg" src="images/cluster.png"/>
+            <img src="images/motifs.png">
+            </div>
+        </div>
+    </section>
+
+    <section class="input">
+        <table>
+            <tr>
+                <td class="left">
+                    <header class="icon">
+                        <ul class="tabs">
+                            <li>h</li>
+                            <li class="active">i</li>
+                            <li class="disabled">a</li>
+                        </ul>
+                    </header>
+                    <h3>Options</h3>
+                    <div id="file_input">
+                        <label>Select a file: <input type="file" id="file"></label>
+                        <span id="file_icon">d</span>
+                        <div id="file_desc">Upload a log by selecting a file with the following format: <br><br>
+                        <li> The first line of the file is the log parsing regular expression. If left empty, the default regular expression 
+                        <span class="regex">"(?&ltevent&gt.*)\n(?&lthost&gt\S*) (?&ltclock&gt{.*})"</span> will be used.<br>
+                        <li> The second line of the file is the multiple executions regular expression delimiter. This can be left empty if the log does not contain multiple executions. <br>
+                        <li> The rest of the file is the log.
+                        </div>
+                    </div>                    
+                    <div class="option">
+                        <label>Log parsing regular expression: <input class="mono" type="text" id="parser"></label>
+                    </div>
+                    <div class="option">
+                        <label>Multiple executions regular expression delimiter: <input class="mono" type="text" id="delimiter"></label>
+                    </div>
+                    <div class="option">
+                        Sort processes in
+                        <select id="ordering">
+                            <option value="ascending">ascending</option>
+                            <option value="descending" selected>descending</option>
+                        </select> order by:
+                        <br>
+                        <label><input id="hostsortLength" name="host_sort" type="radio" checked value="length"> # events</label>
+                        <label><input id="hostsortOrder" name="host_sort" type="radio" value="order"> appearance in log</label>
+                    </div>
+                    <button id="visualize" disabled>Visualize</button>
+                </td>
+                <td class="right">
+                    <div id="examples">
+                      <b>Example logs:</b>
+                      <a class="log-link" href="" data-log="simple-reliable-broadcast.log" data-ordering="ascending" data-hostsort="#hostsortOrder" data-parser="\[\w+\] \[(?<date>([^ ]+ [^ ]+))\] [^ ]+ \[akka://Broadcast/user/(?<host>\w+)\] (?<clock>.*\}) (?<event>.*)">Reliable broadcast</a>
+                      <a class="log-link" href="" data-log="chord.log" data-ordering="descending" data-hostsort="#hostsortLength" data-parser="(?<host>\S*) (?<clock>{.*})\n(?<event>.*)">Chord DHT</a>
+                      <a class="log-link" href="" data-log="tsviz_fslock_24t_4sp.log" data-ordering="descending" data-hostsort="#hostsortLength" data-parser="(?<timestamp>(\d*)) (?<event>.*)\n(?<host>\w*) (?<clock>.*)">WiredTiger KV-store lock contention</a>
+                      <a class="log-link" href="" data-log="tsviz_shared_var_4_threads.log" data-ordering="descending" data-hostsort="#hostsortLength" data-parser="(?<timestamp>(\d*)) (?<event>.*)\n(?<host>\w*) (?<clock>.*)">WiredTiger shared variable contention</a>
+                      <a class="log-link" href="" data-log="voldemort-simple-threadnames.log" data-parser="\[(?<date>\d{4}-\d{2}-\d{2} (\d{2}:){2}\d{2},\d{3}) (?<path>\S*)\] (?<priority>(INFO|WARN)) (?<event>.*)\n(?<host>\S*) (?<clock>{.*})">Voldemort</a>
+                      <a class="log-link" href="" data-log="simpledb.log">SimpleDB</a>
+<a class="log-link" href="" data-log="facebook.log" data-parser="(?<ip>(\d{1,3}\.){3}\d{1,3}) (?<date>(\d{1,2}/){2}\d{4} (\d{2}:){2}\d{2} (AM|PM)) (?<action>(INFO|GET|POST)) (?<event>.*)\n(?<host>\w*) (?<clock>.*)">Data-center lad balancer (synth)</a>
+                      <a class="log-link" href="" data-log="facebook-multiple.log" data-delimiter="^=== (?<trace>.*) ===$" data-parser="(?<ip>(\d{1,3}\.){3}\d{1,3}) (?<date>(\d{1,2}/){2}\d{4} (\d{2}:){2}\d{2} (AM|PM)) (?<action>(INFO|GET|POST)) (?<event>.*)\n(?<host>\w*) (?<clock>.*)">Multi-execution (synth)</a>
+                      <a class="log-link" href="" data-log="multiple-comparison.log" data-delimiter="^=== (?<trace>.*) ===$" data-parser="(?<ip>(\d{1,3}\.){3}\d{1,3}) (?<date>(\d{1,2}/){2}\d{4} (\d{2}:){2}\d{2} (AM|PM)) (?<action>(INFO|GET|POST)) (?<event>.*)\n(?<host>\w*) (?<clock>.*)">Comparison log (synth)</a>
+                    </div>
+                    <textarea id="input" spellcheck="false"></textarea>
+                </td>
+            </tr>
+        </table>
+    </section>
+
+    <section class="visualization">
+        <div class="left">
+            <div class="bg"></div>
+            <header class="icon">
+                <ul class="tabs">
+                    <li>h</li>
+                    <li>i</li>
+                    <li class="active">a</li>
+                </ul>
+            </header>
+            <div id="tabs"></div>
+            <ul class="leftTabLinks">
+               <li class="default"><a href="logTab">Log lines</a></li>
+               <li><a href="motifsTab">Motifs</a></li>
+               <li><a href="clusterTab">Clusters</a></li>
+            </ul>
+            <div id="leftTabContent">
+                <div id="logTab">
+                    <table class="log">
+                        <tr></tr>
+                    </table>
+                </div>
+                <div id="clusterTab">
+                    <div id="clusterOption">
+                        <p>Cluster executions by:</p>
+                        <input id="clusterNumProcess" type="checkbox">
+                        <label>number of processes</label><br>
+                        <input id="clusterComparison" type="checkbox">
+                        <label>execution comparison</label>
+                    </div>
+                    <table class="clusterResults">
+                        <tr>
+                            <td><label id="baseLabel">Base execution:</label></td>
+                            <td>
+                                <select class="clusterBase">
+                                    <option id="placeholder" style="display:none" selected>Select a base execution</option>
+                                </select>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div id="motifsTab">
+                    <div id="motifOption">
+                        <p>Find network motifs:</p>
+                        <input id="twoEvents" type="checkbox">
+                        <label>2-event motifs</label><br>
+                        <input id="threeEvents" type="checkbox">
+                        <label>3-event motifs</label><br>
+                        <input id="fourEvents" type="checkbox">
+                        <label>4-event motifs</label>
+                    </div>
+                    <table class="motifResults">
+                        <tr></tr>
+                    </table>
+                </div>
+            </div>
+            <div class="highlight"></div>
+        </div>
+        <div id="graph">
+            <div id="searchbar">
+                <div id="bar">
+                    <input type="text" class="mono" placeholder="Search the visualization">
+                    <div class="clear">
+                        <div class="one"></div>
+                        <div class="two"></div>
+                    </div>
+                    <button id="searchButton" disabled>Search</button>
+                    <button class="nav" id="prevButton">&lt;</button>
+                    <span class="nav" id="numFound">3</span>
+                    <button class="nav" id="nextButton">&gt;</button>
+                </div>
+                <div id="panel">
+                    <ul class="searchTabLinks">
+                        <li class="default"><a href="textTab">Text Search</a></li>
+                        <li><a href="structuredTab">Structured Search</a> </li>
+                    </ul>
+                    <div id="textTab" class="tab">
+                        <b>Text search</b>: search for log lines/events that match a text query.
+                        <div class="out">
+                            <p>
+                                <dl>
+                                    <dt><b>Examples:</b></dt>
+                                    <dt><code>sync</code></dt>
+                                    <dd>Find events containing the text "sync" in any field.</dd>
+                                    <dt><code>priority=CRITICAL &amp;&amp; text=/fail.*/</code></dt>
+                                    <dd>Find events with "priority" field set to "CRITICAL" and with "text" field matching the specified regex. Supported logical operators are: <code>&amp;&amp;</code>, <code>||</code>, <code>^</code></dd>
+                                    <dt><code>ip="216.58.216.174"</code></dt>
+                                    <dd>String literals containing non-alphanumeric symbols must be surrounded by quotes.</dd>
+                                    <dt><code>location="EC2" || (isMobile &amp;&amp; useragent=/.*Webkit.*/)</code></dt>
+                                    <dd>Use parenthesis to specify order of operations.</dd>
+                                </dl>
+                            </p>
+                        </div>
+                    </div>
+                    <div id="structuredTab" class="tab">
+                        <ul class="structuredSearches">
+                            <li id="customStructure">
+                                <b>Search for a custom structure:</b>
+                                draw a graph structure below (add
+                                processes, events, click and drag to
+                                add inter-event edges).<br>
+                                <div class="hostConstraintDialog">
+                                    <input id="hostConstraint" type="text" placeholder="Add constraint">
+                                </div>
+                                <table>
+                                    <tr>
+                                        <td>
+                                            <svg>
+                                                <circle r="5" class="hover"></circle>
+                                            </svg>
+                                        </td>
+                                        <td>
+                                            <button id="addButton" class="add">+</button>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </li>
+                            <li id="predefinedStructure">
+                                <b>Search for a pre-defined structure:</b>
+                                Select one of the options below to find
+                                the specified structure.
+                                <div class="predefined">
+                                    <button name="request-response">Request-response</button>
+                                    <button name="broadcast">Broadcast</button>
+                                    <button name="gather">Gather</button>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div id="hostBar"></div>
+            <div id="vizContainer"></div>
+        </div>
+        <div id="sidebar">
+            <button class="pairwiseButton">Pairwise</button>
+            <button class="diffButton">Show Differences</button>
+            <div class="info">
+                <div class="event"></div>
+                <table class="fields"></table>
+            </div>
+        </div>
+
+        <div class="dialog">
+            <div class="triangle"></div>
+            <div class="name"></div>
+            <table class="info"></table>
+            <button name="hide" class="hide hb">Hide</button>
+            <button name="filter" class="filter hb">Highlight</button>
+            <button name="collapse" class="collapse">Toggle Collapse</button>
+        </div> 
+    </section>
+
+    <div id="errorbox" class="error"></div>
+    <div id="errorcover" class="error"></div>
+
+    <svg id="defs">
+        <defs>
+            <linearGradient id="gedge">
+                <stop stop-color="#999" offset="0" />
+                <stop stop-color="#fff" offset="1" />
+            </linearGradient>
+        </defs>
+    </svg>
+    
+
+    <!-- REPLACED DURING DEPLOYMENT: -->
+    <script type="text/javascript" src="js/dev.js"></script>
+    <!-- -->
+    
+    <script type="text/javascript" src="js/searchBar.js"></script>
+    <script type="text/javascript" src="js/clusterer.js"></script>
+
+    <script type="text/javascript" src="js/graph/graphEvent.js"></script>
+    <script type="text/javascript" src="js/graph/abstractGraph.js"></script>
+    <script type="text/javascript" src="js/graph/abstractNode.js"></script>
+    <script type="text/javascript" src="js/graph/graphTraversal.js"></script>
+    <script type="text/javascript" src="js/graph/dfsGraphTraversal.js"></script>
+    
+    <script type="text/javascript" src="js/builder/builderGraph.js"></script>
+    <script type="text/javascript" src="js/builder/builderNode.js"></script>
+    <script type="text/javascript" src="js/builder/graphBuilder.js"></script>
+    <script type="text/javascript" src="js/builder/graphBuilderHost.js"></script>
+    <script type="text/javascript" src="js/builder/graphBuilderNode.js"></script>
+
+    <script type="text/javascript" src="js/logEventMatcher/lemAST.js"></script>
+    <script type="text/javascript" src="js/logEventMatcher/lemInterpreter.js"></script>
+    <script type="text/javascript" src="js/logEventMatcher/lemParser.js"></script>
+    <script type="text/javascript" src="js/logEventMatcher/lemToken.js"></script>
+    <script type="text/javascript" src="js/logEventMatcher/lemTokenizer.js"></script>
+    <script type="text/javascript" src="js/logEventMatcher/logEventMatcher.js"></script>
+
+    <script type="text/javascript" src="js/model/logEvent.js"></script>
+    <script type="text/javascript" src="js/model/modelGraph.js"></script>
+    <script type="text/javascript" src="js/model/modelNode.js"></script>
+    <script type="text/javascript" src="js/model/parser.js"></script>
+    <script type="text/javascript" src="js/model/vectorTimestamp.js"></script>
+    <script type="text/javascript" src="js/model/vectorTimestampSerializer.js"></script>
+
+    <script type="text/javascript" src="js/motifFinder/motif.js"></script>
+    <script type="text/javascript" src="js/motifFinder/motifFinder.js"></script>
+    <script type="text/javascript" src="js/motifFinder/motifDrawer.js"></script>
+    <script type="text/javascript" src="js/motifFinder/broadcastGatherFinder.js"></script>
+    <script type="text/javascript" src="js/motifFinder/customMotifFinder.js"></script>
+    <script type="text/javascript" src="js/motifFinder/motifGroup.js"></script>
+    <script type="text/javascript" src="js/motifFinder/motifNavigator.js"></script>
+    <script type="text/javascript" src="js/motifFinder/requestResponseFinder.js"></script>
+    <script type="text/javascript" src="js/motifFinder/textQueryMotifFinder.js"></script>
+
+    <script type="text/javascript" src="js/shiviz.js"></script>
+
+    <script type="text/javascript" src="js/transform/transformation.js"></script>
+    <script type="text/javascript" src="js/transform/collapseSequentialNodesTransformation.js"></script>
+    <script type="text/javascript" src="js/transform/hideHostTransformation.js"></script>
+    <script type="text/javascript" src="js/transform/highlightHostTransformation.js"></script>
+    <script type="text/javascript" src="js/transform/highlightMotifTransformation.js"></script>
+    <script type="text/javascript" src="js/transform/showDiffTransformation.js"></script>
+    <script type="text/javascript" src="js/transform/transformer.js"></script>
+
+    <script type="text/javascript" src="js/util/exception.js"></script>
+    <script type="text/javascript" src="js/util/regexp.js"></script>
+    <script type="text/javascript" src="js/util/util.js"></script>
+
+    <script type="text/javascript" src="js/visualization/controller.js"></script>
+    <script type="text/javascript" src="js/visualization/global.js"></script>
+    <script type="text/javascript" src="js/visualization/hostPermutation.js"></script>
+    <script type="text/javascript" src="js/visualization/layout.js"></script>
+    <script type="text/javascript" src="js/visualization/view.js"></script>
+    <script type="text/javascript" src="js/visualization/visualEdge.js"></script>
+    <script type="text/javascript" src="js/visualization/visualGraph.js"></script>
+    <script type="text/javascript" src="js/visualization/visualNode.js"></script>
+    <script type="text/javascript" src="js/visualization/abbreviation.js"></script>
+
+</body>
+</html>
