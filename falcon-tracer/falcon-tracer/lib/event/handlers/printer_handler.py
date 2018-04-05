@@ -84,7 +84,7 @@ class PrinterSocketEventHandler():
                 "type": "CREATE",
                 "timestamp": event.timestamp,
                 "thread": str(event.pid),
-                "child": event.extra.child_pid,
+                "child": str(event.extra.child_pid),
             }
 
             print json.dumps(data)
