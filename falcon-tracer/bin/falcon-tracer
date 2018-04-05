@@ -1,0 +1,4 @@
+#!/bin/bash
+
+BINPATH=`dirname $0`
+python "$BINPATH/../falcon-tracer/__main__.py" $@
