@@ -16,4 +16,4 @@ The installation process requires `sudo` permissions.
 - Run `make`
 
 ## Usage
-- Run `sudo ./bin/falcon-tracer` on your terminal.
+- Run `./bin/falcon-tracer --help` in your terminal to see all available options.
