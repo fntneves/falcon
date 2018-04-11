@@ -1,5 +1,6 @@
 package pt.haslab.taz;
 
+import com.sun.org.apache.xpath.internal.SourceTree;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -159,8 +160,10 @@ public enum TraceProcessor {
     public ThreadCreationEvent getCorrespondingJoin(ThreadCreationEvent tce) {
         List<ThreadCreationEvent> joins = joinEvents.get(tce.getThread());
         String childThread = tce.getChildThread();
+        if(joins == null)
+            return null;
         for(ThreadCreationEvent join : joins) {
-            if(childThread.equals(join.getChildThread())) {
+            if(join != null && childThread.equals(join.getChildThread())) {
                 return join;
             }
         }
@@ -363,9 +366,6 @@ public enum TraceProcessor {
                 break;
             case LOCK:
             case UNLOCK:
-            case NOTIFY:
-            case NOTIFYALL:
-            case WAIT:
                 var = event.getString("variable");
                 SyncEvent syne = new SyncEvent(e);
                 syne.setVariable(var);
@@ -377,6 +377,7 @@ public enum TraceProcessor {
                         // Only adds the lock event if the previous lock event has a corresponding unlock
                         // in order to handle Reentrant Locks
                         Utils.insertInMapToLists(lockEvents, var, new MyPair<SyncEvent, SyncEvent>(syne, null));
+                        eventsPerThread.get(thread).add(syne);
                     }
                 } else if (type == EventType.UNLOCK) {
                     // second component is the unlock event associated with the lock
@@ -387,7 +388,16 @@ public enum TraceProcessor {
                     } else {
                         pair.setSecond(syne);
                     }
-                } else if (type == EventType.WAIT) {
+                    eventsPerThread.get(thread).add(syne);
+                }
+                break;
+            case NOTIFY:
+            case NOTIFYALL:
+            case WAIT:
+                var = event.getString("variable");
+                syne = new SyncEvent(e);
+                syne.setVariable(var);
+                if (type == EventType.WAIT) {
                     if(!waitEvents.containsKey(var)){
                         waitEvents.put(var, new LinkedList<SyncEvent>());
                     }

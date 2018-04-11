@@ -38,9 +38,9 @@ public class TazTest {
         processor.loadEventTrace(file.getAbsolutePath());
 
         //expected results ---
-        int expectedTotal = 42;
+        int expectedTotal = 41;
         int expectedT1_N1 = 8;
-        int expectedT2_N1 = 14;
+        int expectedT2_N1 = 13;
         int expectedT1_N2 = 13;
         int expectedT2_N2 = 7;
 
