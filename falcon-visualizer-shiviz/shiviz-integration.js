@@ -1,11 +1,11 @@
-// TODO: Decide description and optional fields to pass to LogEvent constructor
 function toShivizLogEvents(log) {
   var vectorClocks = {};
   var dependencies = {};
-  var logEvents = []
+  var logEvents = [];
+  const logObject = JSON.parse(log);
 
-  for (const i in log) {
-    const logEntry = log[i];
+  for (const i in logObject) {
+    const logEntry = logObject[i];
     let vectorClock = vectorClocks[logEntry.thread];
 
     if (vectorClock == undefined) {
