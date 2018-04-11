@@ -38,21 +38,17 @@ public class Event implements Comparable {
 
     public Event(){}
 
-    public Event(String timestamp, EventType type, String thread, int eventNumber) {
+    public Event(String timestamp, EventType type, String thread, int eventNumber, String lineOfCode) {
         this.timestamp = timestamp;
         this.type = type;
         this.thread = thread;
         this.dependency = null;
         this.eventNumber = eventNumber;
         this.data = null;
+        this.loc = lineOfCode;
         //initially, set scheduleOrder equal to eventNumber
         //override scheduleOrder after having causal order
         this.scheduleOrder = eventNumber;
-    }
-
-    public Event(String timestamp, EventType type, String thread, int eventNumber, String loc) {
-        this(timestamp, type, thread, eventNumber);
-        this.loc = loc;
     }
 
     public Event(Event e){
@@ -63,7 +59,7 @@ public class Event implements Comparable {
         this.eventNumber = e.getEventNumber();
         this.data = e.getData();
         this.scheduleOrder = e.getScheduleOrder();
-        this.loc = e.getLoc();
+        this.loc = e.getLineOfCode();
     }
 
     public String getTimestamp() {
@@ -90,7 +86,7 @@ public class Event implements Comparable {
         this.thread = thread;
     }
 
-    public String getLoc() {
+    public String getLineOfCode() {
         return loc;
     }
 
@@ -200,7 +196,7 @@ public class Event implements Comparable {
         return (tmp.getThread() == this.thread
                 && tmp.getType() == this.type
                 && tmp.getScheduleOrder() == this.scheduleOrder
-                && tmp.getLoc().equals(this.loc)
+                && tmp.getLineOfCode().equals(this.loc)
         );
     }
 }

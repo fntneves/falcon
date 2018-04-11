@@ -12,7 +12,6 @@ import pt.haslab.taz.utils.Utils;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.*;
 
 
@@ -30,6 +29,13 @@ public enum TraceProcessor {
 
     /* Map: message id -> pair of events (snd,rcv) */
     public Map<String, MyPair<SocketEvent, SocketEvent>> msgEvents;
+
+    /* Map: rcv event-> list of events of the message handler
+     * (list starts with HANDLERBEGIN and ends with HANDLEREND) */
+    public Map<SocketEvent, List<Event>> handlerEvents;
+
+    /* set indicating whether a given thread's trace has message handlers */
+    private HashSet hasHandlers;
 
     /* Map: socket id -> pair of events (connect,accept) */
     public Map<String, MyPair<SocketEvent, SocketEvent>> connAcptEvents;
@@ -87,6 +93,8 @@ public enum TraceProcessor {
         eventNameToObject = new HashMap<String, Event>();
         sortedByTimestamp = new TreeSet<Event>(new TimestampComparator());
         pendingEventsSndRcv = new HashMap<String, MyPair<Deque<SocketEvent>, Deque<SocketEvent>>>();
+        handlerEvents = new HashMap<SocketEvent, List<Event>>();
+        hasHandlers = new HashSet();
     }
 
     public int getNumberOfEvents(){
@@ -107,14 +115,26 @@ public enum TraceProcessor {
                 parseJSONEvent(object);
             }
         }catch (JSONException e){
-            //EVENTS AS JSON OBJECTS
-            logger.error("Load as JSONArray failed. Try loading as file of JSONObjects");
-            BufferedReader br = new BufferedReader(new FileReader(pathToFile));
-            String line = br.readLine();
-            while (line != null) {
-                JSONObject object = new JSONObject(line);
-                parseJSONEvent(object);
-                line = br.readLine();
+            String msg = e.getMessage();
+
+            if(msg.startsWith("A JSONArray text must start")) {
+                //EVENTS AS JSON OBJECTS
+                logger.error("Load as JSONArray failed. Try loading as file of JSONObjects");
+                BufferedReader br = new BufferedReader(new FileReader(pathToFile));
+                String line = br.readLine();
+                while (line != null) {
+                    JSONObject object = new JSONObject(line);
+                    parseJSONEvent(object);
+                    line = br.readLine();
+                }
+            }
+            else{
+                throw e;
+            }
+        }
+        finally {
+            if(!hasHandlers.isEmpty()) {
+                parseMessageHandlers();
             }
         }
 
@@ -285,8 +305,10 @@ public enum TraceProcessor {
                         closeShutEvents.put(socket, pair);
                     }
                 }
+
                 if(se.getTimestamp() != null && !se.getTimestamp().equals(""))
                     sortedByTimestamp.add(se);
+
                 eventsPerThread.get(thread).add(se);
                 break;
             case START:
@@ -315,9 +337,7 @@ public enum TraceProcessor {
             case WRITE:
             case READ:
                 String var = event.getString("variable");
-                long counter = event.optLong("counter"); //not being used at the moment
                 RWEvent rwe = new RWEvent(e);
-                rwe.setLineOfCode(loc);
                 rwe.setVariable(var);
 
                 if(type == EventType.READ) {
@@ -337,18 +357,17 @@ public enum TraceProcessor {
             case HNDLBEG:
             case HNDLEND:
                 HandlerEvent he = new HandlerEvent(e);
-                he.setLineOfCode(event.getString("loc"));
                 eventsPerThread.get(thread).add(he);
+                if(type == EventType.HNDLBEG)
+                    hasHandlers.add(thread);
                 break;
             case LOCK:
             case UNLOCK:
             case NOTIFY:
             case NOTIFYALL:
             case WAIT:
-                loc = event.getString("loc");
                 var = event.getString("variable");
                 SyncEvent syne = new SyncEvent(e);
-                syne.setLineOfCode(loc);
                 syne.setVariable(var);
 
                 if (type == EventType.LOCK) {
@@ -383,6 +402,51 @@ public enum TraceProcessor {
                 break;
             default:
                 throw new JSONException("Unknown event type: " + type);
+        }
+    }
+
+    /**
+     *  Re-iterates through the trace generating the list of events corresponding to each RCV's message handler
+     */
+    private void parseMessageHandlers(){
+
+        for (String thread : eventsPerThread.keySet()) {
+
+            //only check threads that actually have message handlers
+            if(!hasHandlers.contains(thread) || eventsPerThread.get(thread).size() <= 1)
+                continue;
+
+            //handle nested message handlers by parsing with two iterators
+            int slowIt = 0;
+            int fastIt = 0;
+            List<Event> threadEvents = eventsPerThread.get(thread);
+
+            for(slowIt = 0; slowIt < threadEvents.size(); slowIt++){
+                Event e = threadEvents.get(slowIt);
+
+                if(e.getType() == EventType.RCV && threadEvents.get(slowIt+1).getType() == EventType.HNDLBEG){
+                    List<Event> handlerList = new ArrayList<Event>();
+                    fastIt = slowIt+1;
+                    Event handlerEvent = threadEvents.get(fastIt);
+                    int nestedCounter = 0;
+                    while(handlerEvent.getType() != EventType.HNDLEND
+                            && nestedCounter >= 0
+                            && fastIt < threadEvents.size()){
+                        handlerList.add(handlerEvent);
+                        if(handlerEvent.getType() == EventType.HNDLBEG){
+                            nestedCounter++;
+                        }
+                        else if(handlerEvent.getType() == EventType.HNDLEND){
+                            nestedCounter--; //last HANDLEREND will set nestedCounter = -1 and end loop
+                        }
+                        fastIt++;
+                        if(fastIt < threadEvents.size())
+                            handlerEvent = threadEvents.get(fastIt);
+                    }
+                    handlerList.add(handlerEvent); //add HANDLEREND event
+                    handlerEvents.put( (SocketEvent) e, handlerList);
+                }
+            }
         }
     }
 
@@ -421,7 +485,7 @@ public enum TraceProcessor {
                 rcv = rcvEvents.pop();
 
                 // 2. Decrement read bytes from SND message
-                String msgid = definePartitionedMessageId(snd, rcv);
+                String msgid = computePartitionedMessageId(snd, rcv);
                 snd.setSize(snd.getSize() - rcv.getSize());
 
                 // 3. Associate RCV message with SND message
@@ -432,7 +496,7 @@ public enum TraceProcessor {
                 snd.setSize(0);
 
                 // 2. Associate RCV message with SND message
-                String msgid = definePartitionedMessageId(rcv, snd);
+                String msgid = computePartitionedMessageId(rcv, snd);
                 msgEvents.put(msgid, new MyPair<SocketEvent, SocketEvent>(snd, rcv));
 
                 // 3. Remove enqueued RCV if there are no more bytes remaining
@@ -469,7 +533,7 @@ public enum TraceProcessor {
                 rcv.setSize(rcv.getSize() - snd.getSize());
 
                 // 3. Associate RCV message with SND message
-                String msgid = definePartitionedMessageId(rcv, snd);
+                String msgid = computePartitionedMessageId(rcv, snd);
                 msgEvents.put(msgid, new MyPair<SocketEvent, SocketEvent>(snd, rcv));
             } else {
                 // 1. Decrement sent bytes from SND message
@@ -477,7 +541,7 @@ public enum TraceProcessor {
                 rcv.setSize(0);
 
                 // 2. Associate RCV message with SND message
-                String msgid = definePartitionedMessageId(snd, rcv);
+                String msgid = computePartitionedMessageId(snd, rcv);
                 msgEvents.put(msgid, new MyPair<SocketEvent, SocketEvent>(snd, rcv));
 
                 // 3. Remove enqueued SND if there are no more bytes remaining
@@ -495,7 +559,7 @@ public enum TraceProcessor {
      * @param part - socket event with partial message size
      * @return
      */
-    private String definePartitionedMessageId(SocketEvent full, SocketEvent part){
+    private String computePartitionedMessageId(SocketEvent full, SocketEvent part){
         // the message id will be augmented with a suffix ".X" indicating that the event is partitioned
         String msgid  = "";
         if(full.getMessageId() != null){
@@ -514,93 +578,115 @@ public enum TraceProcessor {
 
     public void printDataStructures() {
 
-        String debugMsg = "THREAD EVENTS\n";
+        StringBuilder debugMsg = new StringBuilder();
+        debugMsg.append("THREAD EVENTS\n");
         for (String t : eventsPerThread.keySet()) {
-            debugMsg += "#"+t+"\n";
+            debugMsg.append("#"+t+"\n");
             for (Event e : eventsPerThread.get(t)) {
-                debugMsg += " " + e.toString()+"\n";
+                debugMsg.append(" " + e.toString()+"\n");
             }
-            debugMsg += "\n";
+            debugMsg.append("\n");
         }
-        logger.debug(debugMsg);
+        logger.debug(debugMsg.toString());
 
-        debugMsg = "SEND/RECEIVE EVENTS\n";
+        debugMsg = new StringBuilder();
+        debugMsg.append("SEND/RECEIVE EVENTS\n");
         for (MyPair<SocketEvent, SocketEvent> se : msgEvents.values()) {
-            debugMsg += se.getFirst() + " -> " + se.getSecond() +"\n";
+            debugMsg.append(se.getFirst() + " -> " + se.getSecond() +"\n");
         }
-        logger.debug(debugMsg);
+        logger.debug(debugMsg.toString());
 
-        debugMsg = "CONNECT/ACCEPT EVENTS\n";
+        debugMsg = new StringBuilder();
+        debugMsg.append("MESSAGE HANDLER EVENTS\n");
+        for (SocketEvent rcv : handlerEvents.keySet()) {
+            debugMsg.append("#"+rcv.toString()+"\n");
+            for (Event e : handlerEvents.get(rcv)) {
+                debugMsg.append(" " + e.toString()+"\n");
+            }
+        }
+        logger.debug(debugMsg.toString());
+
+
+        debugMsg = new StringBuilder();
+        debugMsg.append("CONNECT/ACCEPT EVENTS\n");
         for (MyPair<SocketEvent, SocketEvent> se : connAcptEvents.values()) {
-            debugMsg += se.getFirst() + " -> " + se.getSecond() +"\n";
+            debugMsg.append(se.getFirst() + " -> " + se.getSecond() +"\n");
         }
-        logger.debug(debugMsg);
+        logger.debug(debugMsg.toString());
 
-        debugMsg = "CLOSE/SHUTDOWN EVENTS\n";
+        debugMsg = new StringBuilder();
+        debugMsg.append("CLOSE/SHUTDOWN EVENTS\n");
         for (MyPair<SocketEvent, SocketEvent> se : closeShutEvents.values()) {
-            debugMsg += se.getFirst() + " -> " + se.getSecond() +"\n";
+            debugMsg.append(se.getFirst() + " -> " + se.getSecond() +"\n");
         }
-        logger.debug(debugMsg);
+        logger.debug(debugMsg.toString());
 
-        debugMsg = "FORK EVENTS\n";
+        debugMsg = new StringBuilder();
+        debugMsg.append("FORK EVENTS\n");
         for (List<ThreadCreationEvent> fset : forkEvents.values()) {
             for (ThreadCreationEvent f : fset) {
-                debugMsg += f.toString() + "\n";
+                debugMsg.append(f.toString() + "\n");
             }
         }
-        logger.debug(debugMsg);
+        logger.debug(debugMsg.toString());
 
-        debugMsg = "JOIN EVENTS\n";
+        debugMsg = new StringBuilder();
+        debugMsg.append("JOIN EVENTS\n");
         for (List<ThreadCreationEvent> jset : joinEvents.values()) {
             for (ThreadCreationEvent j : jset) {
-                debugMsg += j.toString() + "\n";
+                debugMsg.append(j.toString() + "\n");
             }
         }
-        logger.debug(debugMsg);
+        logger.debug(debugMsg.toString());
 
-        debugMsg = "READ/WRITE EVENTS\n";
+        debugMsg = new StringBuilder();
+        debugMsg.append("READ/WRITE EVENTS\n");
         for (List<RWEvent> rlist : readEvents.values()) {
             for (RWEvent r : rlist) {
-                debugMsg += r.toString() + "\n";
+                debugMsg.append(r.toString() + "\n");
             }
         }
         for (List<RWEvent> wlist : writeEvents.values()) {
             for (RWEvent w : wlist) {
-                debugMsg += w.toString() + "\n";
+                debugMsg.append(w.toString() + "\n");
             }
         }
-        logger.debug(debugMsg);
+        logger.debug(debugMsg.toString());
 
-        debugMsg = "LOCKING EVENTS\n";
+        debugMsg = new StringBuilder();
+        debugMsg.append("LOCKING EVENTS\n");
         for (List<MyPair<SyncEvent, SyncEvent>> pairs : lockEvents.values()) {
             for (MyPair<SyncEvent,SyncEvent> p : pairs) {
-                debugMsg += p.toString() + "\n";
+                debugMsg.append(p.toString() + "\n");
             }
         }
-        logger.debug(debugMsg);
+        logger.debug(debugMsg.toString());
 
-        debugMsg = "WAIT EVENTS\n";
+        debugMsg = new StringBuilder();
+        debugMsg.append("WAIT EVENTS\n");
         for (List<SyncEvent> wlist : waitEvents.values()) {
             for (SyncEvent w : wlist) {
-                debugMsg += w.toString() + "\n";
+                debugMsg.append(w.toString() + "\n");
             }
         }
-        logger.debug(debugMsg);
+        logger.debug(debugMsg.toString());
 
-        debugMsg = "NOTIFY EVENTS\n";
+        debugMsg = new StringBuilder();
+        debugMsg.append("NOTIFY EVENTS\n");
         for (List<SyncEvent> nlist : notifyEvents.values()) {
             for (SyncEvent n : nlist) {
-                debugMsg += n.toString() + "\n";
+                debugMsg.append(n.toString() + "\n");
             }
         }
-        logger.debug(debugMsg);
+        logger.debug(debugMsg.toString());
 
         if(!sortedByTimestamp.isEmpty()){
-            debugMsg = "TIMESTAMP EVENTS\n";
+            debugMsg = new StringBuilder();
+            debugMsg.append("TIMESTAMP EVENTS\n");
             for (Event e : sortedByTimestamp) {
-                debugMsg += e.toString() + "\n";
+                debugMsg.append(e.toString() + "\n");
             }
-            logger.debug(debugMsg);
+            logger.debug(debugMsg.toString());
         }
     }
 }

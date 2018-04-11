@@ -13,27 +13,14 @@ public class SyncEvent extends Event {
     /* reference of the mutex object (lock or monitor) accessed */
     String var;
 
-    /* line of code of the event, with format "className.methodName.lineOfCode" */
-    String loc;
-
     public SyncEvent(String timestamp, EventType type, String thread, int eventNumber, String variable, String lineOfCode) {
-        super(timestamp, type, thread, eventNumber);
+        super(timestamp, type, thread, eventNumber, lineOfCode);
         this.var = variable;
-        this.loc = lineOfCode;
     }
 
     public SyncEvent(Event e){
         super(e);
         this.var = "";
-        this.loc = "";
-    }
-
-    public String getLoc() {
-        return loc;
-    }
-
-    public void setLineOfCode(String loc) {
-        this.loc = loc;
     }
 
     public String getVariable() {
@@ -57,7 +44,6 @@ public class SyncEvent extends Event {
     public JSONObject toJSONObject() throws JSONException {
         JSONObject json = super.toJSONObject();
         json.put("variable", var);
-        json.put("loc", loc);
 
         return json;
     }

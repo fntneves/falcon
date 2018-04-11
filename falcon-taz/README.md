@@ -25,25 +25,25 @@ The JSON API used by TAZ and the Java data structures that it produces are detai
 
 ## JSON API
 **START**
-- `"timestamp":double`
+- `"timestamp":long`
 - `"thread":string`
 - `"type":string`
 
 **END**
-- `"timestamp":double`
+- `"timestamp":long`
 - `"thread":string`
 - `"type":string`
 - `"data":JSONObject`
   - `"event":string`
 
 **CREATE** / **JOIN**
-- `"timestamp":double`
+- `"timestamp":long`
 - `"thread":string`
 - `"type":string`
 - `"child":string`
 
 **CONNECT** / **ACCEPT** / **CLOSE** / **SHUTDOWN**
-- `"timestamp":double`
+- `"timestamp":long`
 - `"thread":string`
 - `"type":string`
 - `"socket":string`
@@ -56,7 +56,7 @@ The JSON API used by TAZ and the Java data structures that it produces are detai
   - `"enter_timestamp"`
 
 **SND** *(send)* / **RCV** *(receive)*
-- `"timestamp":double`
+- `"timestamp":long`
 - `"thread":string`
 - `"type":string`
 - `"socket":string`
@@ -77,25 +77,22 @@ The JSON API used by TAZ and the Java data structures that it produces are detai
 **HANDLERBEGIN** / **HANDLEREND**
 - `"thread":string`
 - `"type":string`
-- `"counter":int`
-- `"loc":string`
 
 **R** *(read)* / **W** *(write)* / **LOCK** / **UNLOCK** / **WAIT** / **NOTIFY** / **NOTIFYALL** 
 - `"thread":string`
 - `"type":string`
 - `"variable":string`
-- `"counter":int`
 - `"loc":string`
 
 **LOG**
-- `"timestamp":double`
+- `"timestamp":long`
 - `"thread":string`
 - `"type":string`
 - `"data":JSONObject`
   - `"message":string`
 
 ## Entry Description
-- `"timestamp"` is a double value indicating the timestamp of the event.
+- `"timestamp"` is a long value indicating the timestamp of the event.
 - `"thread"` is a string indicating the name of the thread that executed the event. The string has format **tid@pid**, where **tid** is the thread id and **pid** is the process/node id.
 - `"type"` is a string indicating the type of event. Valid types: **START, END, CREATE, JOIN, CONNECT, ACCEPT, CLOSE, SHUTDOWN, SND, RCV, R, W, LOCK, UNLOCK, WAIT, NOTIFY, NOTIFYALL**.
 - `"child"` is a string indicating the name of the thread that was created by the thread that executed the create event.
@@ -108,8 +105,7 @@ The JSON API used by TAZ and the Java data structures that it produces are detai
 - `"message"` is a string corresponding to a unique identifier of the message.
 - `"size"` is an integer indicating the size (in bytes) of the message.
 - `"variable"` is a string indicating the name (reference) of the variable (object) being accessed (i.e. read/written) by a thread.
-- `"counter"` is an integer indicating the n-th access to a variable performed by the same thread during the execution. 
-- `"loc"` is a string indicating the line of code of the event, with format **className.methodName.lineOfCode**.
+- `"loc"` is a string indicating the line of code of the event, with format **className.methodName.lineOfCode**. In practice, the line of code can be any value that uniquely identifies the program instruction.
 - `"data"` is an array of additional event details, which can comprise the following fields: `syscall_exit, syscall, socket_type, fd, exit_timestamp, enter_timestamp, message`.
 
 ---
@@ -158,6 +154,7 @@ class Event {
     EventType type;
     String dependency; //indicates the event that causally precedes this event
     int eventNumber; 
+    String loc;
     Object data;
     int scheduleOrder; //order given by the solver according to the desired criteria
 }
@@ -171,7 +168,6 @@ class ThreadCreationEvent extends Event {
 **SyncEvent** is used for LOCK, UNLOCK, NOTIFY, NOTIFYALL and WAIT events. 
 ```java
 class SyncEvent extends Event {
-    String loc;
     String var;
 }
 ```
@@ -193,14 +189,13 @@ class SocketEvent extends Event {
 **RWEvent** is used for READ and WRITE events. 
 ```java
 class RWEvent extends Event {
-    String loc;
     String var;
 }
 ```
 **HandlerEvent** is used for message handler delimiters: HANDLERBEGIN and HANDLEREND. 
 ```java
 class HandlerEvent extends Event {
-    String loc;
+    super()
 }
 ```
 

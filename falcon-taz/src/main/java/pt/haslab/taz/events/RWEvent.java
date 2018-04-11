@@ -67,7 +67,7 @@ public class RWEvent extends Event {
         if (o == null || getClass() != o.getClass()) return false;
 
         RWEvent tmp = (RWEvent) o;
-        return (tmp.getLoc().equals(this.loc)
+        return (tmp.getLineOfCode().equals(this.loc)
                 && tmp.getVariable().equals(this.var)
                 && tmp.getEventNumber() == this.eventNumber
         );

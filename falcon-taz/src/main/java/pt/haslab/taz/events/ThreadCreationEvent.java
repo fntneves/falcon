@@ -12,8 +12,8 @@ import org.json.JSONObject;
 public class ThreadCreationEvent extends Event {
     String child;
 
-    public ThreadCreationEvent(String timestamp, EventType type, String thread, int eventNumber, String child) {
-        super(timestamp, type, thread, eventNumber);
+    public ThreadCreationEvent(String timestamp, EventType type, String thread, int eventNumber, String child, String lineOfCode) {
+        super(timestamp, type, thread, eventNumber, lineOfCode);
         this.child = child;
     }
 
