@@ -1,36 +1,32 @@
-
-function vectorclocks_generator(log) {
-
-  var vectorclocks = {};
+// TODO: Decide description and optional fields to pass to LogEvent constructor
+function toShivizLogEvents(log) {
+  var vectorClocks = {};
   var dependencies = {};
+  var logEvents = []
 
-  for (var i in log) {
-    var logevent = log[i];
+  for (const i in log) {
+    const logEntry = log[i];
+    let vectorClock = vectorClocks[logEntry.thread];
 
-    var vectorclock = vectorclocks[logevent.thread];
-
-    if (vectorclock == undefined) {
-
-      var clock = {};
-      clock[logevent.thread] = 0;
-      vectorclock = new VectorTimestamp(clock, logevent.thread);
+    if (vectorClock == undefined) {
+      let clock = {};
+      clock[logEntry.thread] = 0;
+      vectorClock = new VectorTimestamp(clock, logEntry.thread);
     }
 
-    if (logevent.dependency != null) {
-      var recv_vectorclock = dependencies[logevent.dependency];
-      vectorclock = vectorclock.update(recv_vectorclock);
+    if (logEntry.dependency != null) {
+      const recvVectorClock = dependencies[logEntry.dependency];
+      vectorClock = vectorClock.update(recvVectorClock);
     }
-    vectorclock = vectorclock.increment();
+    vectorClock = vectorClock.increment();
     /* VectorTimestamp is immutable */
-    vectorclocks[logevent.thread] = vectorclock;
+    vectorClocks[logEntry.thread] = vectorClock;
 
-    logevent["vectorclock"] = vectorclock.getClock();
-
-    if (logevent.type == "CONNECT" || logevent.type == "SND") {
+    if (logEntry.type == "CONNECT" || logEntry.type == "SND") {
       /* VectorTimestamp is immutable - clone not needed */
-      dependencies[logevent.id] = vectorclock;
+      dependencies[logEntry.id] = vectorClock;
     }
+    logEvents.push(new LogEvent(logEntry.type, vectorClock, i));
   }
-
-  return log;
+  return logEvents;
 }
