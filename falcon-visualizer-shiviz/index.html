@@ -113,8 +113,8 @@
                         ShiViz supports keyword search across the
                         parsed fields. Search supports logical
                         connectives and regular expressions. You can
-                        also search for subgraphs or communication 
-                        topologies of interest. You can search for a 
+                        also search for subgraphs or communication
+                        topologies of interest. You can search for a
                         pre-defined structure like broadcast
                         or request-response, or you can define and
                         search for a custom structure.
@@ -136,11 +136,11 @@
                     <strong>Explore execution clusters</strong>
                         <br>
                         For logs with multiple executions, click on the
-                        "clusters" tab to separate executions into 
+                        "clusters" tab to separate executions into
                         different groups based on a chosen metric.
 
                         Cluster by the number of processes to group
-                        executions by the midpoint between the smallest 
+                        executions by the midpoint between the smallest
                         and largest number of processes.
 
                         Cluster by execution comparison to see an overview
@@ -154,7 +154,7 @@
                         occurring communication patterns within and
                         across executions. Search for 2, 3 or 4-event
                         motifs that occur in at least 50% of the
-                        executions or that appear at least 5 times 
+                        executions or that appear at least 5 times
                         within a single execution.
                     </li>
                 </ul>
@@ -275,12 +275,12 @@
                         <label>Select a file: <input type="file" id="file"></label>
                         <span id="file_icon">d</span>
                         <div id="file_desc">Upload a log by selecting a file with the following format: <br><br>
-                        <li> The first line of the file is the log parsing regular expression. If left empty, the default regular expression 
+                        <li> The first line of the file is the log parsing regular expression. If left empty, the default regular expression
                         <span class="regex">"(?&ltevent&gt.*)\n(?&lthost&gt\S*) (?&ltclock&gt{.*})"</span> will be used.<br>
                         <li> The second line of the file is the multiple executions regular expression delimiter. This can be left empty if the log does not contain multiple executions. <br>
                         <li> The rest of the file is the log.
                         </div>
-                    </div>                    
+                    </div>
                     <div class="option">
                         <!-- NOTE: added id for hiding this element in visualize.js -->
                         <label id="log_regex_label">Log parsing regular expression: <input class="mono" type="text" id="parser"></label>
@@ -470,7 +470,7 @@
             <button name="hide" class="hide hb">Hide</button>
             <button name="filter" class="filter hb">Highlight</button>
             <button name="collapse" class="collapse">Toggle Collapse</button>
-        </div> 
+        </div>
     </section>
 
     <div id="errorbox" class="error"></div>
@@ -484,12 +484,12 @@
             </linearGradient>
         </defs>
     </svg>
-    
+
 
     <!-- REPLACED DURING DEPLOYMENT: -->
     <script type="text/javascript" src="bestchai-shiviz-5c13c5afbf19/js/dev.js"></script>
     <!-- -->
-    
+
     <script type="text/javascript" src="bestchai-shiviz-5c13c5afbf19/js/searchBar.js"></script>
     <script type="text/javascript" src="bestchai-shiviz-5c13c5afbf19/js/clusterer.js"></script>
 
@@ -498,7 +498,7 @@
     <script type="text/javascript" src="bestchai-shiviz-5c13c5afbf19/js/graph/abstractNode.js"></script>
     <script type="text/javascript" src="bestchai-shiviz-5c13c5afbf19/js/graph/graphTraversal.js"></script>
     <script type="text/javascript" src="bestchai-shiviz-5c13c5afbf19/js/graph/dfsGraphTraversal.js"></script>
-    
+
     <script type="text/javascript" src="bestchai-shiviz-5c13c5afbf19/js/builder/builderGraph.js"></script>
     <script type="text/javascript" src="bestchai-shiviz-5c13c5afbf19/js/builder/builderNode.js"></script>
     <script type="text/javascript" src="bestchai-shiviz-5c13c5afbf19/js/builder/graphBuilder.js"></script>
@@ -545,7 +545,7 @@
 
     <script type="text/javascript" src="bestchai-shiviz-5c13c5afbf19/js/visualization/controller.js"></script>
     <script type="text/javascript" src="bestchai-shiviz-5c13c5afbf19/js/visualization/global.js"></script>
-    <script type="text/javascript" src="bestchai-shiviz-5c13c5afbf19/js/visualization/hostPermutation.js"></script>
+    <script type="text/javascript" src="hostPermutation.js"></script> <!-- Falcon's adaptation -->
     <script type="text/javascript" src="bestchai-shiviz-5c13c5afbf19/js/visualization/layout.js"></script>
     <script type="text/javascript" src="bestchai-shiviz-5c13c5afbf19/js/visualization/view.js"></script>
     <script type="text/javascript" src="bestchai-shiviz-5c13c5afbf19/js/visualization/visualEdge.js"></script>
