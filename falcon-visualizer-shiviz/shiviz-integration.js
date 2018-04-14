@@ -30,3 +30,17 @@ function toShivizLogEvents(log) {
   }
   return logEvents;
 }
+
+function mapThreadsToPids(log) {
+  const logObject  = JSON.parse(log);
+
+  var threadsToPid = {}
+
+  for (const i in logObject) {
+    const logEntry = logObject[i];
+
+    threadsToPid[logEntry.thread] = logEntry.pid;
+  }
+
+  return threadsToPid;
+}

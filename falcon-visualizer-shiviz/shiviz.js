@@ -2,13 +2,13 @@
  * Constructs a new Shiviz object. As Shiviz is a singleton, do not call this
  * constructor directly. This constructor is the "entry-point" for the
  * application. That is, this is the first function to run on Shiviz's startup.
- * 
+ *
  * @classdesc
- * 
+ *
  * Shiviz is the class responsible for "global" application level aspects of the
  * software. For example, this class is responsible for binding handlers to
  * shiviz's various global UI elements. Shiviz is a singleton
- * 
+ *
  * @constructor
  */
 function Shiviz() {
@@ -54,7 +54,7 @@ function Shiviz() {
                 handleResponse(response, e);
             }).fail(function() {
                 Shiviz.getInstance().handleException(new Exception("Unable to retrieve example log from:\n" + url + "\n\n Note: to use ShiViz example logs offline in Chrome, start Chrome with:\n $ open -n -a '/Applications/Google Chrome.app/' --args --allow-file-access-from-files", true));
-            });  
+            });
         });
     });
 
@@ -90,7 +90,7 @@ function Shiviz() {
     });
 
     $(".input #hostsortLength, .input #hostsortOrder").on("click", function() {
-        d3.selectAll("#vizContainer svg").remove();        
+        d3.selectAll("#vizContainer svg").remove();
     });
 
     // Listener for history popstate
@@ -103,54 +103,54 @@ function Shiviz() {
     $("#visualize").on("click", function() {
         context.go(2, true, true);
     });
-    
+
     // Clears the file input value whenever 'Choose File' is clicked
     $("#file").on("click", function() {
        this.value = "";
        $("#input").val("");
     });
-    
+
     $("#file").on("change", function(e) {
 
        var file = e.target.files[0];
        var reader = new FileReader();
-       
-       reader.onload = function(e) {   
+
+       reader.onload = function(e) {
           // Get the text string containing the file's data
           var text = reader.result;
-          // Split the text string by the new line character 
+          // Split the text string by the new line character
           // to get the first 2 lines as substrings in an array
 //        var lines = text.split("\n",2);
-          
+
           var defaultOrdering = "descending";
-         
-          // If the first line is not empty and not just white space, 
+
+          // If the first line is not empty and not just white space,
           // set it as the 'log parsing regular expression' value.
           // Otherwise, use the default log parsing regular expression
 //        if (lines[0].trim()) { $("#parser").val(lines[0]);}
 //        else { $("#parser").val(defaultParser);}
-          
+
           // Set the 'multiple executions regular expression delimiter' field
           // to the second line and set the ordering of the processes to descending
 //        $("#delimiter").val(lines[1].trim());
           $("#ordering").val(defaultOrdering);
-          
+
           // Get the position of the new line character that occurs at the end of the second line
 //        var startOfLog = text.indexOf("\n", (text.indexOf("\n")) + 1);
-          // The log will start at the position above + 1; 
+          // The log will start at the position above + 1;
           // fill in the log text area with the rest of the lines of the file
           $("#input").val(text);
-          
+
           context.resetView();
 //        $("#visualize").click();
-          
+
           // Clears the file input value whenever the log text area or regular expression
           // fields are modified
           $("#input").on("input", function() {
              $("#file").replaceWith($("#file").clone(true));
           });
        }
-       
+
        reader.readAsText(file);
     });
 
@@ -172,7 +172,7 @@ Shiviz.instance = null;
 
 /**
  * Gets the instance of the Shiviz singleton
- * 
+ *
  * @returns {Shiviz} The singleton instance
  */
 Shiviz.getInstance = function() {
@@ -252,23 +252,25 @@ Shiviz.prototype.visualize = function(log, /* regexpString, delimiterString, */ 
         const logEvents = toShivizLogEvents(log);
         console.timeEnd("toShivizLogEvents");
         const graph = new ModelGraph(logEvents);
-        
+
         hostPermutation.addGraph(graph);
         if (sortType == "order") {
             hostPermutation.addLogs(logEvents);
         }
-        hostPermutation.update();
+
+        const threadsToPid = mapThreadsToPids(log);
+        hostPermutation.update(threadsToPid);
 
         var views = [];
         views.push(new View(graph, hostPermutation, fileName));
 //      for(var i = 0; i < labels.length; i++) {
 //          var label = labels[i];
-//            
+//
 //          var graph = labelGraph[label];
 //          var view = new View(graph, hostPermutation, label);
 //          views.push(view);
 //      }
-        
+
         // initial properties for the diffButton
         $(".diffButton").hide();
         $(".diffButton").text("Show Differences");
@@ -320,7 +322,7 @@ Shiviz.prototype.visualize = function(log, /* regexpString, delimiterString, */ 
 /**
  * Navigates to tab index and pushes history state to browser so user can use
  * back button to navigate between tabs.
- * 
+ *
  * @param {Integer} index The index of the tab: 0 of home, 1 for input, 2 for
  *            visualization
  * @param {Boolean} store Whether or not to store the history state
@@ -376,14 +378,14 @@ Shiviz.prototype.go = function(index, store, force) {
  * <p>
  * Handles an {@link Exception} appropriately.
  * </p>
- * 
+ *
  * <p>
  * If the exception is {@link Exception#isUserFriendly user friendly}, its
  * message is displayed to the user in an error box. Otherwise, a generic error
  * message is presented to the user and the exception's message is logged to
  * console. If the argument is not an {@link Exception}, it is thrown.
  * </p>
- * 
+ *
  * @private
  * @param {Exception} err the Exception to handle
  */
