@@ -146,6 +146,17 @@ public enum TraceProcessor {
 
     }
 
+    public SocketEvent sndFromMessageId(String messageId) {
+         MyPair<SocketEvent, SocketEvent> pair = msgEvents.get(messageId);
+         if(pair != null) {
+             SocketEvent send = pair.getFirst();
+             if(send != null && send.getMessageId().equals(messageId)) {
+                 return send;
+             }
+         }
+         return null;
+    }
+
     public SyncEvent getCorrespondingUnlock(SyncEvent lockEvent) {
         String thread = lockEvent.getThread();
         List<MyPair<SyncEvent, SyncEvent>> pairs = lockEvents.get(lockEvent.getVariable());
