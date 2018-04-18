@@ -1,8 +1,7 @@
-function toShivizLogEvents(log) {
+function toShivizLogEvents(logObject) {
   var vectorClocks = {};
   var dependencies = {};
   var logEvents = [];
-  const logObject = JSON.parse(log);
 
   for (const i in logObject) {
     const logEntry = logObject[i];
@@ -31,9 +30,7 @@ function toShivizLogEvents(log) {
   return logEvents;
 }
 
-function mapThreadsToPids(log) {
-  const logObject  = JSON.parse(log);
-
+function mapThreadsToPids(logObject) {
   var threadsToPid = {}
 
   for (const i in logObject) {

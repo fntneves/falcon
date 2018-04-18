@@ -248,8 +248,10 @@ Shiviz.prototype.visualize = function(log, /* regexpString, delimiterString, */ 
 //              hostPermutation.addLogs(parser.getLogEvents(label));
 //          }
 //      });
+        const logObject = JSON.parse(log);
+
         console.time("toShivizLogEvents");
-        const logEvents = toShivizLogEvents(log);
+        const logEvents = toShivizLogEvents(logObject);
         console.timeEnd("toShivizLogEvents");
         const graph = new ModelGraph(logEvents);
 
@@ -258,7 +260,7 @@ Shiviz.prototype.visualize = function(log, /* regexpString, delimiterString, */ 
             hostPermutation.addLogs(logEvents);
         }
 
-        const threadsToPid = mapThreadsToPids(log);
+        const threadsToPid = mapThreadsToPids(logObject);
         hostPermutation.update(threadsToPid);
 
         var views = [];
