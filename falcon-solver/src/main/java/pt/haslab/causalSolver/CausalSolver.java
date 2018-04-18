@@ -236,12 +236,12 @@ public class CausalSolver {
         int counterFRK_STR = 0;
         solver.writeComment("FORK-START CONSTRAINTS");
         for(List<ThreadCreationEvent> l : trace.forkEvents.values()){
-            for(ThreadCreationEvent e : l){
-                String startEvent = "START_"+e.getChildThread();
-                String cnst = solver.cLt(e.toString(), startEvent);
+            for(ThreadCreationEvent forkevent : l){
+                String startEvent = "START_"+forkevent.getChildThread();
+                String cnst = solver.cLt(forkevent.toString(), startEvent);
                 solver.writeConstraint(solver.postNamedAssert(cnst,tagFRK_STR+counterFRK_STR++));
                 //set dependency
-                allEvents.get(startEvent).setDependency(String.valueOf(e.hashCode()));
+                allEvents.get(startEvent).setDependency(String.valueOf(forkevent.hashCode()));
             }
         }
     }
@@ -252,12 +252,13 @@ public class CausalSolver {
         String tagJOIN_END = "JE_";
         int counterJOIN_END = 0;
         for(List<ThreadCreationEvent> l : trace.joinEvents.values()){
-            for(ThreadCreationEvent e : l){
-                String endEvent = "END_"+e.getChildThread();
-                String cnst = solver.cLt(endEvent, e.toString());
+            for(ThreadCreationEvent joinEvent : l){
+                int endEventPos = trace.eventsPerThread.get(joinEvent.getChildThread()).size();
+                Event endEvent = trace.eventsPerThread.get(joinEvent.getChildThread()).get(endEventPos-1);//"END_"+joinEvent.getChildThread();
+                String cnst = solver.cLt(endEvent.toString(), joinEvent.toString());
                 solver.writeConstraint(solver.postNamedAssert(cnst,tagJOIN_END+counterJOIN_END++));
                 //set dependency
-                allEvents.get(endEvent).setDependency(String.valueOf(e.hashCode()));
+                allEvents.get(joinEvent.toString()).setDependency(String.valueOf(endEvent.hashCode()));
             }
         }
     }
