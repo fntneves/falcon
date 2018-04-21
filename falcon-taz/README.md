@@ -24,13 +24,13 @@ processor.eventsPerThread.get("T1");
 
 TAZ is able to parse execution events that contain (a subset of) the following JSON fields: 
 - `"type":string` indicates the event type. The current event types supported are: 
-- _Thread events:_ **START, END, CREATE, JOIN**
-- _Syncrhonization events:_ **LOCK, UNLOCK, WAIT, NOTIFY, NOTIFYALL**
-- _Inter-process communication events:_ **CONNECT, ACCEPT, SHUTDOWN, CLOSE, SND, RCV**
-- _Read-Write events:_ **R, W** 
-- _Logging events:_ **LOG**
+  - _Thread events:_ **START, END, CREATE, JOIN**
+  - _Synchronization events:_ **LOCK, UNLOCK, WAIT, NOTIFY, NOTIFYALL**
+  - _Inter-process communication events:_ **CONNECT, ACCEPT, SHUTDOWN, CLOSE, SND, RCV**
+  - _Read-Write events:_ **R, W** 
+  - _Logging events:_ **LOG**
 - `"timestamp":long` indicates the timestamp of the event. **[ALL]**
-- `"thread":string` indicates the name of the thread that executed the event. The string is assumed to have the format **tid@pid**, where **tid** is the thread idenfier (e.g. thread name or id) and **pid** is the parent process identifier (e.g. process pid, machine IP, etc). **[ALL]**
+- `"thread":string` indicates the name of the thread that executed the event. The string is assumed to have the format **tid@pid**, where **tid** is the thread identifier (e.g. thread name or id) and **pid** is the parent process identifier (e.g. process pid, machine IP, etc). **[ALL]**
 - `"child":string` indicates the name of the thread that was created by the thread that executed the create event. **[CREATE, JOIN]**
 - `"socket":string` is a string of format **min_ip:min_ip_port-max_ip:max_ip_port** representing the channel with which the socket is associated. This string is the concatenation of the IPs and corresponding ports in ascending order. **[CONNECT, ACCEPT, SHUTDOWN, CLOSE, SND, RCV]**
 - `"src":string` indicates the IP of the source node that sent the message. **[SND, RCV]**
@@ -46,10 +46,10 @@ TAZ is able to parse execution events that contain (a subset of) the following J
 
 Finally, TAZ supports the parsing of additional JSON fields, which are optional and typically set solely after applying the causality analysis:
 - `"id":long` is a unique identifier of the event. **[ALL]**
-- `"dependency":long` indicates the id of the event that *happens-before* this one. Dependency is `null` if the event has no causal depedencies. **[ALL]**
+- `"dependency":long` indicates the id of the event that *happens-before* this one. Dependency is `null` if the event has no causal dependencies. **[ALL]**
 - `"order":long` indicates the logical clock of the event. **[ALL]**
 
-#### JSON Fields per type of event
+### JSON Fields per type of event
 **START**
 - `"timestamp":long`
 - `"thread":string`
