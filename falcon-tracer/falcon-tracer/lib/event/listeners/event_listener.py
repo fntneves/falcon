@@ -1,3 +1,4 @@
+import sys
 import ctypes
 import time
 import socket
@@ -21,6 +22,7 @@ class EventListener():
                     time.sleep(self._sleep_ms / 1000.0)
             except KeyboardInterrupt:
                 self._exiting = True
+                print >> sys.stderr, 'Exiting...'
             self.bpf.kprobe_poll()
 
     def handle(self, cpu, data, size):

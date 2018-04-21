@@ -20,5 +20,4 @@ def main():
 if __name__ == '__main__':
     returned_value = main()
 
-    print "Exiting..."
     sys.exit(returned_value)
