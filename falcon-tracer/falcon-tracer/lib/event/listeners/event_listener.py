@@ -15,7 +15,7 @@ class EventListener():
         self.bpf["events"].open_perf_buffer(self.handle)
 
     def run(self): 
-        while 1:
+        while not self._exiting:
             try:
                 if not self._exiting:
                     time.sleep(self._sleep_ms / 1000.0)
