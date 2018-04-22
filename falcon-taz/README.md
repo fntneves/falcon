@@ -123,133 +123,133 @@ After parsing the JSON event trace, TAZ organizes the events into the following 
 
 ```java
 enum EventType {
-//thread events
-CREATE("CREATE"),
-START("START"),
-END("END"),
-JOIN("JOIN"),
-LOG("LOG"),
+    //thread events
+    CREATE("CREATE"),
+    START("START"),
+    END("END"),
+    JOIN("JOIN"),
+    LOG("LOG"),
 
-//access events
-READ("R"),
-WRITE("W"),
+    //access events
+    READ("R"),
+    WRITE("W"),
 
-//communication events
-SND("SND"),
-RCV("RCV"),
-CLOSE("CLOSE"),
-SHUTDOWN("SHUTDOWN"),
-CONNECT("CONNECT"),
-ACCEPT("ACCEPT"),
+    //communication events
+    SND("SND"),
+    RCV("RCV"),
+    CLOSE("CLOSE"),
+    SHUTDOWN("SHUTDOWN"),
+    CONNECT("CONNECT"),
+    ACCEPT("ACCEPT"),
 
-//message handlers
-HNDLBEG("HANDLERBEGIN"),
-HNDLEND("HANDLEREND"),
+    //message handlers
+    HNDLBEG("HANDLERBEGIN"),
+    HNDLEND("HANDLEREND"),
 
-// lock and unlock events
-LOCK("LOCK"),
-UNLOCK("UNLOCK"),
+    // lock and unlock events
+    LOCK("LOCK"),
+    UNLOCK("UNLOCK"),
 
-//thread synchronization events
-WAIT("WAIT"),
-NOTIFY("NOTIFY"),
-NOTIFYALL("NOTIFYALL");
+    //thread synchronization events
+    WAIT("WAIT"),
+    NOTIFY("NOTIFY"),
+    NOTIFYALL("NOTIFYALL");
 }
 ```
 **Event** is the general class from which all the other event sub-types inherit from. It is also used for LOG events.
 ```java
 class Event {
-String timestamp;
-String thread;
-EventType type;
-String dependency; //indicates the event that causally precedes this event
-int eventNumber; 
-String loc;
-Object data;
-int scheduleOrder; //order given by the solver according to the desired criteria
+    String timestamp;
+    String thread;
+    EventType type;
+    String dependency; //indicates the event that causally precedes this event
+    int eventNumber; 
+    String loc;
+    Object data;
+    int scheduleOrder; //order given by the solver according to the desired criteria
 }
 ```
 **ThreadCreationEvent** is used for CREATE and JOIN events. 
 ```java
 class ThreadCreationEvent extends Event {
-String child;
+    String child;
 }
 ```
 **SyncEvent** is used for LOCK, UNLOCK, NOTIFY, NOTIFYALL and WAIT events. 
 ```java
 class SyncEvent extends Event {
-String var;
+    String var;
 }
 ```
 **SocketEvent** is used for SND, RCV, CLOSE, SHUTDOWN, CONNECT, and ACCEPT events. 
 ```java
 class SocketEvent extends Event {
-enum SocketType { TCP, UDP };
+    enum SocketType { TCP, UDP };
 
-String socket;
-String src;
-int src_port;
-String dst;
-int dst_port;
-SocketType socket_type;
-int size;
-String message;
+    String socket;
+    String src;
+    int src_port;
+    String dst;
+    int dst_port;
+    SocketType socket_type;
+    int size;
+    String message;
 }
 ```
 **RWEvent** is used for READ and WRITE events. 
 ```java
 class RWEvent extends Event {
-String var;
+    String var;
 }
 ```
 **HandlerEvent** is used for message handler delimiters: HANDLERBEGIN and HANDLEREND. 
 ```java
 class HandlerEvent extends Event {
-super()
+    super()
 }
 ```
 
 ### Data Structures 
 
 ```java
-/* Map: message id -> pair of events (snd,rcv) */
-public Map<String, MyPair<SocketEvent, SocketEvent>> msgEvents;
+    /* Map: message id -> pair of events (snd,rcv) */
+    public Map<String, MyPair<SocketEvent, SocketEvent>> msgEvents;
 
-/* Map: socket id -> pair of events (connect,accept) */
-public Map<String, MyPair<SocketEvent, SocketEvent>> connAcptEvents;
+    /* Map: socket id -> pair of events (connect,accept) */
+    public Map<String, MyPair<SocketEvent, SocketEvent>> connAcptEvents;
 
-/* Map: socket id -> pair of events (close,shutdown) */
-public Map<String, MyPair<SocketEvent, SocketEvent>> closeShutEvents;
+    /* Map: socket id -> pair of events (close,shutdown) */
+    public Map<String, MyPair<SocketEvent, SocketEvent>> closeShutEvents;
 
-/* Map: thread -> list of all events in that thread's execution */
-public Map<String, List<Event>> eventsPerThread;
+    /* Map: thread -> list of all events in that thread's execution */
+    public Map<String, List<Event>> eventsPerThread;
 
-/* Map: thread -> list of thread's fork events */
-public Map<String, List<ThreadCreationEvent>> forkEvents;
+    /* Map: thread -> list of thread's fork events */
+    public Map<String, List<ThreadCreationEvent>> forkEvents;
 
-/* Map: thread -> list of thread's join events */
-public Map<String, List<ThreadCreationEvent>> joinEvents;
+    /* Map: thread -> list of thread's join events */
+    public Map<String, List<ThreadCreationEvent>> joinEvents;
 
-/* Map: string (event.toString) -> Event object */
-public HashMap<String, Event> eventNameToObject;
+    /* Map: string (event.toString) -> Event object */
+    public HashMap<String, Event> eventNameToObject;
 
-/* Map: mutex variable -> list of pairs of locks/unlocks */
-public Map<String, List<MyPair<SyncEvent, SyncEvent>>> lockEvents;
+    /* Map: mutex variable -> list of pairs of locks/unlocks */
+    public Map<String, List<MyPair<SyncEvent, SyncEvent>>> lockEvents;
 
-/* Map: variable -> list of reads to that variable by all threads */
-public Map<String, List<RWEvent>> readEvents;
+    /* Map: variable -> list of reads to that variable by all threads */
+    public Map<String, List<RWEvent>> readEvents;
 
-/* Map: variable -> list of writes to that variable by all threads */
-public Map<String, List<RWEvent>> writeEvents;
+    /* Map: variable -> list of writes to that variable by all threads */
+    public Map<String, List<RWEvent>> writeEvents;
 
-/* Map: condition variable -> list of thread's wait events */
-public Map<String, List<SyncEvent>> waitEvents;
+    /* Map: condition variable -> list of thread's wait events */
+    public Map<String, List<SyncEvent>> waitEvents;
 
-/* Map: condition variable -> list of thread's notify events */
-public Map<String, List<SyncEvent>> notifyEvents;
+    /* Map: condition variable -> list of thread's notify events */
+    public Map<String, List<SyncEvent>> notifyEvents;
 
-/* list with socket events ordered by timestamp */
-public TreeSet<Event> sortedByTimestamp;
+    /* list with socket events ordered by timestamp */
+    public TreeSet<Event> sortedByTimestamp;
 ```
 
 
