@@ -1,5 +1,5 @@
 import ctypes
-from .socket_event_data import SocketEventData
+from socket_event import SocketEvent
 
 TASK_COMM_LEN = 16 # linux/sched.h
 
@@ -18,7 +18,7 @@ class EventType():
 
 class DataUnion(ctypes.Union):
     _fields_ = [
-        ("socket", SocketEventData),
+        ("socket", SocketEvent),
     ]
 
 

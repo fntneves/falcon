@@ -4,6 +4,7 @@
 
 from setuptools import setup, find_packages
 
+EXCLUDE_FROM_PACKAGES = ['falcon.bin']
 
 with open('README.md') as f:
     readme = f.read()
@@ -15,12 +16,15 @@ setup(
     name='falcon-tracer',
     version='0.1.0',
     description='',
-    long_description=readme,
     author='Francisco Neves',
     author_email='francisco.t.neves@inesctec.pt',
     url='https://github.com/fntneves/falcon',
     license=license,
-    packages=find_packages(exclude=('tests', 'docs')),
-    include_package_data=True
+    packages=find_packages(exclude=EXCLUDE_FROM_PACKAGES),
+    include_package_data=True,
+    scripts=['falcon/bin/falcon-tracer.py'],
+    entry_points={'console_scripts': [
+        'falcon-tracer = falcon.core.tracer:main',
+    ]}
 )
 

@@ -1,24 +1,28 @@
 import socket
 import struct
 import json
-from ... import util
-from .. import EventType
+from falcon import util
+from falcon.core.events.types import EventType
 
-class PrinterSocketEventHandler():
-    def handle(self, cpu, event):
+class EventParser():
+    @staticmethod
+    def parse(cpu, event, size):
         if event.type / EventType.SOCKET == 1:
-            self.handle_socket_event(cpu, event)
+            return EventParser._parse_socket_event(cpu, event)
         elif event.type / EventType.PROCESS == 1:
-            self.handle_process_event(cpu, event)
+            return EventParser._parse_process_event(cpu, event)
 
-    def handle_socket_event(self, cpu, event):
+        return None
+
+    @staticmethod
+    def _parse_socket_event(cpu, event):
         sock_from = socket.inet_ntop(
             event.data.socket.family, struct.pack("I", event.data.socket.saddr))
         sock_to = socket.inet_ntop(
             event.data.socket.family, struct.pack("I", event.data.socket.daddr))
         sock_id = util.to_socket_id(event.data.socket.saddr, sock_from, event.data.socket.daddr,
                                     sock_to, event.data.socket.sport, event.data.socket.dport)
-
+        data = None
         if event.type == EventType.SOCKET_CONNECT:
             data = {
                 "type": "CONNECT",
@@ -31,8 +35,6 @@ class PrinterSocketEventHandler():
                 "dst": sock_to,
                 "dst_port": event.data.socket.dport,
             }
-
-            print json.dumps(data)
         elif event.type == EventType.SOCKET_ACCEPT:
             data = {
                 "type": "ACCEPT",
@@ -45,8 +47,6 @@ class PrinterSocketEventHandler():
                 "dst": sock_from,
                 "dst_port": event.data.socket.sport,
             }
-
-            print json.dumps(data)
         elif event.type == EventType.SOCKET_SEND:
             data = {
                 "type": "SND",
@@ -60,8 +60,6 @@ class PrinterSocketEventHandler():
                 "dst_port": event.data.socket.dport,
                 "size": event.extra.bytes,
             }
-
-            print json.dumps(data)
         elif event.type == EventType.SOCKET_RECEIVE:
             data = {
                 "type": "RCV",
@@ -76,34 +74,32 @@ class PrinterSocketEventHandler():
                 "size": event.extra.bytes,
             }
 
-            print json.dumps(data)
+        return data
 
-    def handle_process_event(self,cpu, event):
+    @staticmethod
+    def _parse_process_event(cpu, event):
+        data = None
+
         if event.type == EventType.PROCESS_CREATE:
-            data = {
-                "type": "CREATE",
-                "timestamp": event.timestamp,
-                "thread": str(event.pid),
-                "child": str(event.extra.child_pid),
-            }
-
-            print json.dumps(data)
-
-            data = {
-                "type": "START",
-                "timestamp": event.timestamp,
-                "thread": str(event.extra.child_pid),
-            }
-
-            print json.dumps(data)
+            data = [
+                {
+                    "type": "CREATE",
+                    "timestamp": event.timestamp,
+                    "thread": str(event.pid),
+                    "child": str(event.extra.child_pid),
+                },
+                {
+                    "type": "START",
+                    "timestamp": event.timestamp,
+                    "thread": str(event.extra.child_pid),
+                }
+            ]
         elif event.type == EventType.PROCESS_END:
             data = {
                 "type": "END",
                 "timestamp": event.timestamp,
                 "thread": str(event.pid),
             }
-
-            print json.dumps(data)
         elif event.type == EventType.PROCESS_JOIN:
             data = {
                 "type": "JOIN",
@@ -112,5 +108,4 @@ class PrinterSocketEventHandler():
                 "child": str(event.extra.child_pid),
             }
 
-            print json.dumps(data)
-        # TODO.
+        return data

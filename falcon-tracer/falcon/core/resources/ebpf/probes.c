@@ -152,7 +152,7 @@ void static emit_process_create(struct pt_regs *ctx, u64 timestamp, pid_t child_
 void static emit_process_end(struct pt_regs *ctx, u64 timestamp, pid_t pid)
 {
     trace_pids.delete(&pid);
-    
+
     struct event_info_t event = {
         .type = PROCESS_END,
         .pid = bpf_get_current_pid_tgid(),

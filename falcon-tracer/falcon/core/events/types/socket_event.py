@@ -1,6 +1,6 @@
 import ctypes
 
-class SocketEventData(ctypes.Structure):
+class SocketEvent(ctypes.Structure):
     _fields_ = [
         ("sport", ctypes.c_ushort),
         ("dport", ctypes.c_ushort),
