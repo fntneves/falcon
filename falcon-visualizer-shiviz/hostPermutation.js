@@ -306,3 +306,34 @@ LogOrderPermutation.prototype.update = function(threadsToPid) {
         }
     }
 };
+
+
+function ProcessPermutation(reverse) {
+  HostPermutation.call(this, reverse);
+}
+
+// LogOrderPermutation extends HostPermutation
+ProcessPermutation.prototype = Object.create(HostPermutation.prototype);
+ProcessPermutation.prototype.constructor = ProcessPermutation;
+
+ProcessPermutation.prototype.update = function(threadsToPid) {
+
+  HostPermutation.prototype.update.call(this, threadsToPid);
+
+  var pidsToThreads = {};
+
+  for (var thread in threadsToPid) {
+    var pid = threadsToPid[thread];
+    if (pidsToThreads[pid] == undefined) {
+      pidsToThreads[pid] = [];
+    }
+    pidsToThreads[pid].push(thread);
+  }
+
+  for (var pid in pidsToThreads) {
+    var threads = pidsToThreads[pid];
+    for (i in threads) {
+      this.hosts.push(threads[i]);
+    }
+  }
+}

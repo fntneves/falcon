@@ -232,6 +232,9 @@ Shiviz.prototype.visualize = function(log, /* regexpString, delimiterString, */ 
         else if (sortType == "order") {
             hostPermutation = new LogOrderPermutation(descending);
         }
+        else if (sortType == "process") {
+            hostPermutation = new ProcessPermutation(descending);
+        }
         else {
             throw new Exception("You must select a way to sort processes.", true);
         }
