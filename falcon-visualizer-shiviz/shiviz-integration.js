@@ -1,38 +1,53 @@
 function toShivizLogEvents(logObject) {
-  var vectorClocks = {};
+  var vectorTimestamps = {};
   var dependencies = {};
   var logEvents = [];
+  var graph = new ModelGraph();
 
   var fieldsGenerators = initFieldsGenerators();
 
   for (const i in logObject) {
     const logEntry = logObject[i];
-    let vectorClock = vectorClocks[logEntry.thread];
+    let vectorTimestamp = vectorTimestamps[logEntry.thread];
 
-    if (vectorClock == undefined) {
+    if (vectorTimestamp == undefined) {
       let clock = {};
       clock[logEntry.thread] = 0;
-      vectorClock = new VectorTimestamp(clock, logEntry.thread);
+      vectorTimestamp = new VectorTimestamp(clock, logEntry.thread);
     }
+
+    var parentNode = undefined;
 
     if (logEntry.dependency != null) {
-      const recvVectorClock = dependencies[logEntry.dependency];
-      vectorClock = vectorClock.update(recvVectorClock);
+      /*const recvVectorTimestamp = dependencies[logEntry.dependency];
+      vectorTimestamp = vectorTimestamp.update(recvVectorTimestamp);*/
+
+      parentNode = dependencies[logEntry.dependency];
+      const recvVectorTimestamp = parentNode.getFirstLogEvent().getVectorTimestamp();
+      vectorTimestamp = vectorTimestamp.update(recvVectorTimestamp);
     }
-    vectorClock = vectorClock.increment();
+
+    while (vectorTimestamp.getOwnTime() < logEntry.order) {
+      vectorTimestamp = vectorTimestamp.increment();
+    }
 
     /* VectorTimestamp is immutable */
-    vectorClocks[logEntry.thread] = vectorClock;
+    vectorTimestamps[logEntry.thread] = vectorTimestamp;
+
+    const fields = fieldsGenerators[logEntry.type](logEntry);
+    const logEvent = new LogEvent(logEntry.type, vectorTimestamp, i, fields);
+
+    const modelNode = graph.addLogEvent(logEvent, parentNode);
+    logEvents.push(logEvent);
 
     if (logEntry.type == "CONNECT" || logEntry.type == "SND") {
       /* VectorTimestamp is immutable - clone not needed */
-      dependencies[logEntry.id] = vectorClock;
+      dependencies[logEntry.id] = /*vectorTimestamp;*/ modelNode;
     }
 
-    const fields = fieldsGenerators[logEntry.type](logEntry);
-    logEvents.push(new LogEvent(logEntry.type, vectorClock, i, fields));
+    //logEvents.push(new LogEvent(logEntry.type, vectorTimestamp, i, fields));
   }
-  return logEvents;
+  return {"logEvents": logEvents, "graph": graph};
 }
 
 function initFieldsGenerators() {

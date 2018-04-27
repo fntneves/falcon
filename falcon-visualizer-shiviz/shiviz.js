@@ -251,9 +251,12 @@ Shiviz.prototype.visualize = function(log, /* regexpString, delimiterString, */ 
         const logObject = JSON.parse(log);
 
         console.time("toShivizLogEvents");
-        const logEvents = toShivizLogEvents(logObject);
+        //const logEvents = toShivizLogEvents(logObject);
+        const res = toShivizLogEvents(logObject);
+        const logEvents = res["logEvents"];
+        const graph = res["graph"];
         console.timeEnd("toShivizLogEvents");
-        const graph = new ModelGraph(logEvents);
+        //const graph = new ModelGraph(logEvents);
 
         hostPermutation.addGraph(graph);
         if (sortType == "order") {
