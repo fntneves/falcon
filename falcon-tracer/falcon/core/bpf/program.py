@@ -17,7 +17,7 @@ class BpfProgram():
         self._bpf = BPF(text=self._contents)
 
     def attach_probes(self):
-        # self._attach_socket_probes()
+        self._attach_socket_probes()
         self._attach_process_probes()
 
     def detach_probes(self):
