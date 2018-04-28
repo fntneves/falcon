@@ -14,7 +14,7 @@ import pkg_resources
 logging.config.fileConfig(pkg_resources.resource_filename('falcon', '../conf/logging.ini'))
 
 class Tracer:
-    def run(self, pid=0, nworkers=2):
+    def run(self, pid=0):
         program_filepath = pkg_resources.resource_filename('falcon', 'core/resources/ebpf/probes.c')
         signal.signal(signal.SIGINT, util.ignore_signal)
 
@@ -29,13 +29,10 @@ class Tracer:
                 handlers.append(handler)
 
             # Create pipes and workers
-            workers = []
             (output_stream, input_stream) = multiprocessing.Pipe()
-            for _ in xrange(1):
-                worker = events.EventProcessor(input_stream, handlers)
-                worker.daemon = True
-                workers.append(worker)
-                worker.start()
+            worker = events.EventProcessor(input_stream, handlers)
+            worker.daemon = True
+            worker.start()
 
             # Create event handler and listener worker
             bpf_event_handler = events.handling.BpfEventHandler(output_stream)
@@ -51,12 +48,9 @@ class Tracer:
             bpf_event_handler.shutdown()
 
             # Shutdown workers
-            print 'Attempting to shutdown workers...'
-            for worker in workers:
-                output_stream.send('exit')
-
-            for worker in workers:
-                worker.join()
+            print 'Attempting to shutdown worker...'
+            output_stream.send('exit')
+            worker.join()
 
             # Shutdown handlers
             print 'Attempting to shutdown handlers...'
@@ -80,12 +74,8 @@ def main():
 
     parser.add_argument('--pid', type=int, nargs='?', default=0,
                         help="filter events of the given PID. (0 = all PIDs)")
-    parser.add_argument('--workers', type=int, nargs='?', default=2,
-                        help="amount of workers to process events")
-
     args = parser.parse_args()
     sys.exit(Tracer().run(
-        nworkers=args.workers,
         pid=args.pid))
 
 if __name__ == '__main__':
