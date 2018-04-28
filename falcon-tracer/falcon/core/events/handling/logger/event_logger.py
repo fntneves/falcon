@@ -10,8 +10,9 @@ class EventLogger(BaseHandler):
         self._worker = None
 
     def boot(self):
-        self._output_stream = multiprocessing.JoinableQueue()
-        self._worker = LoggingWorker(self._output_stream)
+        (output_stream, input_stream) = multiprocessing.Pipe()
+        self._stream = output_stream
+        self._worker = LoggingWorker(input_stream)
         self._worker.daemon = True
         self._worker.start()
         self._booted = True
@@ -23,18 +24,18 @@ class EventLogger(BaseHandler):
         if event is None:
             return
 
-        if isinstance(event, list):
-            [self._output_stream.put(e) for e in event]
+        if not isinstance(event, list):
+            self._stream.send([event])
         else:
-            self._output_stream.put(event)
+            self._stream.send(event)
 
     def shutdown(self):
         if self._booted:
-            assert self._output_stream is not None
+            assert self._stream is not None
             assert self._worker is not None
         else:
             return
 
-        self._output_stream.join()
-        self._output_stream.put('exit')
+        self._stream.send('exit')
         self._worker.join()
+        self._stream.close()

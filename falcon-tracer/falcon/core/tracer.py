@@ -28,17 +28,17 @@ class Tracer:
                 handler.boot()
                 handlers.append(handler)
 
-            # Create joinable queue and workers
-            event_queue = multiprocessing.JoinableQueue()
+            # Create pipes and workers
             workers = []
-            for _ in xrange(nworkers):
-                worker = events.EventProcessor(event_queue, handlers)
+            (output_stream, input_stream) = multiprocessing.Pipe()
+            for _ in xrange(1):
+                worker = events.EventProcessor(input_stream, handlers)
                 worker.daemon = True
                 workers.append(worker)
                 worker.start()
 
             # Create event handler and listener worker
-            bpf_event_handler = events.handling.BpfEventHandler(event_queue)
+            bpf_event_handler = events.handling.BpfEventHandler(output_stream)
             bpf_event_handler.boot()
 
             bpf_listener_worker = events.bpf.BpfEventListener(program, bpf_event_handler)
@@ -51,11 +51,9 @@ class Tracer:
             bpf_event_handler.shutdown()
 
             # Shutdown workers
-            print 'Waiting for the remaining events to be processed...'
-            event_queue.join()
             print 'Attempting to shutdown workers...'
             for worker in workers:
-                event_queue.put('exit')
+                output_stream.send('exit')
 
             for worker in workers:
                 worker.join()
