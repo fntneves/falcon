@@ -7,10 +7,9 @@ import signal
 from falcon import util
 
 class BpfEventListener(multiprocessing.Process):
-    def __init__(self, bpf, handler, polling_interval=50):
+    def __init__(self, bpf, handler):
         self._bpf = bpf
         self._handler = handler
-        self._polling_interval = polling_interval
 
         super(BpfEventListener, self).__init__(name='bpf_listener')
 
@@ -19,6 +18,10 @@ class BpfEventListener(multiprocessing.Process):
         self._bpf.prepare()
         self._bpf.open_event_buffer('process_events', self.handle)
         self._bpf.open_event_buffer('socket_events', self.handle)
+
+        # Give some time to open buffers.
+        time.sleep(1)
+
         self._bpf.attach_probes()
 
         exit = [False]
@@ -31,7 +34,6 @@ class BpfEventListener(multiprocessing.Process):
 
         # Poll the kprobe events queue
         while not exit[0]:
-            self._polling_interval > 0 and time.sleep(self._polling_interval / 1000.0)
             self._bpf.bpf_instance().kprobe_poll()
 
         self._bpf.detach_probes()
