@@ -1,3 +1,1 @@
 include LICENSE
-recursive-include sysquery conf/*.ini
-recursive-include sysquery resources/ebpf/probes.c
