@@ -11,7 +11,7 @@ from falcon import util
 import pkg_resources
 
 # Configure logger
-logging.config.fileConfig(pkg_resources.resource_filename('falcon', 'conf/logging.ini'))
+logging.config.fileConfig(pkg_resources.resource_filename('falcon', '../conf/logging.ini'))
 
 class Tracer:
     def run(self, pid=0, nworkers=2):
