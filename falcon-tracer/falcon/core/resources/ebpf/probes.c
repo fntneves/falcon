@@ -59,7 +59,8 @@ BPF_HASH(sock_handlers, u32, struct sock *);
 BPF_HASH(trace_pids, u32, char);
 
 // This structure stores the socket events.
-BPF_PERF_OUTPUT(events);
+BPF_PERF_OUTPUT(process_events);
+BPF_PERF_OUTPUT(socket_events);
 
 // Helper functions.
 int static skip_pid(u32 pid) {
@@ -81,7 +82,7 @@ void static emit_socket_connect(struct pt_regs *ctx, u64 timestamp, struct socke
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
     event.socket = *skp;
 
-    events.perf_submit(ctx, &event, sizeof(event));
+    socket_events.perf_submit(ctx, &event, sizeof(event));
 }
 
 void static emit_socket_accept(struct pt_regs *ctx, u64 timestamp, struct socket_info_t *skp)
@@ -96,7 +97,7 @@ void static emit_socket_accept(struct pt_regs *ctx, u64 timestamp, struct socket
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
     event.socket = *skp;
 
-    events.perf_submit(ctx, &event, sizeof(event));
+    socket_events.perf_submit(ctx, &event, sizeof(event));
 }
 
 void static emit_socket_send(struct pt_regs *ctx, u64 timestamp, struct socket_info_t *skp, int bytes)
@@ -112,7 +113,7 @@ void static emit_socket_send(struct pt_regs *ctx, u64 timestamp, struct socket_i
     event.socket = *skp;
     event.bytes = bytes;
 
-    events.perf_submit(ctx, &event, sizeof(event));
+    socket_events.perf_submit(ctx, &event, sizeof(event));
 }
 
 void static emit_socket_receive(struct pt_regs *ctx, u64 timestamp, struct socket_info_t *skp, int bytes)
@@ -128,7 +129,7 @@ void static emit_socket_receive(struct pt_regs *ctx, u64 timestamp, struct socke
     event.socket = *skp;
     event.bytes = bytes;
 
-    events.perf_submit(ctx, &event, sizeof(event));
+    socket_events.perf_submit(ctx, &event, sizeof(event));
 }
 
 void static emit_process_create(struct pt_regs *ctx, u64 timestamp, pid_t child_pid)
@@ -146,7 +147,7 @@ void static emit_process_create(struct pt_regs *ctx, u64 timestamp, pid_t child_
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
     event.child_pid = child_pid;
 
-    events.perf_submit(ctx, &event, sizeof(event));
+    process_events.perf_submit(ctx, &event, sizeof(event));
 }
 
 void static emit_process_end(struct pt_regs *ctx, u64 timestamp, pid_t pid)
@@ -162,7 +163,7 @@ void static emit_process_end(struct pt_regs *ctx, u64 timestamp, pid_t pid)
     event.timestamp = timestamp;
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
 
-    events.perf_submit(ctx, &event, sizeof(event));
+    process_events.perf_submit(ctx, &event, sizeof(event));
 }
 
 void static emit_process_join(struct pt_regs *ctx, u64 timestamp, pid_t child_pid)
@@ -177,7 +178,7 @@ void static emit_process_join(struct pt_regs *ctx, u64 timestamp, pid_t child_pi
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
     event.child_pid = child_pid;
 
-    events.perf_submit(ctx, &event, sizeof(event));
+    process_events.perf_submit(ctx, &event, sizeof(event));
 }
 
 struct socket_info_t static socket_info(struct sock * skp) {

@@ -17,7 +17,8 @@ class BpfEventListener(multiprocessing.Process):
     def run(self):
 
         self._bpf.prepare()
-        self._bpf.open_event_buffer('events', self.handle)
+        self._bpf.open_event_buffer('process_events', self.handle)
+        self._bpf.open_event_buffer('socket_events', self.handle)
         self._bpf.attach_probes()
 
         exit = [False]
@@ -30,7 +31,7 @@ class BpfEventListener(multiprocessing.Process):
 
         # Poll the kprobe events queue
         while not exit[0]:
-            time.sleep(self._polling_interval / 1000.0)
+            self._polling_interval > 0 and time.sleep(self._polling_interval / 1000.0)
             self._bpf.bpf_instance().kprobe_poll()
 
         self._bpf.detach_probes()
