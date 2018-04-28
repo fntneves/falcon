@@ -16,12 +16,16 @@ class EventParser():
 
     @staticmethod
     def _parse_socket_event(cpu, event):
-        sock_from = socket.inet_ntop(
-            event.data.socket.family, struct.pack("I", event.data.socket.saddr))
-        sock_to = socket.inet_ntop(
-            event.data.socket.family, struct.pack("I", event.data.socket.daddr))
-        sock_id = util.to_socket_id(event.data.socket.saddr, sock_from, event.data.socket.daddr,
-                                    sock_to, event.data.socket.sport, event.data.socket.dport)
+        try:
+            sock_from = socket.inet_ntop(
+                event.data.socket.family, struct.pack("I", event.data.socket.saddr))
+            sock_to = socket.inet_ntop(
+                event.data.socket.family, struct.pack("I", event.data.socket.daddr))
+            sock_id = util.to_socket_id(event.data.socket.saddr, sock_from, event.data.socket.daddr,
+                                        sock_to, event.data.socket.sport, event.data.socket.dport)
+        except ValueError:
+            return None
+
         data = None
         if event.type == EventType.SOCKET_CONNECT:
             data = {
