@@ -13,9 +13,6 @@ class BpfEventHandler(BaseHandler):
         self._timer = None
         self._exit = False
 
-    def boot(self):
-        pass
-
     def handle(self, cpu, data, size):
         event = ctypes.cast(data, ctypes.POINTER(EventData)).contents
 
@@ -45,6 +42,3 @@ class BpfEventHandler(BaseHandler):
             if old_events is not None:
                 self._stream.send(old_events)
                 del old_events[:]
-
-    def shutdown(self):
-        pass

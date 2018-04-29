@@ -4,7 +4,6 @@ import socket
 import signal
 import json
 from types.event import EventData
-from falcon import util
 
 
 class EventProcessor(multiprocessing.Process):
@@ -15,7 +14,10 @@ class EventProcessor(multiprocessing.Process):
         super(EventProcessor, self).__init__(name='event_processor')
 
     def run(self):
-        signal.signal(signal.SIGINT, util.ignore_signal)
+        def ignore_signal(signum, frame):
+            pass
+
+        signal.signal(signal.SIGINT, ignore_signal)
         self._hostname = socket.getfqdn()
         exit = False
 

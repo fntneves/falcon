@@ -16,7 +16,10 @@ logging.config.fileConfig(pkg_resources.resource_filename('falcon', '../conf/log
 class Tracer:
     def run(self, pid=0):
         program_filepath = pkg_resources.resource_filename('falcon', 'core/resources/ebpf/probes.c')
-        signal.signal(signal.SIGINT, util.ignore_signal)
+
+        def ignore_signal(signum, frame):
+            pass
+        signal.signal(signal.SIGINT, ignore_signal)
 
         with open(program_filepath, 'r') as program_file:
             program = BpfProgram(text=program_file.read())
