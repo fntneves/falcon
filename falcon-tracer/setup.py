@@ -21,6 +21,9 @@ setup(
     url='https://github.com/fntneves/falcon',
     license=license,
     packages=find_packages(exclude=EXCLUDE_FROM_PACKAGES),
+    install_requires=[
+        'ujson',
+    ],
     include_package_data=True,
     scripts=['falcon/bin/falcon-tracer.py'],
     entry_points={'console_scripts': [

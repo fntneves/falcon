@@ -1,5 +1,5 @@
 import multiprocessing
-import json
+import ujson as json
 import signal
 from falcon import util
 

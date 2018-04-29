@@ -14,7 +14,6 @@ class BpfEventListener(multiprocessing.Process):
         super(BpfEventListener, self).__init__(name='bpf_listener')
 
     def run(self):
-
         self._bpf.prepare()
         self._bpf.open_event_buffer('process_events', self.handle)
         self._bpf.open_event_buffer('socket_events', self.handle)
@@ -22,6 +21,7 @@ class BpfEventListener(multiprocessing.Process):
         # Give some time to open buffers.
         time.sleep(1)
 
+        self._handler.start_flusher()
         self._bpf.attach_probes()
 
         exit = [False]
@@ -37,7 +37,7 @@ class BpfEventListener(multiprocessing.Process):
             self._bpf.bpf_instance().kprobe_poll()
 
         self._bpf.detach_probes()
-        self._handler.flush()
+        self._handler.stop_flusher()
 
         print 'BPF event listener {} is exiting...'.format(
             str(multiprocessing.current_process().pid))
