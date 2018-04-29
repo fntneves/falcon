@@ -25,38 +25,23 @@ class Tracer:
             program = BpfProgram(text=program_file.read())
             program.filter_pid(pid)
 
-            # Create and boot event handlers
+            logging.info('Creating and booting handlers...')
             handlers = []
             for handler in Tracer.get_handlers():
                 handler.boot()
                 handlers.append(handler)
 
-            # Create pipes and workers
-            (output_stream, input_stream) = multiprocessing.Pipe()
-            worker = events.EventProcessor(input_stream, handlers)
-            worker.daemon = True
-            worker.start()
-
-            # Create event handler and listener worker
-            bpf_event_handler = events.handling.BpfEventHandler(output_stream)
-            bpf_event_handler.boot()
-
-            bpf_listener_worker = events.bpf.BpfEventListener(program, bpf_event_handler)
+            logging.info('Starting eBPF listener...')
+            bpf_listener_worker = events.bpf.BpfEventListener(program, handlers[0])
             bpf_listener_worker.daemon = True
             bpf_listener_worker.start()
 
-            # Wait for the producer to finish
             while bpf_listener_worker.is_alive():
+                logging.info('Waiting for eBPF listener to exit...')
                 bpf_listener_worker.join()
-            bpf_event_handler.shutdown()
-
-            # Shutdown workers
-            print 'Attempting to shutdown worker...'
-            output_stream.send('exit')
-            worker.join()
 
             # Shutdown handlers
-            print 'Attempting to shutdown handlers...'
+            logging.info('Shutting handlers down...')
             for handler in handlers:
                 handler.shutdown()
 

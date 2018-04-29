@@ -4,7 +4,9 @@ import time
 import socket
 import multiprocessing
 import signal
+import logging
 from falcon import util
+from falcon.core.events.types.event import EventData
 
 class BpfEventListener(multiprocessing.Process):
     def __init__(self, bpf, handler):
@@ -21,13 +23,13 @@ class BpfEventListener(multiprocessing.Process):
         # Give some time to open buffers.
         time.sleep(1)
 
-        self._handler.start_flusher()
         self._bpf.attach_probes()
 
         exit = [False]
 
         def start_shutdown(sigum, frame):
-            print 'BPF event listener {} is interrupted...'.format(str(multiprocessing.current_process().pid))
+            logging.info('BPF event listener {} was interrupted...'.format(
+                str(multiprocessing.current_process().pid)))
             exit[0] = True
 
         signal.signal(signal.SIGINT, start_shutdown)
@@ -37,11 +39,12 @@ class BpfEventListener(multiprocessing.Process):
             self._bpf.bpf_instance().kprobe_poll()
 
         self._bpf.detach_probes()
-        self._handler.stop_flusher()
 
-        print 'BPF event listener {} is exiting...'.format(
-            str(multiprocessing.current_process().pid))
+        logging.info('BPF event listener {} is exiting...'.format(
+            str(multiprocessing.current_process().pid)))
 
     def handle(self, cpu, data, size):
-        self._handler.handle(cpu, data, size)
+        event = ctypes.cast(data, ctypes.POINTER(EventData)).contents
+
+        self._handler.handle(cpu, event, size)
 
