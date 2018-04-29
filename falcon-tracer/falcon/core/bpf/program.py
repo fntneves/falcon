@@ -8,7 +8,7 @@ class BpfProgram():
         self._contents = text
         self._bpf = None
         self._probes = None
-        self._perf_buffer_size = 8192
+        self._perf_buffer_size = 64 * 1024
 
     def bpf_instance(self):
         return self._bpf
