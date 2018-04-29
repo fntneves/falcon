@@ -36,11 +36,15 @@ class BpfEventHandler(BaseHandler):
             time.sleep(5.0)
 
             self._lock.acquire()
+            old_events = None
             if len(self._events) > 0:
-                self._stream.send(self._events)
-                del self._events[:]
+                old_events = self._events
                 self._events = []
             self._lock.release()
+
+            if old_events is not None:
+                self._stream.send(old_events)
+                del old_events[:]
 
     def shutdown(self):
         pass
