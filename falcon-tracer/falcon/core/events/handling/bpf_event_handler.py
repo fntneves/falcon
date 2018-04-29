@@ -16,9 +16,12 @@ class BpfEventHandler(BaseHandler):
         self._events.append((cpu, event, size))
 
         if len(self._events) > 10000:
-            self._stream.send(self._events)
-            del self._events[:]
-            self._events = []
+            self.flush()
+
+    def flush(self):
+        self._stream.send(self._events)
+        del self._events[:]
+        self._events = []
 
     def shutdown(self):
-        self._stream.send(self._events)
+        pass

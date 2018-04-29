@@ -37,6 +37,7 @@ class BpfEventListener(multiprocessing.Process):
             self._bpf.bpf_instance().kprobe_poll()
 
         self._bpf.detach_probes()
+        self._handler.flush()
 
         print 'BPF event listener {} is exiting...'.format(
             str(multiprocessing.current_process().pid))
