@@ -5,7 +5,6 @@ const topPadding = 20;
 const threadPadding = 150;
 const clockPadding = 50;
 const eventRadius = 10;
-const enablePayload = true;
 const drawThreadTimeline = Symbol('drawThreadTimeline');
 const drawClockEvents = Symbol('drawClockEvents');
 const calculateThreadPosition = Symbol('calculateThreadPosition');
@@ -114,12 +113,7 @@ export default class TraceDrawer {
         // nextSubLabelOffset += eventLabelChannelId.bbox().height;
       // }
 
-      if (enablePayload && event instanceof SocketEvent && event.data.data.payload !== undefined) {
-        const titlePayload =
-      eventGroup.element('title').words(JSON.stringify(event.data.data.payload));
-        titlePayload.addTo(eventGroup);
-      }
-
+    
       if (event.type === 'LOG') {
         const titleMessage = eventGroup.element('title').words(event.data.data.message);
         titleMessage.addTo(eventGroup);
