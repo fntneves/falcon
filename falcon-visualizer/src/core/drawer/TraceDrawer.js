@@ -1,5 +1,4 @@
 import SVG from 'svg.js';
-import SocketEvent from '../event/SocketEvent';
 
 const topPadding = 20;
 const threadPadding = 150;
@@ -112,12 +111,6 @@ export default class TraceDrawer {
         // nextSubLabelOffset + ((eventRadius + eventLabelChannelId.font('size')) / 2));
         // nextSubLabelOffset += eventLabelChannelId.bbox().height;
       // }
-
-      if (event instanceof SocketEvent && event.data.data.payload !== undefined) {
-        const titlePayload =
-      eventGroup.element('title').words(JSON.stringify(event.data.data.payload));
-        titlePayload.addTo(eventGroup);
-      }
 
       if (event.type === 'LOG') {
         const titleMessage = eventGroup.element('title').words(event.data.data.message);
