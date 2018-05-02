@@ -30,6 +30,25 @@ public class CausalSolver {
     public static Solver solver;
     public static HashMap<String, Event> allEvents; //map: string (event.toString) -> Event object
 
+    //command line config
+    public enum Parameters {
+        EVENT_FILE("event-file"),
+        SOLVER("solver-bin"),
+        OUTPUT("output-file"),
+        GOAL_TS("use-timestamp");
+
+        private final String desc;
+
+        private Parameters(String l){
+            this.desc = l;
+        }
+
+        @Override
+        public String toString() {
+            return this.desc;
+        }
+    }
+
     public static void main(String args[]) {
         allEvents = new HashMap<String, Event>();
 
@@ -40,8 +59,11 @@ public class CausalSolver {
             if (is != null) {
                 props.load(is);
 
+                //parse configuration from command line
+                parseParameters(args);
+
                 //populate data structures
-                String traceFile = props.getProperty("event-file");
+                String traceFile = props.getProperty(Parameters.EVENT_FILE.toString());
                 trace = TraceProcessor.INSTANCE;
                 trace.loadEventTrace(traceFile);
                 Stats.numEventsTrace = trace.getNumberOfEvents();
@@ -77,7 +99,7 @@ public class CausalSolver {
     }
 
     public static void initSolver() throws IOException {
-        String solverPath = props.getProperty("solver-bin"); //set up solver path
+        String solverPath = props.getProperty(Parameters.SOLVER.toString()); //set up solver path
         System.out.println("[CausalSolver] Init solver: "+solverPath);
         solver = Z3Solver.getInstance();
         solver.init(solverPath);
@@ -90,7 +112,7 @@ public class CausalSolver {
         genJoinExitConstraints();
         genLockingConstraints();
         genWaitNotifyConstraints();
-        boolean useTimestamps = props.getProperty("use-timestamp").equals("true");
+        boolean useTimestamps = props.getProperty(Parameters.GOAL_TS.toString()).equals("true");
         if(useTimestamps){
             genTimestampConstraints();
         }
@@ -315,6 +337,41 @@ public class CausalSolver {
         solver.writeConstraint(solver.cMinimize(solver.cSummation(allEvents.keySet())));
     }
 
+    public static void parseParameters(String[] args){
+        String option = "--";
+
+        for(int i = 0; i < args.length; i++){
+            String flag = args[i];
+            String value = (i + 1 < args.length) ? args[++i] : "";
+            if(flag.equals(option+Parameters.EVENT_FILE)){
+                props.setProperty(Parameters.EVENT_FILE.toString(), value);
+            }
+            else if(flag.equals(option+Parameters.SOLVER)){
+                props.setProperty(Parameters.SOLVER.toString(), value);
+            }
+            else if(flag.equals(option+Parameters.OUTPUT)){
+                props.setProperty(Parameters.OUTPUT.toString(), value);
+            }
+            else if(flag.equals(option+Parameters.GOAL_TS)){
+                props.setProperty(Parameters.GOAL_TS.toString(), value);
+            }
+            else{ //error - unkown input
+                System.err.print("Wrong input: "+flag);
+                System.err.println("\nOptions:");
+                System.err.println("--event-file <path-to-event-file>\tPath to the event trace in JSON format.");
+                System.err.println("--output-file <path-to-output-file>\tSave the global, causally-ordered trace produced by Falcon.");
+                System.err.println("--solver-bin <path-to-solver-bin>\tPath to the Z3 binary.");
+                System.err.println("--use-timestamp <true/false>\t\tSolve the model according to the original event timestamps (=true) or to minimize the logical clocks (=false).");
+
+                System.exit(1);
+            }
+        }
+    }
+
+
+    /**
+     * Augment each event with the corresponding logical clock output by Z3.
+     */
     public static void parseSolverOutput(){
         String output = solver.readOutputLine();
         while(!output.equals("") && !output.equals(")")){
@@ -361,10 +418,13 @@ public class CausalSolver {
         }
     }
 
+    /**
+     * Generate global ordered trace in JSON format
+     */
     public static void outputCausalOrderJSON(){
         TreeSet<Event> orderedEvents = new TreeSet<Event>(allEvents.values());
         try {
-            FileWriter outfile = new FileWriter(new File(props.getProperty("output-file")));
+            FileWriter outfile = new FileWriter(new File(props.getProperty(Parameters.OUTPUT.toString())));
             JSONArray jsonEvents = new JSONArray();
             for (Event e : orderedEvents) {
                 JSONObject json = e.toJSONObject();
