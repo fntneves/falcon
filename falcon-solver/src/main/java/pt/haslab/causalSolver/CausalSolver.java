@@ -337,6 +337,10 @@ public class CausalSolver {
         solver.writeConstraint(solver.cMinimize(solver.cSummation(allEvents.keySet())));
     }
 
+    /**
+     * Parse the configuation parameters
+     * @param args
+     */
     public static void parseParameters(String[] args){
         String option = "--";
 
