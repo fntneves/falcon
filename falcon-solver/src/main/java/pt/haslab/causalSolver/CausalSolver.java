@@ -7,10 +7,27 @@ import pt.haslab.causalSolver.solver.Solver;
 import pt.haslab.causalSolver.solver.Z3Solver;
 import pt.haslab.causalSolver.stats.Stats;
 import pt.haslab.taz.TraceProcessor;
-import pt.haslab.taz.events.*;
+import pt.haslab.taz.events.Event;
+import pt.haslab.taz.events.EventType;
+import pt.haslab.taz.events.MyPair;
+import pt.haslab.taz.events.SocketEvent;
+import pt.haslab.taz.events.SyncEvent;
+import pt.haslab.taz.events.ThreadCreationEvent;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Created by nunomachado on 30/03/17.
@@ -59,7 +76,6 @@ public class CausalSolver {
             if (is != null) {
                 props.load(is);
 
-                //parse configuration from command line
                 parseParameters(args);
 
                 //populate data structures
