@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>pt.haslab</groupId>
-    <artifactId>causalSolver</artifactId>
+    <artifactId>falcon-solver</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <dependencies>

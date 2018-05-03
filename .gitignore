@@ -103,4 +103,5 @@ fabric.properties
 
 ### User stuff
 target/
+falcon-solver/src/main/resources/causalSolver.properties
 # End of https://www.gitignore.io/api/intellij
