@@ -1,11 +1,11 @@
 /**
  * Constructs a Controller to control the given {@link Global}
- * 
+ *
  * @classdesc
- * 
+ *
  * The Controller manipulates the model on user input. It is responsible for
  * maintaining {@link Transformation}s.
- * 
+ *
  * @constructor
  */
 function Controller(global) {
@@ -64,13 +64,13 @@ function Controller(global) {
 
         $(".dialog").hide();
         // remove the scrolling behavior for hiding/showing dialog boxes once we click outside the box
-        $(window).unbind("scroll"); 
-        
+        $(window).unbind("scroll");
+
         d3.select("circle.sel").each(function(d) {
             $(this).remove();
             d.setSelected(false);
         });
-        
+
         d3.select("polygon.sel").each(function(d) {
             $(this).remove();
             d.setSelected(false);
@@ -97,12 +97,12 @@ function Controller(global) {
 
             // Hide host
             case "hide":
-                self.hideHost(e);
+                self.hideHost(e.getHost());
                 break;
-            
+
             // Hide process
             case "hide-proc":
-                self.hideProc(e);
+                self.hideProc(e.getNode().pid);
                 break;
 
             // Unhide host
@@ -110,20 +110,25 @@ function Controller(global) {
                 self.unhideHost(e);
                 break;
 
+            // Unhide process
+            case "unhide-proc":
+                self.unhideProc(e);
+                break;
+
             // Highlight host
             case "filter":
-                self.toggleHostHighlight(e);
+                self.toggleHostHighlight(e.getHost());
                 break;
 
             // Toggle collapse
             case "collapse":
-                self.toggleCollapseNode(e);
+                self.toggleCollapseNode(e.getNode());
                 break;
         }
         self.bindScroll();
     });
-    
-    $(".diffButton").unbind().click(function() {    
+
+    $(".diffButton").unbind().click(function() {
         // remove the scrolling behavior for hiding/showing dialog boxes when the diff button is clicked
         $(window).unbind("scroll");
         $(this).toggleClass("fade");
@@ -132,7 +137,7 @@ function Controller(global) {
             $(this).text("Hide Differences");
             global.setShowDiff(true);
             self.showDiff();
-        }           
+        }
         else {
             $(this).text("Show Differences");
             global.setShowDiff(false);
@@ -141,7 +146,7 @@ function Controller(global) {
         self.bindScroll();
     });
 
-    $(".pairwiseButton").unbind().click(function() {    
+    $(".pairwiseButton").unbind().click(function() {
         // remove the scrolling behavior for hiding/showing dialog boxes when the pairwise button is clicked
         $(window).unbind("scroll");
         $(this).toggleClass("fade");
@@ -153,7 +158,7 @@ function Controller(global) {
             if ($("#clusterNumProcess").is(":checked") || $("#clusterComparison").is(":checked")) {
                 global.drawClusterIcons();
             }
-        }           
+        }
         else {
             $(this).text("Pairwise");
             // Remove the right view arrow when viewing graphs individually
@@ -240,7 +245,7 @@ function Controller(global) {
 /**
  * Highlights a motif across all {@link View}s using the provided motif finder.
  * The visualization is then re-drawn.
- * 
+ *
  * @param {MotifFinder} motifFinder
  * @see {@link HighlightMotifTransformation}
  */
@@ -256,7 +261,7 @@ Controller.prototype.highlightMotif = function(motifFinder) {
 /**
  * Clears highlighting of motifs across all {@link View}s. The visualization is
  * then re-drawn
- * 
+ *
  * @see {@link HighlightMotifTransformation}
  */
 Controller.prototype.clearHighlight = function() {
@@ -270,7 +275,7 @@ Controller.prototype.clearHighlight = function() {
 
 /**
  * Determines if a motif is being highlighted in any of the {@link View}s.
- * 
+ *
  * @returns {Boolean} True if a motif is being highlighted
  */
 Controller.prototype.hasHighlight = function() {
@@ -300,7 +305,7 @@ Controller.prototype.hasHighlightInView = function(view) {
 /**
  * Hides the specified host across all {@link View}s. The visualization is then
  * re-drawn.
- * 
+ *
  * @param {String} host The host to hide.
  */
 Controller.prototype.hideHost = function(host) {
@@ -313,30 +318,17 @@ Controller.prototype.hideHost = function(host) {
     this.bindScroll();
 };
 
-// TODO: Replace with implementation that uses pidToHosts map instead of traversing the dummy nodes
-Controller.prototype.hideProc = function(host) {
-    console.log("Entered hideProc");
-
+Controller.prototype.hideProc = function(pid) {
     $(window).unbind("scroll");
 
-    const tidAndPid = host.split("@", 2);
-    const pid = (tidAndPid.length == 2) ? tidAndPid[1] : tidAndPid[0];
-    
-    console.log("tidAndPid = " + tidAndPid + "; pid = " + pid);
     this.global.getViews().forEach(function(view) {
         const transformer = view.getTransformer();
-/*
-        view.getModel().getDummyNodes().forEach(function(dummyNode) {
-            const dummyNodePid = dummyNode.getPid();
 
-            console.log("Dummy pid " + dummyNodePid);
-            if (dummyNodePid === pid && dummyNode.isHead()) {
-                transformer.hideHost(dummyNode.getHost());
-            }
+        view.getModel().pidsToHosts[pid].forEach(function(host) {
+          transformer.hideHost(host);
         });
-*/
     });
-    
+
     this.global.drawAll();
     this.bindScroll();
 };
@@ -344,7 +336,7 @@ Controller.prototype.hideProc = function(host) {
 /**
  * Unhides the specified host across all {@link View}s. The visualization is
  * then re-drawn.
- * 
+ *
  * @param {String} host The host to unhide.
  */
 Controller.prototype.unhideHost = function(host) {
@@ -357,10 +349,35 @@ Controller.prototype.unhideHost = function(host) {
     this.bindScroll();
 };
 
+Controller.prototype.unhideProc = function(clickedHost) {
+    $(window).unbind("scroll");
+
+    this.global.getViews().forEach(function(view) {
+        const transformer = view.getTransformer();
+
+        const model = view.getModel();
+
+        var pid;
+
+        for (pid in model.pidsToHosts) {
+            if (model.pidsToHosts[pid].includes(clickedHost)) {
+                break;
+            }
+        }
+
+        view.getModel().pidsToHosts[pid].forEach(function(host) {
+          transformer.unhideHost(host);
+        });
+    });
+
+    this.global.drawAll();
+    this.bindScroll();
+};
+
 /**
  * Toggles the highlighting of a host across all {@link View}s. The
  * visualization is then re-drawn.
- * 
+ *
  * @param {String} host The host whose highlighting is to be toggled
  */
 Controller.prototype.toggleHostHighlight = function(host) {
@@ -374,7 +391,7 @@ Controller.prototype.toggleHostHighlight = function(host) {
 
 /**
  * Toggles the collapsing of a node.
- * 
+ *
  * @param {ModelNode} node
  */
 Controller.prototype.toggleCollapseNode = function(node) {
@@ -410,7 +427,7 @@ Controller.prototype.showDiff = function() {
  * and graphs are displayed pairwise
  * @see {@link ShowDiffTransformation}
  */
- 
+
 Controller.prototype.hideDiff = function() {
     var views = this.global.getActiveViews();
     var viewL = views[0];
@@ -423,12 +440,12 @@ Controller.prototype.hideDiff = function() {
 
 /**
  * Binds events to the nodes.
- * 
+ *
  * <ul>
  * <li>mouseover: highlights node & log line, shows info in sidebar</li>
  * <li>shift + click: toggles collapsed node</li>
  * </ul>
- * 
+ *
  * @param {d3.selection} nodes A D3 selection of the nodes.
  */
 Controller.prototype.bindNodes = function(nodes) {
@@ -493,7 +510,7 @@ Controller.prototype.bindNodes = function(nodes) {
         // Only highlight log lines on the Log Lines tab
 
         if ($(".leftTabLinks li").first().hasClass("default")) {
-            
+
             $line.addClass("focus").css({
                 "background": "transparent",
                 "color": "white",
@@ -529,12 +546,12 @@ Controller.prototype.bindNodes = function(nodes) {
 
 /**
  * Binds events to hosts
- * 
+ *
  * <ul>
  * <li>double-click: Hides the host</li>
  * <li>shift+double-click: Highlights the host</li>
  * </ul>
- * 
+ *
  * @param {d3.selection} hosts A D3 selection of the host rects
  */
 Controller.prototype.bindHosts = function(hosts) {
@@ -564,7 +581,7 @@ Controller.prototype.bindHosts = function(hosts) {
 
 /**
  * Binds node highlighting to mouseover event on log lines
- * 
+ *
  * @param {jQuery.selection} lines A jQuery selection of the log lines
  */
 Controller.prototype.bindLines = function(lines) {
@@ -581,7 +598,7 @@ Controller.prototype.bindLines = function(lines) {
 
 /**
  * Binds unhide to double-click event on hidden hosts.
- * 
+ *
  * @param {String} host The host that is hidden
  * @param {d3.selection} node The visualNode that was hidden
  */
@@ -599,7 +616,7 @@ Controller.prototype.bindHiddenHosts = function(host, node) {
 
 /**
  * Ensures things are positioned correctly on scroll
- * 
+ *
  * @private
  * @param {Event} e The event object JQuery passes to the handler
  */
@@ -619,7 +636,7 @@ Controller.prototype.onScroll = function(e) {
 
 /**
  * Shows the node selection popup dialog
- * 
+ *
  * @param {VisualNode} e The VisualNode that is selected
  * @param {Number} type The type of node: 0 for regular, 1 for host, 2 for
  *            hidden host
@@ -633,7 +650,7 @@ Controller.prototype.showDialog = function(e, type, elem) {
         $(this).remove();
         d.setSelected(false);
     });
-    
+
     d3.select("polygon.sel").each(function(d) {
         $(this).remove();
         d.setSelected(false);
@@ -641,7 +658,7 @@ Controller.prototype.showDialog = function(e, type, elem) {
 
     // Highlight the node with an appropriate outline
     if (!type) {
-        
+
         e.setSelected(true);
         var id = e.getId();
         var views = this.global.getActiveViews();
@@ -650,7 +667,7 @@ Controller.prototype.showDialog = function(e, type, elem) {
         if (this.global.getShowDiff()) {
           var uniqueEventsL = views[0].getTransformer().getUniqueEvents();
           var uniqueEventsR = views[1].getTransformer().getUniqueEvents();
-        
+
           // If this node is not a unique event, highlight the node with a circular outline
           if (uniqueEventsL.indexOf(id) == -1 && uniqueEventsR.indexOf(id) == -1) {
             var selcirc = d3.select("#node" + e.getId()).insert("circle", "circle");
@@ -718,20 +735,20 @@ Controller.prototype.showDialog = function(e, type, elem) {
     // Set fill color, etc.
     if (type) {
         const rectOffset = $rect.offset().top;
-        const scrollOffset = $(window).scrollTop(); 
+        const scrollOffset = $(window).scrollTop();
         const hostAdjust = Global.HOST_SIZE / 2;
         const top = rectOffset - scrollOffset + hostAdjust;
         $dialog.css({
             "top": top,
             "background": type == 2 ? $rect.css("fill") : e.getFillColor(),
             "border-color": type == 2 ? $rect.css("fill") : e.getFillColor()
-        }).data("element", type == 2 ? e : e.getHost());
+        }).data("element", e);
     } else {
         $dialog.css({
             "top": e.getY() + $svg.offset().top,
             "background": e.getFillColor(),
             "border-color": e.getFillColor()
-        }).data("element", e.getNode());
+        }).data("element", e);
     }
 
     // Set class "host" if host (hidden or not) is selected
@@ -821,9 +838,9 @@ Controller.prototype.showDialog = function(e, type, elem) {
     }
 
     // The dialogtop doesn't change while scrolling, but it does get set
-    // to 0 by JS when hidden, so must keep track of its location 
+    // to 0 by JS when hidden, so must keep track of its location
     const visibleDialogTop = $dialog.offset().top;
-    
+
     $(window).scroll(function() {
         toggleDialogVisibility();
         controller.toggleGreyHostNodes();
@@ -859,7 +876,7 @@ Controller.prototype.toggleGreyHostNodes = function () {
             view.setGreyHost(visualNode, isScrolledPast);
         }
     }
- 
+
     // VisualNode => Boolean
     function isAboveHostbar(visualNode) {
         const $circle = visualNode.getSVG().find("circle");
@@ -895,4 +912,3 @@ function getHostbarBottomOffset() {
         return 0;
     }
 }
-

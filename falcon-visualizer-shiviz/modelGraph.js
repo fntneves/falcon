@@ -2,6 +2,8 @@
 function ModelGraph() {
 
   AbstractGraph.call(this);
+
+  this.pidsToHosts = {};
 }
 
 /**
@@ -284,12 +286,13 @@ ModelGraph.prototype.constructor = ModelGraph;
 
 ModelGraph.prototype.addLogEvent = function(logEvent, parentModelNode) {
   var host = logEvent.getHost();
-  var node = new ModelNode([logEvent]);
+  var pid = logEvent.pid;
+  var node = new ModelNode([logEvent], pid);
   node.host = host;
   node.graph = this;
 
   if (this.hosts.includes(host) == false) {
-    initHost(this, host);
+    initHost(this, host, pid);
   }
 
   var lastNode = this.hostToTail[host];
@@ -302,15 +305,20 @@ ModelGraph.prototype.addLogEvent = function(logEvent, parentModelNode) {
   return node;
 
 
-  function initHost(mg, host) {
+  function initHost(mg, host, pid) {
     mg.hosts.push(host);
 
-    var head = new ModelNode([]);
+    if (mg.pidsToHosts[pid] == undefined) {
+      mg.pidsToHosts[pid] = [];
+    }
+    mg.pidsToHosts[pid].push(host);
+
+    var head = new ModelNode([], pid);
     head.isHeadInner = true;
     head.host = host;
     head.graph = mg;
 
-    var tail = new ModelNode([]);
+    var tail = new ModelNode([], pid);
     tail.isTailInner = true;
     tail.host = host;
     tail.graph = mg;
@@ -343,6 +351,7 @@ ModelGraph.prototype.clone = function() {
         var node = allNodes[i];
         var newNode = new ModelNode(node.getLogEvents());
         newNode.host = node.getHost();
+        newNode.pid = node.pid;
         newNode.graph = newGraph;
         newNode.isHeadInner = node.isHeadInner;
         newNode.isTailInner = node.isTailInner;
