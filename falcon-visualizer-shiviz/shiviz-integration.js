@@ -36,6 +36,7 @@ function toShivizLogEvents(logObject) {
 
     const fields = fieldsGenerators[logEntry.type](logEntry);
     const logEvent = new LogEvent(logEntry.type, vectorTimestamp, i, fields);
+    logEvent.pid = logEntry.pid;
 
     const modelNode = graph.addLogEvent(logEvent, parentNode);
     logEvents.push(logEvent);
@@ -109,7 +110,7 @@ function logFieldsGenerator(logEntry) {
 
   return fields;
 }
-// ----------
+/* ----------
 
 function mapThreadsToPids(logObject) {
   var threadsToPid = {}
@@ -121,4 +122,4 @@ function mapThreadsToPids(logObject) {
   }
 
   return threadsToPid;
-}
+}*/

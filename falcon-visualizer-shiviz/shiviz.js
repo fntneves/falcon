@@ -266,8 +266,7 @@ Shiviz.prototype.visualize = function(log, /* regexpString, delimiterString, */ 
             hostPermutation.addLogs(logEvents);
         }
 
-        const threadsToPid = mapThreadsToPids(logObject);
-        hostPermutation.update(threadsToPid);
+        hostPermutation.update();
 
         var views = [];
         views.push(new View(graph, hostPermutation, fileName));

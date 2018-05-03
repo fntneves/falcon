@@ -164,24 +164,24 @@ HostPermutation.prototype.getHostColors = function() {
  *
  * @abstract
  */
-HostPermutation.prototype.update = function(threadsToPid) {
+HostPermutation.prototype.update = function() {
 
     this.hasUpdated = true;
 
+    var pidsColors = {}
+
     for (var i = 0; i < this.graphs.length; i++) {
         var graph = this.graphs[i];
-        var hosts = graph.getHosts();
+        var pidsToHosts = graph.pidsToHosts;
 
-        var pidsColors = {}
-
-        for (var j = 0; j < hosts.length; j++) {
-            var host = hosts[j];
-            if (!this.hostColors[host]) {
-                var threadPid = threadsToPid[host];
-                var pidColor = pidsColors[threadPid];
-                if (pidColor == undefined) {
-                  pidColor = pidsColors[threadPid] = this.color(threadPid);
-                }
+        for (pid in pidsToHosts) {
+            var pidColor = pidsColors[pid];
+            if (pidColor == undefined) {
+                pidColor = pidsColors[pid] = this.color(pid);
+            }
+            var hosts = pidsToHosts[pid];
+            for (var j = 0; j < hosts.length; j++) {
+                var host = hosts[j];
                 this.hostColors[host] = pidColor;
             }
         }
@@ -212,9 +212,9 @@ LengthPermutation.prototype.constructor = LengthPermutation;
 /**
  * Overrides {@link HostPermutation#update}
  */
-LengthPermutation.prototype.update = function(threadsToPid) {
+LengthPermutation.prototype.update = function() {
 
-    HostPermutation.prototype.update.call(this, threadsToPid);
+    HostPermutation.prototype.update.call(this);
 
     var currHosts = {};
 
@@ -292,9 +292,9 @@ LogOrderPermutation.prototype.addLogs = function(logs) {
 /**
  * Overrides {@link HostPermutation#update}
  */
-LogOrderPermutation.prototype.update = function(threadsToPid) {
+LogOrderPermutation.prototype.update = function() {
 
-    HostPermutation.prototype.update.call(this, threadsToPid);
+    HostPermutation.prototype.update.call(this);
 
     var hostSet = {};
 
@@ -316,22 +316,33 @@ function ProcessPermutation(reverse) {
 ProcessPermutation.prototype = Object.create(HostPermutation.prototype);
 ProcessPermutation.prototype.constructor = ProcessPermutation;
 
-ProcessPermutation.prototype.update = function(threadsToPid) {
+ProcessPermutation.prototype.update = function() {
 
-  HostPermutation.prototype.update.call(this, threadsToPid);
+  HostPermutation.prototype.update.call(this);
 
-  var pidsToThreads = {};
+  var globalPidsToHosts = {};
 
-  for (var thread in threadsToPid) {
-    var pid = threadsToPid[thread];
-    if (pidsToThreads[pid] == undefined) {
-      pidsToThreads[pid] = [];
-    }
-    pidsToThreads[pid].push(thread);
+  for (var i = 0; i < this.graphs.length; i++) {
+      var graph = this.graphs[i];
+      var pidsToHosts = graph.pidsToHosts;
+
+      for (var pid in pidsToHosts) {
+          var hosts = pidsToHosts[pid];
+          if (globalPidsToHosts[pid] == undefined) {
+              globalPidsToHosts[pid] = hosts;
+          }
+          else {
+              for (var j = 0; j < hosts.length; j++) {
+                if(globalPidsToHosts.includes(hosts[j]) == false) {
+                    globalPidsToHosts.push(hosts[j]);
+                }
+              }
+          }
+      }
   }
 
-  for (var pid in pidsToThreads) {
-    var threads = pidsToThreads[pid];
+  for (var pid in globalPidsToHosts) {
+    var threads = globalPidsToHosts[pid];
     for (i in threads) {
       this.hosts.push(threads[i]);
     }
