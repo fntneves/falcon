@@ -1,6 +1,6 @@
 import socket
 import struct
-import json
+import logging
 from falcon import util
 from falcon.core.events.types import EventType
 
@@ -24,6 +24,7 @@ class EventParser():
             sock_id = util.to_socket_id(event.data.socket.saddr, sock_from, event.data.socket.daddr,
                                         sock_to, event.data.socket.sport, event.data.socket.dport)
         except ValueError:
+            logging.info('Could not generate socket IDs, maybe due to invalid socket family.')
             return None
 
         data = None

@@ -461,10 +461,13 @@ public class CausalSolver
                 System.err.println( "\nOptions:" );
                 System.err.println( "--event-file <path-to-event-file>\tPath to the event trace in JSON format." );
                 System.err.println(
-                                "--output-file <path-to-output-file>\tSave the global, causally-ordered trace produced by Falcon." );
-                System.err.println( "--solver-bin <path-to-solver-bin>\tPath to the Z3 binary." );
+                                "--output-file <path-to-output-file>\tSave the global, causally-ordered trace "
+                                                + "produced by Falcon. Default: 'trace-ordered.out'." );
                 System.err.println(
-                                "--use-timestamp <true/false>\t\tSolve the model according to the original event timestamps (=true) or to minimize the logical clocks (=false)." );
+                                "--use-timestamp <true/false>\t\tSolve the model according to the original event "
+                                                + "timestamps (=true) or to minimize the logical clocks (=false). "
+                                                + "Default: 'true'." );
+                System.err.println( "--solver-bin <path-to-solver-bin>\tPath to the Z3 binary. Default: 'z3'" );
 
                 System.exit( 1 );
             }
