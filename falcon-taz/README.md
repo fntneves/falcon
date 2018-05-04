@@ -1,15 +1,15 @@
-# TAZ (evenT trAce organiZer) 
+# Falcon TAZ (evenT trAce organiZer) 
 ![alt text](https://upload.wikimedia.org/wikipedia/en/c/c4/Taz-Looney_Tunes.svg)
 
 TAZ is the component of Falcon responsible for organizing the events traced during an execution into data structures that enable and ease posterior analyses. TAZ receives as input an event trace in JSON format and exposes an object `TraceProcessor` that allows accessing the different events according to their type. 
 
-### Build
+## Installation
 
 ```bash
 $ mvn package install
 ```
 
-### Usage
+## Usage
 
 To load an event trace into TAZ, just create an instance of `TraceProcessor` and invoke the method `loadEventTrace` with the path to the event trace file as parameter.
 ```java
