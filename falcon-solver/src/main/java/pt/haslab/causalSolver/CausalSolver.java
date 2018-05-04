@@ -41,6 +41,8 @@ public class CausalSolver
     //properties
     public static Properties props;
 
+    public static String PRINT_TAG = "[Falcon-Solver]";
+
     //event trace processor
     public static TraceProcessor trace;
 
@@ -99,6 +101,7 @@ public class CausalSolver
                 Stats.buildingModeltime = System.currentTimeMillis() - modelStart;
 
                 //solve model
+                System.out.println( PRINT_TAG + " Start constraint solving..." );
                 long solvingStart = System.currentTimeMillis();
                 boolean result = solver.solveModel();
                 Stats.solvingTime = System.currentTimeMillis() - solvingStart;
@@ -133,7 +136,7 @@ public class CausalSolver
                     throws IOException
     {
         String solverPath = props.getProperty( Parameters.SOLVER.toString() ); //set up solver path
-        System.out.println( "[CausalSolver] Init solver: " + solverPath );
+        System.out.println( PRINT_TAG+" Init solver: " + solverPath );
         solver = Z3Solver.getInstance();
         solver.init( solverPath );
     }
@@ -159,7 +162,7 @@ public class CausalSolver
     private static void genTimestampConstraints()
                     throws IOException
     {
-        System.out.println( "[CausalSolver] Generate timestamp constraints" );
+        System.out.println( PRINT_TAG+" Generate timestamp constraints" );
         HashMap<String, List<SocketEvent>> channelEvents = new HashMap<String, List<SocketEvent>>();
 
         //filter events per socket channel
@@ -197,7 +200,7 @@ public class CausalSolver
     public static void genProgramOrderConstraints()
                     throws IOException
     {
-        System.out.println( "[CausalSolver] Generate program order constraints" );
+        System.out.println( PRINT_TAG+" Generate program order constraints" );
         String tagPO = "PO_";
         int counterPO = 0;
         int max = 0;
@@ -236,7 +239,7 @@ public class CausalSolver
     public static void genCommunicationConstraints()
                     throws IOException
     {
-        System.out.println( "[CausalSolver] Generate communication constraints" );
+        System.out.println( PRINT_TAG+" Generate communication constraints" );
         String tagSND_RCV = "SR_";
         int counterSND_RCV = 0;
         solver.writeComment( "COMMUNICATION CONSTRAINTS - SEND / RECEIVE" );
@@ -280,7 +283,7 @@ public class CausalSolver
     public static void genLockingConstraints()
                     throws IOException
     {
-        System.out.println( "[CausalSolver] Generate locking constraints" );
+        System.out.println( PRINT_TAG+" Generate locking constraints" );
         solver.writeComment( "LOCKING CONSTRAINTS" );
         for ( String var : trace.lockEvents.keySet() )
         {
@@ -317,7 +320,7 @@ public class CausalSolver
     public static void genForkStartConstraints()
                     throws IOException
     {
-        System.out.println( "[CausalSolver] Generate fork-start constraints" );
+        System.out.println( PRINT_TAG+" Generate fork-start constraints" );
         String tagFRK_STR = "FS_";
         int counterFRK_STR = 0;
         solver.writeComment( "FORK-START CONSTRAINTS" );
@@ -337,7 +340,7 @@ public class CausalSolver
     public static void genJoinExitConstraints()
                     throws IOException
     {
-        System.out.println( "[CausalSolver] Generate join-exit constraints" );
+        System.out.println( PRINT_TAG+" Generate join-exit constraints" );
         solver.writeComment( "JOIN-END CONSTRAINTS" );
         String tagJOIN_END = "JE_";
         int counterJOIN_END = 0;
@@ -345,13 +348,17 @@ public class CausalSolver
         {
             for ( ThreadCreationEvent joinEvent : l )
             {
-                int endEventPos = trace.eventsPerThread.get( joinEvent.getChildThread() ).size();
-                Event endEvent = trace.eventsPerThread.get( joinEvent.getChildThread() ).get(
-                                endEventPos - 1 );//"END_"+joinEvent.getChildThread();
-                String cnst = solver.cLt( endEvent.toString(), joinEvent.toString() );
-                solver.writeConstraint( solver.postNamedAssert( cnst, tagJOIN_END + counterJOIN_END++ ) );
-                //set dependency
-                allEvents.get( joinEvent.toString() ).setDependency( String.valueOf( endEvent.hashCode() ) );
+                String childThread = joinEvent.getChildThread();
+                if(trace.eventsPerThread.containsKey( childThread ) )
+                {
+                    int endEventPos = trace.eventsPerThread.get( childThread ).size();
+                    Event endEvent = trace.eventsPerThread.get( joinEvent.getChildThread() ).get(
+                                    endEventPos - 1 );//"END_"+joinEvent.getChildThread();
+                    String cnst = solver.cLt( endEvent.toString(), joinEvent.toString() );
+                    solver.writeConstraint( solver.postNamedAssert( cnst, tagJOIN_END + counterJOIN_END++ ) );
+                    //set dependency
+                    allEvents.get( joinEvent.toString() ).setDependency( String.valueOf( endEvent.hashCode() ) );
+                }
             }
         }
     }
@@ -359,7 +366,7 @@ public class CausalSolver
     public static void genWaitNotifyConstraints()
                     throws IOException
     {
-        System.out.println( "[CausalSolver] Generate wait-notify constraints" );
+        System.out.println( PRINT_TAG+" Generate wait-notify constraints" );
         solver.writeComment( "WAIT-NOTIFY CONSTRAINTS" );
         HashMap<SyncEvent, Set<String>> binaryVars =
                         new HashMap<SyncEvent, Set<String>>(); //map: notify event -> list of all binary vars corresponding to that notify
@@ -421,7 +428,7 @@ public class CausalSolver
     public static void genCausalOrderFunction()
                     throws IOException
     {
-        System.out.println( "[CausalSolver] Generate causality objective function" );
+        System.out.println( PRINT_TAG+" Generate causality objective function" );
         solver.writeComment( "CAUSALITY OBJECTIVE FUNCTION" );
         solver.writeConstraint( solver.cMinimize( solver.cSummation( allEvents.keySet() ) ) );
     }
@@ -535,7 +542,8 @@ public class CausalSolver
         TreeSet<Event> orderedEvents = new TreeSet<Event>( allEvents.values() );
         try
         {
-            FileWriter outfile = new FileWriter( new File( props.getProperty( Parameters.OUTPUT.toString() ) ) );
+            String outputFile = props.getProperty( Parameters.OUTPUT.toString() );
+            FileWriter fileWriter = new FileWriter( new File( props.getProperty( Parameters.OUTPUT.toString() ) ) );
             JSONArray jsonEvents = new JSONArray();
             for ( Event e : orderedEvents )
             {
@@ -543,9 +551,11 @@ public class CausalSolver
                 System.out.println( json.toString() );
                 jsonEvents.put( json );
             }
-            outfile.write( jsonEvents.toString() );
-            outfile.flush();
-            outfile.close();
+            fileWriter.write( jsonEvents.toString() );
+            fileWriter.flush();
+            fileWriter.close();
+
+            System.out.println("\n" + PRINT_TAG + " Output saved to: " + outputFile );
         }
         catch ( JSONException exc )
         {

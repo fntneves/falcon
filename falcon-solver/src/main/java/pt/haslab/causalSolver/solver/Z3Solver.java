@@ -254,25 +254,25 @@ public class Z3Solver
 
     public String postAssert( String constraint )
     {
-        Stats.numConstraints++;
+        Stats.numHBConstraints++;
         return ( "(assert " + constraint + ")" );
     }
 
     public String postNamedAssert( String constraint, String label )
     {
-        Stats.numConstraints++;
+        Stats.numHBConstraints++;
         return ( "(assert (! " + constraint + ":named " + label + "))" );
     }
 
     public String postSoftAssert( String constraint )
     {
-        Stats.numConstraints++;
+        Stats.numHBConstraints++;
         return ( "(assert-soft " + constraint + ")" );
     }
 
     public String postNamedSoftAssert( String constraint, String label )
     {
-        Stats.numConstraints++;
+        Stats.numHBConstraints++;
         return ( "(assert-soft (! " + constraint + ":named " + label + "))" );
     }
 

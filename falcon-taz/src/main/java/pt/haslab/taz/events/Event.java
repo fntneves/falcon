@@ -152,6 +152,13 @@ public class Event implements Comparable {
     @Override
     public String toString() {
         String res = type+"_"+thread;
+
+        //since there can be multiple LOG events per thread
+        //we need to uniquely identify each one
+        if(type == EventType.LOG)
+        {
+            res = type+"_"+eventNumber+"_"+thread;
+        }
         return res;
     }
 

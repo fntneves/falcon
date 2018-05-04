@@ -23,7 +23,7 @@ public class TazTest {
 
         try {
             TraceProcessor processor = TraceProcessor.INSTANCE;
-            File file = new File(processor.getClass().getClassLoader().getResource("testEventTrace.txt").getFile());
+            File file = new File("/Users/nunomachado/Dropbox/PosDoc_UMinho/falcon/logs/zktrace_full.log");//processor.getClass().getClassLoader().getResource("testEventTrace.txt").getFile());
             System.out.println("Test file: "+file.getAbsolutePath());
             processor.loadEventTrace(file.getAbsolutePath());
         }catch (Exception e){
