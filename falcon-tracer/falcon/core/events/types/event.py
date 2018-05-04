@@ -31,7 +31,6 @@ class ExtraDataUnion(ctypes.Union):
 class EventData(ctypes.Structure):
     _fields_ = [
         ("type", ctypes.c_uint),
-        ("timestamp", ctypes.c_ulonglong),
         ("pid", ctypes.c_uint),
         ("tgid", ctypes.c_uint),
         ("ppid", ctypes.c_uint),

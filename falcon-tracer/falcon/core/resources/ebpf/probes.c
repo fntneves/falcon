@@ -31,7 +31,6 @@ struct socket_info_t {
 
 struct event_info_t {
     enum event_type type;
-    u64 timestamp;
     u32 pid;
     u32 tgid;
     u32 ppid;
@@ -54,7 +53,6 @@ struct event_info_t {
 // The following structures are used to keep data while switching from enter
 // to exit syscall points, for instance to keep function variables that
 // would be needed later. At the end, this structure should be empty.
-BPF_HASH(entry_timestamps, u32, u64);
 BPF_HASH(sock_handlers, u32, struct sock *);
 BPF_HASH(trace_pids, u32, char);
 
@@ -71,21 +69,20 @@ int static skip_pid(u32 pid) {
     return 1;
 }
 
-void static emit_socket_connect(struct pt_regs *ctx, u64 timestamp, struct socket_info_t * skp) {
+void static emit_socket_connect(struct pt_regs *ctx, struct socket_info_t * skp) {
     struct event_info_t event = {
         .type = SOCKET_CONNECT,
         .pid = bpf_get_current_pid_tgid(),
         .tgid = bpf_get_current_pid_tgid() >> 32
     };
 
-    event.timestamp = timestamp;
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
     event.socket = *skp;
 
     socket_events.perf_submit(ctx, &event, sizeof(event));
 }
 
-void static emit_socket_accept(struct pt_regs *ctx, u64 timestamp, struct socket_info_t *skp)
+void static emit_socket_accept(struct pt_regs *ctx, struct socket_info_t *skp)
 {
     struct event_info_t event = {
         .type = SOCKET_ACCEPT,
@@ -93,14 +90,13 @@ void static emit_socket_accept(struct pt_regs *ctx, u64 timestamp, struct socket
         .tgid = bpf_get_current_pid_tgid() >> 32
     };
 
-    event.timestamp = timestamp;
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
     event.socket = *skp;
 
     socket_events.perf_submit(ctx, &event, sizeof(event));
 }
 
-void static emit_socket_send(struct pt_regs *ctx, u64 timestamp, struct socket_info_t *skp, int bytes)
+void static emit_socket_send(struct pt_regs *ctx, struct socket_info_t *skp, int bytes)
 {
     struct event_info_t event = {
         .type = SOCKET_SEND,
@@ -108,7 +104,6 @@ void static emit_socket_send(struct pt_regs *ctx, u64 timestamp, struct socket_i
         .tgid = bpf_get_current_pid_tgid() >> 32
     };
 
-    event.timestamp = timestamp;
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
     event.socket = *skp;
     event.bytes = bytes;
@@ -116,7 +111,7 @@ void static emit_socket_send(struct pt_regs *ctx, u64 timestamp, struct socket_i
     socket_events.perf_submit(ctx, &event, sizeof(event));
 }
 
-void static emit_socket_receive(struct pt_regs *ctx, u64 timestamp, struct socket_info_t *skp, int bytes)
+void static emit_socket_receive(struct pt_regs *ctx, struct socket_info_t *skp, int bytes)
 {
     struct event_info_t event = {
         .type = SOCKET_RECEIVE,
@@ -124,7 +119,6 @@ void static emit_socket_receive(struct pt_regs *ctx, u64 timestamp, struct socke
         .tgid = bpf_get_current_pid_tgid() >> 32
     };
 
-    event.timestamp = timestamp;
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
     event.socket = *skp;
     event.bytes = bytes;
@@ -132,7 +126,7 @@ void static emit_socket_receive(struct pt_regs *ctx, u64 timestamp, struct socke
     socket_events.perf_submit(ctx, &event, sizeof(event));
 }
 
-void static emit_process_create(struct pt_regs *ctx, u64 timestamp, pid_t child_pid)
+void static emit_process_create(struct pt_regs *ctx, pid_t child_pid)
 {
     char zero = ' ';
     trace_pids.insert(&child_pid, &zero);
@@ -143,14 +137,13 @@ void static emit_process_create(struct pt_regs *ctx, u64 timestamp, pid_t child_
         .tgid = bpf_get_current_pid_tgid() >> 32
     };
 
-    event.timestamp = timestamp;
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
     event.child_pid = child_pid;
 
     process_events.perf_submit(ctx, &event, sizeof(event));
 }
 
-void static emit_process_end(struct pt_regs *ctx, u64 timestamp, pid_t pid)
+void static emit_process_end(struct pt_regs *ctx, pid_t pid)
 {
     trace_pids.delete(&pid);
 
@@ -160,13 +153,12 @@ void static emit_process_end(struct pt_regs *ctx, u64 timestamp, pid_t pid)
         .tgid = bpf_get_current_pid_tgid() >> 32
     };
 
-    event.timestamp = timestamp;
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
 
     process_events.perf_submit(ctx, &event, sizeof(event));
 }
 
-void static emit_process_join(struct pt_regs *ctx, u64 timestamp, pid_t child_pid)
+void static emit_process_join(struct pt_regs *ctx, pid_t child_pid)
 {
     struct event_info_t event = {
         .type = PROCESS_JOIN,
@@ -174,7 +166,6 @@ void static emit_process_join(struct pt_regs *ctx, u64 timestamp, pid_t child_pi
         .tgid = bpf_get_current_pid_tgid() >> 32
     };
 
-    event.timestamp = timestamp;
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
     event.child_pid = child_pid;
 
@@ -215,9 +206,6 @@ int entry__tcp_connect(struct pt_regs *ctx, struct sock * sk) {
         return 1;
     }
 
-    u64 timestamp = bpf_ktime_get_ns();
-    entry_timestamps.update(&kpid, &timestamp);
-
     // Stash the current sock for the exit call.
     if (sk->sk_family == AF_INET)
         sock_handlers.update(&kpid, &sk);
@@ -232,12 +220,11 @@ int exit__tcp_connect(struct pt_regs *ctx) {
     u32 kpid = bpf_get_current_pid_tgid();
     int error = PT_REGS_RC(ctx);
     struct sock ** skpp = sock_handlers.lookup(&kpid);
-    u64 * timestamp = entry_timestamps.lookup(&kpid);
 
-    if (error >= 0 && skpp != NULL && timestamp != NULL) {
+    if (error >= 0 && skpp != NULL) {
         struct sock * skp = *skpp;
         struct socket_info_t sk = socket_info(skp);
-        emit_socket_connect(ctx, *timestamp, &sk);
+        emit_socket_connect(ctx, &sk);
     } else if (error < 0 ) {
         // Something went wrong, so do not register socket.
     }
@@ -263,7 +250,7 @@ int exit__inet_csk_accept(struct pt_regs *ctx)
     if (skp != NULL)
     {
         struct socket_info_t sk = socket_info(skp);
-        emit_socket_accept(ctx, bpf_ktime_get_ns(), &sk);
+        emit_socket_accept(ctx, &sk);
     }
 
     return 0;
@@ -278,9 +265,6 @@ int entry__sock_sendmsg(struct pt_regs *ctx, struct socket * sock, struct msghdr
     if (skip_pid(kpid)) {
         return 1;
     }
-
-    u64 timestamp = bpf_ktime_get_ns();
-    entry_timestamps.update(&kpid, &timestamp);
 
     // Stash the current sock for the exit call.
     struct sock * skp = sock->sk;
@@ -298,12 +282,11 @@ int exit__sock_sendmsg(struct pt_regs *ctx) {
     u32 kpid = bpf_get_current_pid_tgid();
     int sent_bytes = PT_REGS_RC(ctx);
     struct sock ** skpp = sock_handlers.lookup(&kpid);
-    u64 * timestamp = entry_timestamps.lookup(&kpid);
 
-    if (sent_bytes > 0 && skpp != NULL && timestamp != NULL) {
+    if (sent_bytes > 0 && skpp != NULL) {
         struct sock *skp = *skpp;
         struct socket_info_t sk = socket_info(skp);
-        emit_socket_send(ctx, *timestamp, &sk, sent_bytes);
+        emit_socket_send(ctx, &sk, sent_bytes);
     } else if (sent_bytes <= 0 ) {
         // Something went wrong.
     }
@@ -324,9 +307,6 @@ int entry__sock_recvmsg(struct pt_regs *ctx, struct socket *sock, struct msghdr 
         return 1;
     }
 
-    u64 timestamp = bpf_ktime_get_ns();
-    entry_timestamps.update(&kpid, &timestamp);
-
     // Stash the current sock for the exit call.
     struct sock *skp = sock->sk;
 
@@ -344,13 +324,12 @@ int exit__sock_recvmsg(struct pt_regs *ctx)
     u32 kpid = bpf_get_current_pid_tgid();
     int read_bytes = PT_REGS_RC(ctx);
     struct sock **skpp = sock_handlers.lookup(&kpid);
-    u64 * timestamp = entry_timestamps.lookup(&kpid);
 
-    if (read_bytes > 0 && skpp != NULL && timestamp != NULL)
+    if (read_bytes > 0 && skpp != NULL)
     {
         struct sock *skp = *skpp;
         struct socket_info_t sk = socket_info(skp);
-        emit_socket_receive(ctx, *timestamp, &sk, read_bytes);
+        emit_socket_receive(ctx, &sk, read_bytes);
     }
     else if (read_bytes <= 0)
     {
@@ -358,24 +337,6 @@ int exit__sock_recvmsg(struct pt_regs *ctx)
     }
 
     sock_handlers.delete(&kpid);
-
-    return 0;
-}
-
-/**
- * Probe "sys_clone" at the entry point.
- */
-int entry__sys_clone(struct pt_regs *ctx)
-{
-    u32 kpid = bpf_get_current_pid_tgid();
-
-    if (skip_pid(kpid)) {
-        return 1;
-    }
-
-    // Save entry timestamp
-    u64 timestamp = bpf_ktime_get_ns();
-    entry_timestamps.update(&kpid, &timestamp);
 
     return 0;
 }
@@ -392,12 +353,9 @@ int exit__sys_clone(struct pt_regs *ctx)
     }
 
     pid_t new_tid = PT_REGS_RC(ctx);
-    u64 * timestamp = entry_timestamps.lookup(&kpid);
-    if (timestamp != NULL && new_tid > 0) {
-        emit_process_create(ctx, *timestamp, new_tid);
+    if (new_tid > 0) {
+        emit_process_create(ctx, new_tid);
     }
-
-    entry_timestamps.delete(&kpid);
 
     return 0;
 }
@@ -416,7 +374,7 @@ int exit__sys_wait(struct pt_regs *ctx)
     pid_t exited_pid = PT_REGS_RC(ctx);
 
     if (exited_pid > 0) {
-        emit_process_join(ctx, bpf_ktime_get_ns(), exited_pid);
+        emit_process_join(ctx, exited_pid);
     }
 
     return 0;
@@ -433,7 +391,7 @@ int entry__sys_exit(struct pt_regs *ctx)
         return 1;
     }
 
-    emit_process_end(ctx, bpf_ktime_get_ns(), kpid);
+    emit_process_end(ctx, kpid);
 
     return 0;
 }
