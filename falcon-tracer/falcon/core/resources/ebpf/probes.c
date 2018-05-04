@@ -24,8 +24,8 @@ enum event_type {
 struct socket_info_t {
     u16 sport;
     u16 dport;
-    u32 saddr;
-    u32 daddr;
+    u64 saddr[2];
+    u64 daddr[2];
     u16 family;
 };
 
@@ -36,10 +36,8 @@ struct event_info_t {
     u32 ppid;
     char comm[TASK_COMM_LEN];
 
-    union {
-        // SOCKET_* events
-        struct socket_info_t socket;
-    };
+    // SOCKET_* events
+    struct socket_info_t socket;
 
     union {
         // SOCKET_SEND and SOCKET_RECEIVE events
@@ -175,23 +173,32 @@ void static emit_process_join(struct pt_regs *ctx, pid_t child_pid)
 struct socket_info_t static socket_info(struct sock * skp) {
     u16 sport = 0;
     u16 dport = 0;
-    u32 saddr = 0;
-    u32 daddr = 0;
     u16 family = 0;
+    struct socket_info_t sk = {};
 
-    bpf_probe_read(&saddr, sizeof(saddr), &skp->sk_rcv_saddr);
-    bpf_probe_read(&sport, sizeof(sport), &skp->sk_num);
-    bpf_probe_read(&daddr, sizeof(daddr), &skp->sk_daddr);
-    bpf_probe_read(&dport, sizeof(dport), &skp->sk_dport);
     bpf_probe_read(&family, sizeof(family), &skp->sk_family);
 
-    struct socket_info_t sk = {
-        .saddr = saddr,
-        .sport = sport,
-        .daddr = daddr,
-        .dport = ntohs(dport),
-        .family = family,
-    };
+    if (family == AF_INET) {
+        u32 saddr = 0;
+        u32 daddr = 0;
+
+        bpf_probe_read(&saddr, sizeof(saddr), &skp->sk_rcv_saddr);
+        bpf_probe_read(&daddr, sizeof(daddr), &skp->sk_daddr);
+
+        sk.saddr[0] = saddr;
+        sk.daddr[0] = daddr;
+    } else if (family == AF_INET6) {
+        bpf_probe_read(sk.saddr, sizeof(sk.saddr), &skp->sk_v6_rcv_saddr);
+        bpf_probe_read(sk.daddr, sizeof(sk.daddr), &skp->sk_v6_daddr);
+    }
+
+    bpf_probe_read(&sport, sizeof(sport), &skp->sk_num);
+    bpf_probe_read(&dport, sizeof(dport), &skp->sk_dport);
+    bpf_probe_read(&dport, sizeof(dport), &skp->sk_dport);
+
+    sk.sport = sport;
+    sk.dport = ntohs(dport);
+    sk.family = family;
 
     return sk;
 }
@@ -207,8 +214,8 @@ int entry__tcp_connect(struct pt_regs *ctx, struct sock * sk) {
     }
 
     // Stash the current sock for the exit call.
-    if (sk->sk_family == AF_INET)
-        sock_handlers.update(&kpid, &sk);
+    // if (sk->sk_family == AF_INET)
+    sock_handlers.update(&kpid, &sk);
 
     return 0;
 }

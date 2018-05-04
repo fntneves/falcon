@@ -17,14 +17,18 @@ class EventParser():
     @staticmethod
     def _parse_socket_event(cpu, event):
         try:
-            sock_from = socket.inet_ntop(
-                event.data.socket.family, struct.pack("I", event.data.socket.saddr))
-            sock_to = socket.inet_ntop(
-                event.data.socket.family, struct.pack("I", event.data.socket.daddr))
-            sock_id = util.to_socket_id(event.data.socket.saddr, sock_from, event.data.socket.daddr,
-                                        sock_to, event.data.socket.sport, event.data.socket.dport)
-        except ValueError:
-            logging.info('Could not generate socket IDs, maybe due to invalid socket family.')
+            if event.socket.family == socket.AF_INET:
+                sock_from = socket.inet_ntop(event.socket.family, struct.pack("I", event.socket.saddr[0]))
+                sock_to = socket.inet_ntop(event.socket.family, struct.pack("I", event.socket.daddr[0]))
+                sock_id = util.to_socket_id(event.socket.saddr[0], sock_from, event.socket.daddr[0], sock_to, event.socket.sport, event.socket.dport)
+            elif event.socket.family == socket.AF_INET6:
+                sock_from = socket.inet_ntop(event.socket.family, event.socket.saddr)
+                sock_to = socket.inet_ntop(event.socket.family, event.socket.daddr)
+                sock_id = util.to_socket_id(event.socket.saddr, sock_from, event.socket.daddr,sock_to, event.socket.sport, event.socket.dport)
+            else:
+                raise ValueError('Undefined socket family: {}' % event.socket_family)
+        except ValueError as ve:
+            logging.info('Could not generate socket IDs. {}' % ve)
             return None
 
         data = None
@@ -36,9 +40,9 @@ class EventParser():
                 "socket": sock_id,
                 "socket_type": "TCP",
                 "src": sock_from,
-                "src_port": event.data.socket.sport,
+                "src_port": event.socket.sport,
                 "dst": sock_to,
-                "dst_port": event.data.socket.dport,
+                "dst_port": event.socket.dport,
             }
         elif event.type == EventType.SOCKET_ACCEPT:
             data = {
@@ -48,9 +52,9 @@ class EventParser():
                 "socket": sock_id,
                 "socket_type": "TCP",
                 "src": sock_to,
-                "src_port": event.data.socket.dport,
+                "src_port": event.socket.dport,
                 "dst": sock_from,
-                "dst_port": event.data.socket.sport,
+                "dst_port": event.socket.sport,
             }
         elif event.type == EventType.SOCKET_SEND:
             data = {
@@ -60,9 +64,9 @@ class EventParser():
                 "socket": sock_id,
                 "socket_type": "TCP",
                 "src": sock_from,
-                "src_port": event.data.socket.sport,
+                "src_port": event.socket.sport,
                 "dst": sock_to,
-                "dst_port": event.data.socket.dport,
+                "dst_port": event.socket.dport,
                 "size": event.extra.bytes,
             }
         elif event.type == EventType.SOCKET_RECEIVE:
@@ -73,9 +77,9 @@ class EventParser():
                 "socket": sock_id,
                 "socket_type": "TCP",
                 "src": sock_to,
-                "src_port": event.data.socket.dport,
+                "src_port": event.socket.dport,
                 "dst": sock_from,
-                "dst_port": event.data.socket.sport,
+                "dst_port": event.socket.sport,
                 "size": event.extra.bytes,
             }
 

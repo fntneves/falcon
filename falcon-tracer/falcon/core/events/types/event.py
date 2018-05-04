@@ -16,12 +16,6 @@ class EventType():
     PROCESS_CREATE = 203
     PROCESS_JOIN = 204
 
-class DataUnion(ctypes.Union):
-    _fields_ = [
-        ("socket", SocketEvent),
-    ]
-
-
 class ExtraDataUnion(ctypes.Union):
     _fields_ = [
         ("bytes", ctypes.c_uint),
@@ -35,6 +29,6 @@ class EventData(ctypes.Structure):
         ("tgid", ctypes.c_uint),
         ("ppid", ctypes.c_uint),
         ("comm", ctypes.c_char * TASK_COMM_LEN),
-        ("data", DataUnion),
+        ("socket", SocketEvent),
         ("extra", ExtraDataUnion)
     ]
