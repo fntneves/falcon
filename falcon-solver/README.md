@@ -8,6 +8,7 @@ In more detail, Falcon Solver:
 3. Solves the constraint model to obtain the logical clocks for the events that satisfy the causal dependencies.
 
 **References:**
+
 [1] L. Lamport, “Time clocks, and the ordering of events in a distributed system”, Commun. ACM, vol. 21, pp. 558–565, July 1978.
 
 ## Requirements

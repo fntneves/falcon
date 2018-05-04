@@ -11,7 +11,7 @@ For additional details about Falcon, please check our [DSN'18 paper (to appear)]
 
 ## Installation
 
-The modular architecture of Falcon allows its components to be used in separate (and leveraged by different projects). To set up the complete Falcon pipeline, install each particular component according to the following instructions:
+Falcon's components are independent and, therefore, can be leveraged by different projects. To set up the full pipeline, install each particular component according to the following instructions:
 - [Install falcon-tracer](https://github.com/fntneves/falcon/tree/master/falcon-tracer)
 - [Install falcon-solver](https://github.com/fntneves/falcon/tree/master/falcon-solver)
 - [Install falcon-visualizer](https://github.com/fntneves/falcon/tree/master/falcon-visualizer)
