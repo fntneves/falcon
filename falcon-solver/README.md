@@ -27,14 +27,12 @@ mvn package
 (Assuming `$HOME=<path/to/falcon-solver>`)
 - Run: `java -jar $HOME/target/falcon-solver-1.0-SNAPSHOT-jar-with-dependencies.jar [options]`
 
-The options available are as:
+The options available are:
 
-* `--event-file <path-to-event-file>` indicates the path to the event trace in JSON format.
-* `--use-timestamp <true/false>` is a boolean flag indicating whether Falcon should solve the constraints attempting to follow the original event timestamps. If false, Falcon will solve the model attempting to minimize the logical clocks. 
-
-
-* `--solver-bin <path-to-solver-bin>` indicates the path to the Z3 solver binary. Default: `$HOME/lib/z3`.
-* `--output-file <path-to-output-file>` indicates the path to the output file produced by Falcon Solver. The output file contains the set of events in JSON format ordered by their causal order.
+* `--event-file <path-to-event-file>` indicates the path to the event trace in JSON format. **[required]**
+* `--use-timestamp <true/false>` is a boolean flag indicating whether Falcon should solve the constraints attempting to follow the original event timestamps. If false, Falcon will solve the model attempting to minimize the logical clocks. Default: `true`.
+* `--solver-bin <path-to-solver-bin>` indicates the path to the Z3 solver binary. Default: `z3`.
+* `--output-file <path-to-output-file>` indicates the path to the output file produced by Falcon Solver. The output file contains the set of events in JSON format ordered by their causal order. Default: `trace-ordered.out`.
 
 Alternatively, these parameters can be configured by editing the file `$HOME/src/main/resources/causalSolver.properties` prior to building the jar.
 
