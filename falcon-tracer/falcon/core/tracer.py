@@ -17,10 +17,6 @@ class Tracer:
     def run(self, pid=0):
         program_filepath = pkg_resources.resource_filename('falcon', 'core/resources/ebpf/probes.c')
 
-        def ignore_signal(signum, frame):
-            pass
-        signal.signal(signal.SIGINT, ignore_signal)
-
         with open(program_filepath, 'r') as program_file:
             program = BpfProgram(text=program_file.read())
             program.filter_pid(pid)
@@ -31,14 +27,9 @@ class Tracer:
                 handler.boot()
                 handlers.append(handler)
 
-            logging.info('Starting eBPF listener...')
+            logging.info('Running eBPF listener...')
             bpf_listener_worker = events.bpf.BpfEventListener(program, handlers[0])
-            bpf_listener_worker.daemon = True
-            bpf_listener_worker.start()
-
-            while bpf_listener_worker.is_alive():
-                logging.info('Waiting for eBPF listener to exit...')
-                bpf_listener_worker.join()
+            bpf_listener_worker.run()
 
             # Shutdown handlers
             logging.info('Shutting handlers down...')

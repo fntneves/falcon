@@ -8,12 +8,10 @@ import logging
 from falcon import util
 from falcon.core.events.types.event import EventData
 
-class BpfEventListener(multiprocessing.Process):
+class BpfEventListener():
     def __init__(self, bpf, handler):
         self._bpf = bpf
         self._handler = handler
-
-        super(BpfEventListener, self).__init__(name='bpf_listener')
 
     def run(self):
         self._bpf.prepare()
