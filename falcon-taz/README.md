@@ -6,7 +6,7 @@ TAZ is the component of Falcon responsible for organizing the events traced duri
 ## Installation
 
 ```bash
-$ mvn package install
+mvn package install
 ```
 
 ## Usage

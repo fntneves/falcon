@@ -16,13 +16,13 @@ In more detail, Falcon Solver:
 
 ## Installation
 
-- Install falcon-taz: `$ cd ../falcon-taz ; mvn package install`
-- Compile falcon-solver: `$ mvn package`
+- Install *falcon-taz*: `cd ../falcon-taz ; mvn package install`
+- Compile *falcon-solver*: `mvn package`
 
 ## Usage
 
 (Assuming `$HOME=<path/to/falcon-solver>`)
-- Run: `$ java -jar $HOME/target/causalSolver-1.0-SNAPSHOT-jar-with-dependencies.jar [options]`
+- Run: `java -jar $HOME/target/falcon-solver-1.0-SNAPSHOT-jar-with-dependencies.jar [options]`
 
 The options available are as follows:
 
