@@ -26,7 +26,7 @@ class BpfEventListener(multiprocessing.Process):
 
         exit = [False]
 
-        def start_shutdown(sigum, frame):
+        def start_shutdown(signum, frame):
             print 'BPF event listener {} is interrupted...'.format(str(multiprocessing.current_process().pid))
             exit[0] = True
 
@@ -44,4 +44,3 @@ class BpfEventListener(multiprocessing.Process):
 
     def handle(self, cpu, data, size):
         self._handler.handle(cpu, data, size)
-
