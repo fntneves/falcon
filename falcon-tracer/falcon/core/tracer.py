@@ -6,6 +6,7 @@ import events
 import signal
 import time
 import sys
+import os
 from bpf import BpfProgram
 from falcon import util
 import pkg_resources
@@ -44,6 +45,7 @@ class Tracer:
             bpf_listener_worker = events.bpf.BpfEventListener(program, bpf_event_handler)
             bpf_listener_worker.daemon = True
             bpf_listener_worker.start()
+            os.kill(pid, signal.SIGCONT)
 
             # Wait for the producer to finish
             while bpf_listener_worker.is_alive():
@@ -70,6 +72,24 @@ class Tracer:
 
         return handler_instances
 
+def run_program(program):
+    pid = os.fork()
+    if pid == 0:
+        paused = [True]
+        def received(signum, frame):
+            paused[0] = False
+
+        signal.signal(signal.SIGCONT, received)
+
+        while paused[0]:
+            signal.pause()
+        # give some time to make sure listener has started
+        # seems a little too "hackish"...
+        time.sleep(5)
+        os.execvp(program[0], program)
+    else:
+        return pid
+
 
 def main():
     """Main entry point for the script."""
@@ -77,9 +97,16 @@ def main():
 
     parser.add_argument('--pid', type=int, nargs='?', default=0,
                         help="filter events of the given PID. (0 = all PIDs)")
+    parser.add_argument('--run', nargs='+', default='',
+                        metavar=('PROGRAM', 'ARGS'),
+                        help="program to run and filter events")
     args = parser.parse_args()
+    if args.run != '':
+        prog_pid = run_program(args.run)
+    else:
+        prog_pid = args.pid
     sys.exit(Tracer().run(
-        pid=args.pid))
+        pid=prog_pid))
 
 if __name__ == '__main__':
     main()
