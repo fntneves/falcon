@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import pt.haslab.taz.events.Event;
 import pt.haslab.taz.events.EventType;
 import pt.haslab.taz.events.HandlerEvent;
+import pt.haslab.taz.events.LogEvent;
 import pt.haslab.taz.events.MyPair;
 import pt.haslab.taz.events.RWEvent;
 import pt.haslab.taz.events.SocketEvent;
@@ -240,13 +241,11 @@ public enum TraceProcessor
         String thread = event.getString( "thread" );
         String loc = event.optString( "loc" );
         loc = ( loc == null ) ? "" : loc;
+        // consider timestamp to be a long for the moment
         long time = event.getLong( "timestamp" );
         String timestamp = String.valueOf( time );
-        //** consider timestamp to be a long for the moment
-        //BigDecimal bd = new BigDecimal(String.valueOf(time)).multiply(new BigDecimal(1000000)).stripTrailingZeros();
-        //String timestamp = bd.toPlainString();
-        eventNumber++;
 
+        eventNumber++;
         Event e = new Event( timestamp, type, thread, eventNumber, loc );
 
         //optional fields
@@ -264,7 +263,9 @@ public enum TraceProcessor
         switch ( type )
         {
             case LOG:
-                eventsPerThread.get( thread ).add( e );
+                String msg = event.getString( "message" );
+                LogEvent le = new LogEvent( e, msg );
+                eventsPerThread.get( thread ).add( le );
                 break;
             case CONNECT:
             case ACCEPT:

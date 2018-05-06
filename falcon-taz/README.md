@@ -202,6 +202,12 @@ class RWEvent extends Event {
     String var;
 }
 ```
+**LogEvent** is used for LOG events. 
+```java
+class LogEvent extends Event {
+    String message;
+}
+```
 **HandlerEvent** is used for message handler delimiters: HANDLERBEGIN and HANDLEREND. 
 ```java
 class HandlerEvent extends Event {
