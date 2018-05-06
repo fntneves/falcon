@@ -2,6 +2,7 @@ package pt.haslab.taz.events;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import sun.rmi.runtime.Log;
 
 /**
  * Created by nunomachado on 06/05/18.
@@ -58,9 +59,9 @@ public class LogEvent extends Event
         if ( o == null || getClass() != o.getClass() )
             return false;
 
-        RWEvent tmp = (RWEvent) o;
+        LogEvent tmp = (LogEvent) o;
         return ( tmp.getLineOfCode().equals( this.loc )
-                        && tmp.getVariable().equals( this.message )
+                        && tmp.getMessage().equals( this.message )
                         && tmp.getEventNumber() == this.eventNumber
         );
     }

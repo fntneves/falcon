@@ -3,6 +3,8 @@ package pt.haslab.causalSolver;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pt.haslab.causalSolver.solver.Solver;
 import pt.haslab.causalSolver.solver.Z3Solver;
 import pt.haslab.causalSolver.stats.Stats;
@@ -35,13 +37,13 @@ import java.util.TreeSet;
 @SuppressWarnings( "ALL" )
 public class CausalSolver
 {
+    private static Logger logger = LoggerFactory.getLogger( CausalSolver.class );
+
     // Global event counter
     public static int dataEventId = 0; // Counter for RCV and SND messages
 
     //properties
     public static Properties props;
-
-    public static String PRINT_TAG = "[Falcon-Solver]";
 
     //event trace processor
     public static TraceProcessor trace;
@@ -101,7 +103,7 @@ public class CausalSolver
                 Stats.buildingModeltime = System.currentTimeMillis() - modelStart;
 
                 //solve model
-                System.out.println( PRINT_TAG + " Start constraint solving..." );
+                logger.info( "Start constraint solving..." );
                 long solvingStart = System.currentTimeMillis();
                 boolean result = solver.solveModel();
                 Stats.solvingTime = System.currentTimeMillis() - solvingStart;
@@ -117,14 +119,14 @@ public class CausalSolver
                     Stats.printStats();
                 }
                 else
-                    System.out.println( "unsat" );
+                    logger.info( "unsat" );
 
                 solver.close();
             }
         }
         catch ( FileNotFoundException e )
         {
-            System.out.println( "[ERROR] Cannot find file!" );
+            logger.error( "Cannot find file!" );
         }
         catch ( Exception e )
         {
@@ -136,7 +138,7 @@ public class CausalSolver
                     throws IOException
     {
         String solverPath = props.getProperty( Parameters.SOLVER.toString() ); //set up solver path
-        System.out.println( PRINT_TAG+" Init solver: " + solverPath );
+        logger.info( "Initiate solver: " + solverPath );
         solver = Z3Solver.getInstance();
         solver.init( solverPath );
     }
@@ -162,7 +164,7 @@ public class CausalSolver
     private static void genTimestampConstraints()
                     throws IOException
     {
-        System.out.println( PRINT_TAG+" Generate timestamp constraints" );
+        logger.info( "Add timestamp constraints" );
         HashMap<String, List<SocketEvent>> channelEvents = new HashMap<String, List<SocketEvent>>();
 
         //filter events per socket channel
@@ -200,7 +202,7 @@ public class CausalSolver
     public static void genProgramOrderConstraints()
                     throws IOException
     {
-        System.out.println( PRINT_TAG+" Generate program order constraints" );
+        logger.info( "Add program order constraints" );
         String tagPO = "PO_";
         int counterPO = 0;
         int max = 0;
@@ -239,7 +241,7 @@ public class CausalSolver
     public static void genCommunicationConstraints()
                     throws IOException
     {
-        System.out.println( PRINT_TAG+" Generate communication constraints" );
+        logger.info( "Add communication constraints" );
         String tagSND_RCV = "SR_";
         int counterSND_RCV = 0;
         solver.writeComment( "COMMUNICATION CONSTRAINTS - SEND / RECEIVE" );
@@ -283,7 +285,7 @@ public class CausalSolver
     public static void genLockingConstraints()
                     throws IOException
     {
-        System.out.println( PRINT_TAG+" Generate locking constraints" );
+        logger.info( "Add locking constraints" );
         solver.writeComment( "LOCKING CONSTRAINTS" );
         for ( String var : trace.lockEvents.keySet() )
         {
@@ -320,7 +322,7 @@ public class CausalSolver
     public static void genForkStartConstraints()
                     throws IOException
     {
-        System.out.println( PRINT_TAG+" Generate fork-start constraints" );
+        logger.info( "Add fork-start constraints" );
         String tagFRK_STR = "FS_";
         int counterFRK_STR = 0;
         solver.writeComment( "FORK-START CONSTRAINTS" );
@@ -340,7 +342,7 @@ public class CausalSolver
     public static void genJoinExitConstraints()
                     throws IOException
     {
-        System.out.println( PRINT_TAG+" Generate join-exit constraints" );
+        logger.info( "Add join-exit constraints" );
         solver.writeComment( "JOIN-END CONSTRAINTS" );
         String tagJOIN_END = "JE_";
         int counterJOIN_END = 0;
@@ -349,11 +351,11 @@ public class CausalSolver
             for ( ThreadCreationEvent joinEvent : l )
             {
                 String childThread = joinEvent.getChildThread();
-                if(trace.eventsPerThread.containsKey( childThread ) )
+                if ( trace.eventsPerThread.containsKey( childThread ) )
                 {
                     int endEventPos = trace.eventsPerThread.get( childThread ).size();
                     Event endEvent = trace.eventsPerThread.get( joinEvent.getChildThread() ).get(
-                                    endEventPos - 1 );//"END_"+joinEvent.getChildThread();
+                                    endEventPos - 1 );
                     String cnst = solver.cLt( endEvent.toString(), joinEvent.toString() );
                     solver.writeConstraint( solver.postNamedAssert( cnst, tagJOIN_END + counterJOIN_END++ ) );
                     //set dependency
@@ -366,7 +368,7 @@ public class CausalSolver
     public static void genWaitNotifyConstraints()
                     throws IOException
     {
-        System.out.println( PRINT_TAG+" Generate wait-notify constraints" );
+        logger.info( "Add wait-notify constraints" );
         solver.writeComment( "WAIT-NOTIFY CONSTRAINTS" );
         HashMap<SyncEvent, Set<String>> binaryVars =
                         new HashMap<SyncEvent, Set<String>>(); //map: notify event -> list of all binary vars corresponding to that notify
@@ -428,7 +430,7 @@ public class CausalSolver
     public static void genCausalOrderFunction()
                     throws IOException
     {
-        System.out.println( PRINT_TAG+" Generate causality objective function" );
+        logger.info( "Add causality objective function" );
         solver.writeComment( "CAUSALITY OBJECTIVE FUNCTION" );
         solver.writeConstraint( solver.cMinimize( solver.cSummation( allEvents.keySet() ) ) );
     }
@@ -489,7 +491,7 @@ public class CausalSolver
         String output = solver.readOutputLine();
         while ( !output.equals( "" ) && !output.equals( ")" ) )
         {
-            //System.out.println(output);
+            logger.debug( output );
 
             //it's an event - parse event reference and logical causal order
             if ( output.contains( "(define-fun" ) )
@@ -528,7 +530,7 @@ public class CausalSolver
                 }
             }
             else if ( output.contains( "error" ) )
-                System.out.println( output );
+                logger.debug( output );
 
             output = solver.readOutputLine();
         }
@@ -548,14 +550,14 @@ public class CausalSolver
             for ( Event e : orderedEvents )
             {
                 JSONObject json = e.toJSONObject();
-                System.out.println( json.toString() );
+                logger.debug( json.toString() );
                 jsonEvents.put( json );
             }
             fileWriter.write( jsonEvents.toString() );
             fileWriter.flush();
             fileWriter.close();
 
-            System.out.println("\n" + PRINT_TAG + " Output saved to: " + outputFile );
+            logger.info( "Output saved to: " + outputFile );
         }
         catch ( JSONException exc )
         {

@@ -156,7 +156,7 @@ public enum TraceProcessor
                     }
                     catch ( JSONException objError )
                     {
-                        System.err.println( "Not a JSON object. Ignoring event! \n\t-> " + line );
+                        logger.error( "Not a JSON object! Ignoring event: " + line );
                     }
                     finally
                     {
