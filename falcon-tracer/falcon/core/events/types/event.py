@@ -11,8 +11,6 @@ class EventType():
     SOCKET_RECEIVE = 104
 
     PROCESS = 200
-    PROCESS_START = 201
-    PROCESS_END = 202
     PROCESS_CREATE = 203
     PROCESS_JOIN = 204
 
@@ -27,7 +25,6 @@ class EventData(ctypes.Structure):
         ("type", ctypes.c_uint),
         ("pid", ctypes.c_uint),
         ("tgid", ctypes.c_uint),
-        ("ppid", ctypes.c_uint),
         ("comm", ctypes.c_char * TASK_COMM_LEN),
         ("socket", SocketEvent),
         ("extra", ExtraDataUnion)

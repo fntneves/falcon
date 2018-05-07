@@ -15,8 +15,6 @@ enum event_type {
     SOCKET_SEND = 103,
     SOCKET_RECEIVE = 104,
 
-    PROCESS_START = 201,
-    PROCESS_END = 202,
     PROCESS_CREATE = 203,
     PROCESS_JOIN = 204,
 };
@@ -33,7 +31,6 @@ struct event_info_t {
     enum event_type type;
     u32 pid;
     u32 tgid;
-    u32 ppid;
     char comm[TASK_COMM_LEN];
 
     // SOCKET_* events
@@ -141,21 +138,6 @@ void static emit_process_create(struct pt_regs *ctx, pid_t child_pid)
     process_events.perf_submit(ctx, &event, sizeof(event));
 }
 
-void static emit_process_end(struct pt_regs *ctx, pid_t pid)
-{
-    trace_pids.delete(&pid);
-
-    struct event_info_t event = {
-        .type = PROCESS_END,
-        .pid = bpf_get_current_pid_tgid(),
-        .tgid = bpf_get_current_pid_tgid() >> 32
-    };
-
-    bpf_get_current_comm(&event.comm, sizeof(event.comm));
-
-    process_events.perf_submit(ctx, &event, sizeof(event));
-}
-
 void static emit_process_join(struct pt_regs *ctx, pid_t child_pid)
 {
     struct event_info_t event = {
@@ -166,6 +148,8 @@ void static emit_process_join(struct pt_regs *ctx, pid_t child_pid)
 
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
     event.child_pid = child_pid;
+
+    trace_pids.delete(&child_pid);
 
     process_events.perf_submit(ctx, &event, sizeof(event));
 }
@@ -383,22 +367,6 @@ int exit__sys_wait(struct pt_regs *ctx)
     if (exited_pid > 0) {
         emit_process_join(ctx, exited_pid);
     }
-
-    return 0;
-}
-
-/**
- * Probe "sys_exit" at the entry point.
- */
-int entry__sys_exit(struct pt_regs *ctx)
-{
-    u32 kpid = bpf_get_current_pid_tgid();
-
-    if (skip_pid(kpid)) {
-        return 1;
-    }
-
-    emit_process_end(ctx, kpid);
 
     return 0;
 }

@@ -65,7 +65,6 @@ class BpfProgram():
 
         syscall_probes = {}
         # Prefix with 're' to indicate it is a regex.
-        syscall_probes['re_' + syscall_regex + 'exit'] = ('entry__sys_exit', None)
         syscall_probes['re_' + syscall_regex + 'wait'] = (None, 'exit__sys_wait')
         syscall_probes['re_' + syscall_regex + 'clone'] = ('entry__sys_clone', 'exit__sys_clone')
 

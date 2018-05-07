@@ -36,7 +36,7 @@ class EventParser():
             data = {
                 "type": "CONNECT",
                 "timestamp": event.timestamp,
-                "thread": str(event.pid),
+                "thread": '{}@{}'.format(str(event.pid), str(event.tgid)),
                 "socket": sock_id,
                 "socket_type": "TCP",
                 "src": sock_from,
@@ -48,7 +48,7 @@ class EventParser():
             data = {
                 "type": "ACCEPT",
                 "timestamp": event.timestamp,
-                "thread": str(event.pid),
+                "thread": '{}@{}'.format(str(event.pid), str(event.tgid)),
                 "socket": sock_id,
                 "socket_type": "TCP",
                 "src": sock_to,
@@ -60,7 +60,7 @@ class EventParser():
             data = {
                 "type": "SND",
                 "timestamp": event.timestamp,
-                "thread": str(event.pid),
+                "thread": '{}@{}'.format(str(event.pid), str(event.tgid)),
                 "socket": sock_id,
                 "socket_type": "TCP",
                 "src": sock_from,
@@ -73,7 +73,7 @@ class EventParser():
             data = {
                 "type": "RCV",
                 "timestamp": event.timestamp,
-                "thread": str(event.pid),
+                "thread": '{}@{}'.format(str(event.pid), str(event.tgid)),
                 "socket": sock_id,
                 "socket_type": "TCP",
                 "src": sock_to,
@@ -94,27 +94,28 @@ class EventParser():
                 {
                     "type": "CREATE",
                     "timestamp": event.timestamp,
-                    "thread": str(event.pid),
-                    "child": str(event.extra.child_pid),
+                    "thread": '{}@{}'.format(str(event.pid), str(event.tgid)),
+                    "child": '{}@{}'.format(str(event.extra.child_pid), str(event.pid)),
                 },
                 {
                     "type": "START",
                     "timestamp": event.timestamp,
-                    "thread": str(event.extra.child_pid),
+                    "thread": '{}@{}'.format(str(event.extra.child_pid), str(event.pid)),
                 }
             ]
-        elif event.type == EventType.PROCESS_END:
-            data = {
-                "type": "END",
-                "timestamp": event.timestamp,
-                "thread": str(event.pid),
-            }
         elif event.type == EventType.PROCESS_JOIN:
-            data = {
-                "type": "JOIN",
-                "timestamp": event.timestamp,
-                "thread": str(event.pid),
-                "child": str(event.extra.child_pid),
-            }
+            data = [
+                {
+                    "type": "END",
+                    "timestamp": event.timestamp,
+                    "thread": '{}@{}'.format(str(event.extra.child_pid), str(event.pid)),
+                },
+                {
+                    "type": "JOIN",
+                    "timestamp": event.timestamp,
+                    "thread": '{}@{}'.format(str(event.pid), str(event.tgid)),
+                    "child": '{}@{}'.format(str(event.extra.child_pid), str(event.pid)),
+                }
+            ]
 
         return data
