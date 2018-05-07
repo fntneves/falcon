@@ -146,4 +146,4 @@ class EventParser():
 
     @staticmethod
     def thread_id(pid, tgid, host):
-        return '{}-{}@{}'.format(pid, tgid, host)
+        return '{}@{}'.format(pid, host)
