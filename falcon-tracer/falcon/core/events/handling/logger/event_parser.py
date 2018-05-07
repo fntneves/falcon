@@ -26,7 +26,7 @@ class EventParser():
                 sock_to = socket.inet_ntop(event.socket.family, event.socket.daddr)
                 sock_id = util.to_socket_id(event.socket.saddr, sock_from, event.socket.daddr,sock_to, event.socket.sport, event.socket.dport)
             else:
-                raise ValueError('Undefined socket family: {}' % event.socket_family)
+                raise ValueError('Undefined socket family: {}' % event.socket.family)
         except ValueError as ve:
             logging.info('Could not generate socket IDs. {}' % ve)
             return None
