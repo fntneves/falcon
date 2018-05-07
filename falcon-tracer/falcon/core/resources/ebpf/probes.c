@@ -9,8 +9,7 @@
 
 #define PID_FILTER //PID_FILTER//
 
-enum event_type
-{
+enum event_type {
     SOCKET_CONNECT = 101,
     SOCKET_ACCEPT = 102,
     SOCKET_SEND = 103,
@@ -20,8 +19,7 @@ enum event_type
     PROCESS_JOIN = 204,
 };
 
-struct socket_info_t
-{
+struct socket_info_t {
     u16 sport;
     u16 dport;
     u64 saddr[2];
@@ -29,8 +27,7 @@ struct socket_info_t
     u16 family;
 };
 
-struct event_info_t
-{
+struct event_info_t {
     enum event_type type;
     u32 pid;
     u32 tgid;
@@ -59,22 +56,20 @@ BPF_PERF_OUTPUT(process_events);
 BPF_PERF_OUTPUT(socket_events);
 
 // Helper functions.
-int static skip_pid(u32 pid)
-{
-    if (PID_FILTER == 0 || trace_pids.lookup(&pid) != NULL || pid == PID_FILTER)
-    {
+int static skip_pid(u32 pid) {
+    if (PID_FILTER == 0 || trace_pids.lookup(&pid) != NULL || pid == PID_FILTER) {
         return 0;
     }
 
     return 1;
 }
 
-void static emit_socket_connect(struct pt_regs *ctx, struct socket_info_t *skp)
-{
+void static emit_socket_connect(struct pt_regs *ctx, struct socket_info_t * skp) {
     struct event_info_t event = {
         .type = SOCKET_CONNECT,
         .pid = bpf_get_current_pid_tgid(),
-        .tgid = bpf_get_current_pid_tgid() >> 32};
+        .tgid = bpf_get_current_pid_tgid() >> 32
+    };
 
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
     event.socket = *skp;
@@ -87,7 +82,8 @@ void static emit_socket_accept(struct pt_regs *ctx, struct socket_info_t *skp)
     struct event_info_t event = {
         .type = SOCKET_ACCEPT,
         .pid = bpf_get_current_pid_tgid(),
-        .tgid = bpf_get_current_pid_tgid() >> 32};
+        .tgid = bpf_get_current_pid_tgid() >> 32
+    };
 
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
     event.socket = *skp;
@@ -100,7 +96,8 @@ void static emit_socket_send(struct pt_regs *ctx, struct socket_info_t *skp, int
     struct event_info_t event = {
         .type = SOCKET_SEND,
         .pid = bpf_get_current_pid_tgid(),
-        .tgid = bpf_get_current_pid_tgid() >> 32};
+        .tgid = bpf_get_current_pid_tgid() >> 32
+    };
 
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
     event.socket = *skp;
@@ -114,7 +111,8 @@ void static emit_socket_receive(struct pt_regs *ctx, struct socket_info_t *skp, 
     struct event_info_t event = {
         .type = SOCKET_RECEIVE,
         .pid = bpf_get_current_pid_tgid(),
-        .tgid = bpf_get_current_pid_tgid() >> 32};
+        .tgid = bpf_get_current_pid_tgid() >> 32
+    };
 
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
     event.socket = *skp;
@@ -131,7 +129,8 @@ void static emit_process_create(struct pt_regs *ctx, pid_t child_pid)
     struct event_info_t event = {
         .type = PROCESS_CREATE,
         .pid = bpf_get_current_pid_tgid(),
-        .tgid = bpf_get_current_pid_tgid() >> 32};
+        .tgid = bpf_get_current_pid_tgid() >> 32
+    };
 
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
     event.child_pid = child_pid;
@@ -144,7 +143,8 @@ void static emit_process_join(struct pt_regs *ctx, pid_t child_pid)
     struct event_info_t event = {
         .type = PROCESS_JOIN,
         .pid = bpf_get_current_pid_tgid(),
-        .tgid = bpf_get_current_pid_tgid() >> 32};
+        .tgid = bpf_get_current_pid_tgid() >> 32
+    };
 
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
     event.child_pid = child_pid;
@@ -154,8 +154,7 @@ void static emit_process_join(struct pt_regs *ctx, pid_t child_pid)
     process_events.perf_submit(ctx, &event, sizeof(event));
 }
 
-struct socket_info_t static socket_info(struct sock *skp)
-{
+struct socket_info_t static socket_info(struct sock * skp) {
     u16 sport = 0;
     u16 dport = 0;
     u16 family = 0;
@@ -163,8 +162,7 @@ struct socket_info_t static socket_info(struct sock *skp)
 
     bpf_probe_read(&family, sizeof(family), &skp->sk_family);
 
-    if (family == AF_INET)
-    {
+    if (family == AF_INET) {
         u32 saddr = 0;
         u32 daddr = 0;
 
@@ -173,9 +171,7 @@ struct socket_info_t static socket_info(struct sock *skp)
 
         sk.saddr[0] = saddr;
         sk.daddr[0] = daddr;
-    }
-    else if (family == AF_INET6)
-    {
+    } else if (family == AF_INET6) {
         bpf_probe_read(sk.saddr, sizeof(sk.saddr), &skp->sk_v6_rcv_saddr);
         bpf_probe_read(sk.daddr, sizeof(sk.daddr), &skp->sk_v6_daddr);
     }
@@ -194,20 +190,16 @@ struct socket_info_t static socket_info(struct sock *skp)
 /**
  * Probe "tcp_connect" at the entry point.
  */
-int entry__tcp_connect(struct pt_regs *ctx, struct sock *sk)
-{
+int entry__tcp_connect(struct pt_regs *ctx, struct sock * sk) {
     u32 kpid = bpf_get_current_pid_tgid();
 
-    if (skip_pid(kpid))
-    {
+    if (skip_pid(kpid)) {
         return 1;
     }
 
     // Stash the current sock for the exit call.
-    if (skp->sk_family == AF_INET || skp->sk_family == AF_INET6)
-    {
+    if (sk->sk_family == AF_INET || sk->sk_family == AF_INET6)
         sock_handlers.update(&kpid, &sk);
-    }
 
     return 0;
 }
@@ -215,20 +207,16 @@ int entry__tcp_connect(struct pt_regs *ctx, struct sock *sk)
 /**
  * Probe "tcp_connect" at the exit point.
  */
-int exit__tcp_connect(struct pt_regs *ctx)
-{
+int exit__tcp_connect(struct pt_regs *ctx) {
     u32 kpid = bpf_get_current_pid_tgid();
     int error = PT_REGS_RC(ctx);
-    struct sock **skpp = sock_handlers.lookup(&kpid);
+    struct sock ** skpp = sock_handlers.lookup(&kpid);
 
-    if (error >= 0 && skpp != NULL)
-    {
-        struct sock *skp = *skpp;
+    if (error >= 0 && skpp != NULL) {
+        struct sock * skp = *skpp;
         struct socket_info_t sk = socket_info(skp);
         emit_socket_connect(ctx, &sk);
-    }
-    else if (error < 0)
-    {
+    } else if (error < 0 ) {
         // Something went wrong, so do not register socket.
     }
 
@@ -244,14 +232,13 @@ int exit__inet_csk_accept(struct pt_regs *ctx)
 {
     u32 kpid = bpf_get_current_pid_tgid();
 
-    if (skip_pid(kpid))
-    {
+    if (skip_pid(kpid)) {
         return 1;
     }
 
-    struct sock *skp = (struct sock *)PT_REGS_RC(ctx);
+    struct sock * skp = (struct sock *) PT_REGS_RC(ctx);
 
-    if (skp != NULL && (skp->sk_family == AF_INET || skp->sk_family == AF_INET6))
+    if (skp != NULL)
     {
         struct socket_info_t sk = socket_info(skp);
         emit_socket_accept(ctx, &sk);
@@ -263,22 +250,18 @@ int exit__inet_csk_accept(struct pt_regs *ctx)
 /**
  * Probe "sock_sendmsg" at the entry point.
  */
-int entry__sock_sendmsg(struct pt_regs *ctx, struct socket *sock, struct msghdr *msg)
-{
+int entry__sock_sendmsg(struct pt_regs *ctx, struct socket * sock, struct msghdr * msg) {
     u32 kpid = bpf_get_current_pid_tgid();
 
-    if (skip_pid(kpid))
-    {
+    if (skip_pid(kpid)) {
         return 1;
     }
 
     // Stash the current sock for the exit call.
-    struct sock *skp = sock->sk;
+    struct sock * sk = sock->sk;
 
-    if (skp->sk_family == AF_INET || skp->sk_family == AF_INET6)
-    {
-        sock_handlers.update(&kpid, &skp);
-    }
+    if (sk->sk_family == AF_INET || sk->sk_family == AF_INET6)
+        sock_handlers.update(&kpid, &sk);
 
     return 0;
 }
@@ -286,20 +269,16 @@ int entry__sock_sendmsg(struct pt_regs *ctx, struct socket *sock, struct msghdr 
 /**
  * Probe "sock_sendmsg" at the exit point.
  */
-int exit__sock_sendmsg(struct pt_regs *ctx)
-{
+int exit__sock_sendmsg(struct pt_regs *ctx) {
     u32 kpid = bpf_get_current_pid_tgid();
     int sent_bytes = PT_REGS_RC(ctx);
-    struct sock **skpp = sock_handlers.lookup(&kpid);
+    struct sock ** skpp = sock_handlers.lookup(&kpid);
 
-    if (sent_bytes > 0 && skpp != NULL)
-    {
+    if (sent_bytes > 0 && skpp != NULL) {
         struct sock *skp = *skpp;
         struct socket_info_t sk = socket_info(skp);
         emit_socket_send(ctx, &sk, sent_bytes);
-    }
-    else if (sent_bytes <= 0)
-    {
+    } else if (sent_bytes <= 0 ) {
         // Something went wrong.
     }
 
@@ -315,18 +294,15 @@ int entry__sock_recvmsg(struct pt_regs *ctx, struct socket *sock, struct msghdr 
 {
     u32 kpid = bpf_get_current_pid_tgid();
 
-    if (skip_pid(kpid))
-    {
+    if (skip_pid(kpid)) {
         return 1;
     }
 
     // Stash the current sock for the exit call.
-    struct sock *skp = sock->sk;
+    struct sock *sk = sock->sk;
 
-    if (skp->sk_family == AF_INET || skp->sk_family == AF_INET6)
-    {
-        sock_handlers.update(&kpid, &skp);
-    }
+    if (sk->sk_family == AF_INET || sk->sk_family == AF_INET6)
+        sock_handlers.update(&kpid, &sk);
 
     return 0;
 }
@@ -363,14 +339,12 @@ int exit__sys_clone(struct pt_regs *ctx)
 {
     u32 kpid = bpf_get_current_pid_tgid();
 
-    if (skip_pid(kpid))
-    {
+    if (skip_pid(kpid)) {
         return 1;
     }
 
     pid_t new_tid = PT_REGS_RC(ctx);
-    if (new_tid > 0)
-    {
+    if (new_tid > 0) {
         emit_process_create(ctx, new_tid);
     }
 
@@ -384,15 +358,13 @@ int exit__sys_wait(struct pt_regs *ctx)
 {
     u32 kpid = bpf_get_current_pid_tgid();
 
-    if (skip_pid(kpid))
-    {
+    if (skip_pid(kpid)) {
         return 1;
     }
 
     pid_t exited_pid = PT_REGS_RC(ctx);
 
-    if (exited_pid > 0)
-    {
+    if (exited_pid > 0) {
         emit_process_join(ctx, exited_pid);
     }
 
