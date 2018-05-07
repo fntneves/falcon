@@ -36,31 +36,37 @@ class EventParser():
             data = {
                 "type": "CONNECT",
                 "timestamp": event.timestamp,
-                "thread": '{}@{}'.format(str(event.pid), str(event.tgid)),
+                "thread": EventParser.thread_id(event.pid, event.tgid, event.host),
                 "socket": sock_id,
                 "socket_type": "TCP",
                 "src": sock_from,
                 "src_port": event.socket.sport,
                 "dst": sock_to,
                 "dst_port": event.socket.dport,
+                "data": {
+                    "host": event.host,
+                }
             }
         elif event.type == EventType.SOCKET_ACCEPT:
             data = {
                 "type": "ACCEPT",
                 "timestamp": event.timestamp,
-                "thread": '{}@{}'.format(str(event.pid), str(event.tgid)),
+                "thread": EventParser.thread_id(event.pid, event.tgid, event.host),
                 "socket": sock_id,
                 "socket_type": "TCP",
                 "src": sock_to,
                 "src_port": event.socket.dport,
                 "dst": sock_from,
                 "dst_port": event.socket.sport,
+                "data": {
+                    "host": event.host,
+                }
             }
         elif event.type == EventType.SOCKET_SEND:
             data = {
                 "type": "SND",
                 "timestamp": event.timestamp,
-                "thread": '{}@{}'.format(str(event.pid), str(event.tgid)),
+                "thread": EventParser.thread_id(event.pid, event.tgid, event.host),
                 "socket": sock_id,
                 "socket_type": "TCP",
                 "src": sock_from,
@@ -68,12 +74,15 @@ class EventParser():
                 "dst": sock_to,
                 "dst_port": event.socket.dport,
                 "size": event.extra.bytes,
+                "data": {
+                    "host": event.host,
+                }
             }
         elif event.type == EventType.SOCKET_RECEIVE:
             data = {
                 "type": "RCV",
                 "timestamp": event.timestamp,
-                "thread": '{}@{}'.format(str(event.pid), str(event.tgid)),
+                "thread": EventParser.thread_id(event.pid, event.tgid, event.host),
                 "socket": sock_id,
                 "socket_type": "TCP",
                 "src": sock_to,
@@ -81,6 +90,9 @@ class EventParser():
                 "dst": sock_from,
                 "dst_port": event.socket.sport,
                 "size": event.extra.bytes,
+                "data": {
+                    "host": event.host,
+                }
             }
 
         return data
@@ -94,13 +106,19 @@ class EventParser():
                 {
                     "type": "CREATE",
                     "timestamp": event.timestamp,
-                    "thread": '{}@{}'.format(str(event.pid), str(event.tgid)),
-                    "child": '{}@{}'.format(str(event.extra.child_pid), str(event.pid)),
+                    "thread": EventParser.thread_id(event.pid, event.tgid, event.host),
+                    "child": EventParser.thread_id(event.extra.child_pid, event.pid, event.host),
+                    "data": {
+                        "host": event.host,
+                    }
                 },
                 {
                     "type": "START",
                     "timestamp": event.timestamp,
-                    "thread": '{}@{}'.format(str(event.extra.child_pid), str(event.pid)),
+                    "thread": EventParser.thread_id(event.extra.child_pid, event.pid, event.host),
+                    "data": {
+                        "host": event.host,
+                    }
                 }
             ]
         elif event.type == EventType.PROCESS_JOIN:
@@ -108,14 +126,24 @@ class EventParser():
                 {
                     "type": "END",
                     "timestamp": event.timestamp,
-                    "thread": '{}@{}'.format(str(event.extra.child_pid), str(event.pid)),
+                    "thread": EventParser.thread_id(event.extra.child_pid, event.pid, event.host),
+                    "data": {
+                        "host": event.host,
+                    }
                 },
                 {
                     "type": "JOIN",
                     "timestamp": event.timestamp,
-                    "thread": '{}@{}'.format(str(event.pid), str(event.tgid)),
-                    "child": '{}@{}'.format(str(event.extra.child_pid), str(event.pid)),
+                    "thread": EventParser.thread_id(event.pid, event.tgid, event.host),
+                    "child": EventParser.thread_id(event.extra.child_pid, event.pid, event.host),
+                    "data": {
+                        "host": event.host,
+                    }
                 }
             ]
 
         return data
+
+    @staticmethod
+    def thread_id(pid, tgid, host):
+        return '{}-{}@{}'.format(pid, tgid, host)

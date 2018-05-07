@@ -197,8 +197,6 @@ int entry__tcp_connect(struct pt_regs *ctx, struct sock * sk) {
         return 1;
     }
 
-    // Stash the current sock for the exit call.
-    // if (sk->sk_family == AF_INET)
     sock_handlers.update(&kpid, &sk);
 
     return 0;
@@ -260,8 +258,7 @@ int entry__sock_sendmsg(struct pt_regs *ctx, struct socket * sock, struct msghdr
     // Stash the current sock for the exit call.
     struct sock * skp = sock->sk;
 
-    if (skp->sk_family == AF_INET)
-        sock_handlers.update(&kpid, &skp);
+    sock_handlers.update(&kpid, &skp);
 
     return 0;
 }
@@ -301,8 +298,7 @@ int entry__sock_recvmsg(struct pt_regs *ctx, struct socket *sock, struct msghdr 
     // Stash the current sock for the exit call.
     struct sock *skp = sock->sk;
 
-    if (skp->sk_family == AF_INET)
-        sock_handlers.update(&kpid, &skp);
+    sock_handlers.update(&kpid, &skp);
 
     return 0;
 }
