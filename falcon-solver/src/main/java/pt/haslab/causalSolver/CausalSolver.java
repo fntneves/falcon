@@ -210,8 +210,6 @@ public class CausalSolver
         {
             max += l.size();
         }
-        solver.writeConstraint( solver.declareIntVar( "MAX" ) );
-        solver.writeConstraint( solver.postAssert( solver.cEq( "MAX", String.valueOf( max ) ) ) );
 
         //generate program order variables and constraints
         for ( List<Event> events : trace.eventsPerThread.values() )
@@ -222,7 +220,7 @@ public class CausalSolver
                 String threadOrder = "";
                 for ( Event e : events )
                 {
-                    String var = solver.declareIntVar( e.toString(), "0", "MAX" );
+                    String var = solver.declareIntVar( e.toString(), "0", String.valueOf( max ) );
                     solver.writeConstraint( var );
                     threadOrder += ( e.toString() + " " );
 
@@ -232,7 +230,6 @@ public class CausalSolver
                 if ( events.size() > 1 )
                 {
                     solver.writeConstraint( solver.postNamedAssert( solver.cLt( threadOrder ), tagPO + counterPO++ ) );
-                    solver.writeConstraint( solver.postAssert( solver.cDistinct( threadOrder ) ) );
                 }
             }
         }
