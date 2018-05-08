@@ -194,7 +194,6 @@ public class Event
         json.put( "type", type.toString() );
         json.put( "thread", thread );
         json.put( "loc", loc );
-        json.put( "pid", this.getNodeId() );
         json.put( "order", scheduleOrder );
         json.put( "id", this.hashCode() );
         json.put( "timestamp", timestamp );
