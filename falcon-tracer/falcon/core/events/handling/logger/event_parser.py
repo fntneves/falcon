@@ -4,7 +4,6 @@ import logging
 from falcon import util
 from falcon.core.events.types import EventType
 
-
 class EventParser():
     @staticmethod
     def parse(cpu, event, size):
@@ -18,8 +17,7 @@ class EventParser():
     @staticmethod
     def _parse_socket_event(cpu, event):
         try:
-            sock_from, sock_to, sock_id = EventParser.get_sock_info(
-                event.socket.family, event.socket.saddr, event.socket.sport, event.socket.daddr, event.socket.dport)
+            sock_from, sock_to, sock_id = EventParser.get_sock_info(event.socket.family, event.socket.saddr, event.socket.sport, event.socket.daddr, event.socket.dport)
         except ValueError:
             logging.info('Could not generate socket IDs.')
             return None
@@ -147,24 +145,23 @@ class EventParser():
             sock_id = util.to_socket_id(
                 saddr[0], sock_from, daddr[0], sock_to, sport, dport)
         elif family == socket.AF_INET6:
-            if (saddr[0] == 0x0 and saddr[1] & 0xffff0000 == 0xffff0000) and (daddr[0] == 0x0 and daddr[1] & 0xffff0000 == 0xffff0000):
+            sock_from = None
+            if saddr[0] == 0x0 and saddr[1] & 0xffff0000 == 0xffff0000:
                 # Look for IPv4 mapped source address
-                sock_from = socket.inet_ntop(
-                    socket.AF_INET, struct.pack("I", saddr[1] >> 32))
-                logging.debug(
-                    'Source IPv4 mapped to IPv6 address detected: {}'.format(sock_from))
-                sock_to = socket.inet_ntop(
-                    socket.AF_INET, struct.pack("I", daddr[1] >> 32))
-                logging.debug(
-                    'Destination IPv4 mapped to IPv6 address detected: {}'.format(sock_to))
-
-                sock_id = util.to_socket_id(
-                    saddr[1] >> 32, sock_from, daddr[1] >> 32, sock_to, sport, dport)
+                sock_from = socket.inet_ntop(socket.AF_INET, struct.pack("I", saddr[1] >> 32))
+                logging.debug('Source IPv4 mapped to IPv6 address detected: {}'.format(sock_from))
             else:
                 sock_from = socket.inet_ntop(socket.AF_INET6, saddr)
+
+            sock_to = None
+            if daddr[0] == 0x0 and daddr[1] & 0xffff0000 == 0xffff0000:
+                # Look for IPv4 mapped destination address
+                sock_to = socket.inet_ntop(socket.AF_INET, struct.pack("I", daddr[1] >> 32))
+                logging.debug('Destination IPv4 mapped to IPv6 address detected: {}'.format(sock_to))
+            else:
                 sock_to = socket.inet_ntop(socket.AF_INET6, daddr)
-                sock_id = util.to_socket_id(
-                    saddr, sock_from, daddr, sock_to, sport, dport)
+
+            sock_id = util.to_socket_id(saddr, sock_from, daddr, sock_to, sport, dport)
 
         else:
             raise ValueError('Undefined socket family: {}'.format(family))
