@@ -17,18 +17,9 @@ class EventParser():
     @staticmethod
     def _parse_socket_event(cpu, event):
         try:
-            if event.socket.family == socket.AF_INET:
-                sock_from = socket.inet_ntop(event.socket.family, struct.pack("I", event.socket.saddr[0]))
-                sock_to = socket.inet_ntop(event.socket.family, struct.pack("I", event.socket.daddr[0]))
-                sock_id = util.to_socket_id(event.socket.saddr[0], sock_from, event.socket.daddr[0], sock_to, event.socket.sport, event.socket.dport)
-            elif event.socket.family == socket.AF_INET6:
-                sock_from = socket.inet_ntop(event.socket.family, event.socket.saddr)
-                sock_to = socket.inet_ntop(event.socket.family, event.socket.daddr)
-                sock_id = util.to_socket_id(event.socket.saddr, sock_from, event.socket.daddr,sock_to, event.socket.sport, event.socket.dport)
-            else:
-                raise ValueError('Undefined socket family: {}' % str(event.socket.family))
-        except ValueError as ve:
-            logging.info('Could not generate socket IDs. {}' % str(ve))
+            sock_from, sock_to, sock_id = EventParser.get_sock_info(event.socket.family, event.socket.saddr, event.socket.sport, event.socket.daddr, event.socket.dport)
+        except ValueError:
+            logging.info('Could not generate socket IDs.')
             return None
 
         data = None
@@ -143,6 +134,39 @@ class EventParser():
             ]
 
         return data
+
+    @staticmethod
+    def get_sock_info(family, saddr, sport, daddr, dport):
+        if family == socket.AF_INET:
+            sock_from = socket.inet_ntop(
+                socket.AF_INET, struct.pack("I", saddr[0]))
+            sock_to = socket.inet_ntop(
+                socket.AF_INET, struct.pack("I", daddr[0]))
+            sock_id = util.to_socket_id(
+                saddr[0], sock_from, daddr[0], sock_to, sport, dport)
+        elif family == socket.AF_INET6:
+            sock_from = None
+            if saddr[0] == 0x0 and saddr[1] & 0xffff0000 == 0xffff0000:
+                # Look for IPv4 mapped source address
+                sock_from = socket.inet_ntop(socket.AF_INET, struct.pack("I", saddr[1] >> 32))
+                logging.debug('Source IPv4 mapped to IPv6 address detected: {}'.format(sock_from))
+            else:
+                sock_from = socket.inet_ntop(socket.AF_INET6, saddr)
+
+            sock_to = None
+            if daddr[0] == 0x0 and daddr[1] & 0xffff0000 == 0xffff0000:
+                # Look for IPv4 mapped destination address
+                sock_to = socket.inet_ntop(socket.AF_INET, struct.pack("I", daddr[1] >> 32))
+                logging.debug('Destination IPv4 mapped to IPv6 address detected: {}'.format(sock_to))
+            else:
+                sock_to = socket.inet_ntop(socket.AF_INET6, daddr)
+
+            sock_id = util.to_socket_id(saddr, sock_from, daddr, sock_to, sport, dport)
+
+        else:
+            raise ValueError('Undefined socket family: {}'.format(family))
+
+        return (sock_from, sock_to, sock_id)
 
     @staticmethod
     def thread_id(pid, tgid, host):
