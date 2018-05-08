@@ -137,34 +137,47 @@ class EventParser():
 
     @staticmethod
     def get_sock_info(family, saddr, sport, daddr, dport):
+        sock_saddr = saddr
+        sock_daddr = daddr
+
+        # Handle IPv4 sockets
         if family == socket.AF_INET:
-            sock_from = socket.inet_ntop(
-                socket.AF_INET, struct.pack("I", saddr[0]))
-            sock_to = socket.inet_ntop(
-                socket.AF_INET, struct.pack("I", daddr[0]))
-            sock_id = util.to_socket_id(
-                saddr[0], sock_from, daddr[0], sock_to, sport, dport)
+            sock_saddr = saddr[0]
+            sock_daddr = daddr[0]
+            sock_from = socket.inet_ntop(socket.AF_INET, struct.pack("I", sock_saddr))
+            sock_to = socket.inet_ntop(socket.AF_INET, struct.pack("I", sock_daddr))
+
+            if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
+                logging.debug('ipv4 saddr: {} -> {}'.format(hex(sock_saddr), sock_from))
+                logging.debug('ipv4 daddr: {} -> {}'.format(hex(sock_daddr), sock_to))
+        # Handle IPv6 sockets
         elif family == socket.AF_INET6:
-            sock_from = None
+
+            # Handle IPv4-mapped IPv6 source socket addresses
             if saddr[0] == 0x0 and saddr[1] & 0xffff0000 == 0xffff0000:
-                # Look for IPv4 mapped source address
-                sock_from = socket.inet_ntop(socket.AF_INET, struct.pack("I", saddr[1] >> 32))
-                logging.debug('Source IPv4 mapped to IPv6 address detected: {}'.format(sock_from))
+                sock_saddr = saddr[1] >> 32
+                sock_from = socket.inet_ntop(socket.AF_INET, struct.pack("I", sock_saddr))
+
+                if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
+                    logging.debug('ipv4-mapped saddr: {} -> {}'.format(hex(sock_saddr), sock_from))
             else:
                 sock_from = socket.inet_ntop(socket.AF_INET6, saddr)
 
-            sock_to = None
+            # Handle IPv4-mapped IPv6 destination socket addresses
             if daddr[0] == 0x0 and daddr[1] & 0xffff0000 == 0xffff0000:
-                # Look for IPv4 mapped destination address
-                sock_to = socket.inet_ntop(socket.AF_INET, struct.pack("I", daddr[1] >> 32))
-                logging.debug('Destination IPv4 mapped to IPv6 address detected: {}'.format(sock_to))
+                # Convert IPv4-mapped destination IPv6 address to IPv4
+                sock_daddr = daddr[1] >> 32
+                sock_to = socket.inet_ntop(socket.AF_INET, struct.pack("I", sock_daddr))
+
+                if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
+                    logging.debug('ipv4-mapped daddr: {} -> {}'.format(hex(sock_daddr), sock_from))
             else:
                 sock_to = socket.inet_ntop(socket.AF_INET6, daddr)
 
-            sock_id = util.to_socket_id(saddr, sock_from, daddr, sock_to, sport, dport)
-
         else:
             raise ValueError('Undefined socket family: {}'.format(family))
+
+        sock_id = util.to_socket_id(sock_daddr, sock_from, sock_daddr, sock_to, sport, dport)
 
         return (sock_from, sock_to, sock_id)
 
