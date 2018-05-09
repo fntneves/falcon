@@ -1,8 +1,8 @@
 export default class Event {
   constructor(fields) {
     this.id = fields.id;
-    this.pid = fields.pid;// .split('@')[1];
-    this.thread = fields.thread;// .split('@')[0];
+    this.pid = (fields.thread.split('@')[1]).split('.')[0];
+    this.thread = fields.thread.split('@')[0];
     this.clock = fields.order;
     this.dependency = fields.dependency || null;
     this.type = fields.type;
