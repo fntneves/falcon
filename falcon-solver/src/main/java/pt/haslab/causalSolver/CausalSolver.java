@@ -381,8 +381,8 @@ public class CausalSolver
                 for ( SyncEvent notify : trace.notifyEvents.get( condition ) )
                 {
                     //binary var used to indicate whether the signal operation is mapped to a wait operation or not
-                    String binVar = "B_" + condition + "-W_" + wait.getThread() + "_" + wait.getEventNumber() + "-N_"
-                                    + notify.getThread() + "_" + notify.getEventNumber();
+                    String binVar = "B_" + condition + "-W_" + wait.getThread() + "_" + wait.getEventId() + "-N_"
+                                    + notify.getThread() + "_" + notify.getEventId();
 
                     if ( !binaryVars.containsKey( notify ) )
                     {
