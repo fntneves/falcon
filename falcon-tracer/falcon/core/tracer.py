@@ -18,47 +18,23 @@ class Tracer:
     def run(self, pid=0):
         program_filepath = pkg_resources.resource_filename('falcon', 'core/resources/ebpf/probes.c')
 
-        def ignore_signal(signum, frame):
-            pass
-        signal.signal(signal.SIGINT, ignore_signal)
-
         with open(program_filepath, 'r') as program_file:
             program = BpfProgram(text=program_file.read())
             program.filter_pid(pid)
 
-            # Create and boot event handlers
+            logging.info('Creating and booting handlers...')
             handlers = []
             for handler in Tracer.get_handlers():
                 handler.boot()
                 handlers.append(handler)
 
-            # Create pipes and workers
-            (output_stream, input_stream) = multiprocessing.Pipe()
-            worker = events.EventProcessor(input_stream, handlers)
-            worker.daemon = True
-            worker.start()
-
-            # Create event handler and listener worker
-            bpf_event_handler = events.handling.BpfEventHandler(output_stream)
-            bpf_event_handler.boot()
-
-            bpf_listener_worker = events.bpf.BpfEventListener(program, bpf_event_handler)
-            bpf_listener_worker.daemon = True
-            bpf_listener_worker.start()
+            logging.info('Running eBPF listener...')
+            bpf_listener_worker = events.bpf.BpfEventListener(program, handlers[0])
+            bpf_listener_worker.run()
             os.kill(pid, signal.SIGCONT)
 
-            # Wait for the producer to finish
-            while bpf_listener_worker.is_alive():
-                bpf_listener_worker.join()
-            bpf_event_handler.shutdown()
-
-            # Shutdown workers
-            print 'Attempting to shutdown worker...'
-            output_stream.send('exit')
-            worker.join()
-
             # Shutdown handlers
-            print 'Attempting to shutdown handlers...'
+            logging.info('Shutting handlers down...')
             for handler in handlers:
                 handler.shutdown()
 
@@ -83,9 +59,6 @@ def run_program(program):
 
         while paused[0]:
             signal.pause()
-        # give some time to make sure listener has started
-        # seems a little too "hackish"...
-        time.sleep(5)
         os.execvp(program[0], program)
     else:
         return pid

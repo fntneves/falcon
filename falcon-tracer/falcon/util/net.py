@@ -10,7 +10,7 @@ def if_indextoname (index):
     libc.if_indextoname.argtypes = [ctypes.c_uint32, ctypes.c_char_p]
     libc.if_indextoname.restype = ctypes.c_char_p
 
-    ifname = ctypes.create_string_buffer (32)
+    ifname = ctypes.create_string_buffer(32)
     ifname = libc.if_indextoname (index, ifname)
     if not ifname:
         raise RuntimeError ("Invalid network interface index.")

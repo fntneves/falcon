@@ -8,7 +8,7 @@ class BpfProgram():
         self._contents = text
         self._bpf = None
         self._probes = None
-        self._perf_buffer_size = 8192
+        self._perf_buffer_size = 64 * 1024
 
     def bpf_instance(self):
         return self._bpf
@@ -65,7 +65,6 @@ class BpfProgram():
 
         syscall_probes = {}
         # Prefix with 're' to indicate it is a regex.
-        syscall_probes['re_' + syscall_regex + 'exit'] = ('entry__sys_exit', None)
         syscall_probes['re_' + syscall_regex + 'wait'] = (None, 'exit__sys_wait')
         syscall_probes['re_' + syscall_regex + 'clone'] = ('entry__sys_clone', 'exit__sys_clone')
 
