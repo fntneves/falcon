@@ -52,8 +52,7 @@ BPF_HASH(sock_handlers, u32, struct sock *);
 BPF_HASH(trace_pids, u32, char);
 
 // This structure stores the socket events.
-BPF_PERF_OUTPUT(process_events);
-BPF_PERF_OUTPUT(socket_events);
+BPF_PERF_OUTPUT(events);
 
 // Helper functions.
 int static skip_pid(u32 pid) {
@@ -74,7 +73,7 @@ void static emit_socket_connect(struct pt_regs *ctx, struct socket_info_t * skp)
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
     event.socket = *skp;
 
-    socket_events.perf_submit(ctx, &event, sizeof(event));
+    events.perf_submit(ctx, &event, sizeof(event));
 }
 
 void static emit_socket_accept(struct pt_regs *ctx, struct socket_info_t *skp)
@@ -88,7 +87,7 @@ void static emit_socket_accept(struct pt_regs *ctx, struct socket_info_t *skp)
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
     event.socket = *skp;
 
-    socket_events.perf_submit(ctx, &event, sizeof(event));
+    events.perf_submit(ctx, &event, sizeof(event));
 }
 
 void static emit_socket_send(struct pt_regs *ctx, struct socket_info_t *skp, int bytes)
@@ -103,7 +102,7 @@ void static emit_socket_send(struct pt_regs *ctx, struct socket_info_t *skp, int
     event.socket = *skp;
     event.bytes = bytes;
 
-    socket_events.perf_submit(ctx, &event, sizeof(event));
+    events.perf_submit(ctx, &event, sizeof(event));
 }
 
 void static emit_socket_receive(struct pt_regs *ctx, struct socket_info_t *skp, int bytes)
@@ -118,24 +117,24 @@ void static emit_socket_receive(struct pt_regs *ctx, struct socket_info_t *skp, 
     event.socket = *skp;
     event.bytes = bytes;
 
-    socket_events.perf_submit(ctx, &event, sizeof(event));
+    events.perf_submit(ctx, &event, sizeof(event));
 }
 
-void static emit_process_create(struct pt_regs *ctx, pid_t child_pid)
+void static emit_process_create(struct pt_regs * ctx, pid_t parent_pid, pid_t child_pid)
 {
     char zero = ' ';
     trace_pids.insert(&child_pid, &zero);
 
     struct event_info_t event = {
         .type = PROCESS_CREATE,
-        .pid = bpf_get_current_pid_tgid(),
+        .pid = parent_pid,
         .tgid = bpf_get_current_pid_tgid() >> 32
     };
 
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
     event.child_pid = child_pid;
 
-    process_events.perf_submit(ctx, &event, sizeof(event));
+    events.perf_submit(ctx, &event, sizeof(event));
 }
 
 void static emit_process_join(struct pt_regs *ctx, pid_t child_pid)
@@ -151,7 +150,7 @@ void static emit_process_join(struct pt_regs *ctx, pid_t child_pid)
 
     trace_pids.delete(&child_pid);
 
-    process_events.perf_submit(ctx, &event, sizeof(event));
+    events.perf_submit(ctx, &event, sizeof(event));
 }
 
 struct socket_info_t static socket_info(struct sock * skp) {
@@ -333,20 +332,25 @@ int exit__sock_recvmsg(struct pt_regs *ctx)
 }
 
 /**
- * Probe "sys_clone" at the exit point.
+ * Handle forks.
  */
-int exit__sys_clone(struct pt_regs *ctx)
+struct sched_process_fork
 {
-    u32 kpid = bpf_get_current_pid_tgid();
+    u64 __unused__;
+    char parent_comm[16];
+    pid_t parent_pid;
+    char child_comm[16];
+    pid_t child_pid;
+};
 
-    if (skip_pid(kpid)) {
+int on_fork(struct sched_process_fork * args)
+{
+    if (skip_pid(args->parent_pid))
+    {
         return 1;
     }
 
-    pid_t new_tid = PT_REGS_RC(ctx);
-    if (new_tid > 0) {
-        emit_process_create(ctx, new_tid);
-    }
+    emit_process_create((struct pt_regs *) args, args->parent_pid, args->child_pid);
 
     return 0;
 }

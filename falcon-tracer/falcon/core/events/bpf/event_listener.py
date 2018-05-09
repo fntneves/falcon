@@ -15,8 +15,7 @@ class BpfEventListener():
 
     def run(self):
         self._bpf.prepare()
-        self._bpf.open_event_buffer('process_events', self.handle)
-        self._bpf.open_event_buffer('socket_events', self.handle)
+        self._bpf.open_event_buffer('events', self.handle)
 
         # Give some time to open buffers.
         time.sleep(1)
