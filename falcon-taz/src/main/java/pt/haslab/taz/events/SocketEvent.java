@@ -72,7 +72,7 @@ public class SocketEvent
         this.src_port = 0;
         this.dst = "";
         this.dst_port = 0;
-        this.msgId = "";
+        this.msgId = null;
         this.size = 0;
         this.socket_type = null;
     }
@@ -211,7 +211,7 @@ public class SocketEvent
                         && tmp.getMessageId() == this.msgId
                         && tmp.getSocket().equals( this.socket )
                         && tmp.getThread().equals( this.thread )
-                        && tmp.getEventNumber() == this.eventNumber
+                        && tmp.getEventId() == this.eventId
         );
     }
 
@@ -220,7 +220,7 @@ public class SocketEvent
     {
         String res = type + "_" + socket.hashCode() + ( ( msgId != null && !msgId.equals( "" ) ) ?
                         ( "_" + msgId ) :
-                        "" ) + "_" + thread + "_" + eventNumber;
+                        "" ) + "_" + thread + "_" + eventId;
         return res;
     }
 
@@ -239,9 +239,11 @@ public class SocketEvent
         json.put( "dst", dst );
         json.put( "dst_port", dst_port );
         json.put( "socket_type", socket_type );
-        json.put( "size", size );
-        json.put( "message", msgId );
-
+        if ( this.msgId != null )
+        {
+            json.put( "size", size );
+            json.put( "message", msgId );
+        }
         return json;
     }
 }

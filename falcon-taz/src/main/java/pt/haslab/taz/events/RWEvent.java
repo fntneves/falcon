@@ -67,7 +67,7 @@ public class RWEvent
                         && this.getNodeId().equals( e.getNodeId() )
                         //&& !thread.equals(e.getThread())
                         && var.equals( e.getVariable() )
-                        && ( !thread.equals( e.getThread() ) || eventNumber != e.getEventNumber() ) );
+                        && ( !thread.equals( e.getThread() ) || eventId != e.getEventId() ) );
     }
 
     @Override
@@ -82,14 +82,14 @@ public class RWEvent
         RWEvent tmp = (RWEvent) o;
         return ( tmp.getLineOfCode().equals( this.loc )
                         && tmp.getVariable().equals( this.var )
-                        && tmp.getEventNumber() == this.eventNumber
+                        && tmp.getEventId() == this.eventId
         );
     }
 
     @Override
     public String toString()
     {
-        String res = type + "_" + var + "_" + thread + "_" + eventNumber + "@" + loc;
+        String res = type + "_" + var + "_" + thread + "_" + eventId + "@" + loc;
         return res;
     }
 }

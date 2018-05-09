@@ -232,7 +232,7 @@ public enum TraceProcessor
     private void parseJSONEvent( JSONObject event )
                     throws JSONException
     {
-        //required fields
+        // --- REQUIRED FIELDS ---
         EventType type = EventType.getEventType( event.getString( "type" ) );
 
         if ( type == null )
@@ -245,11 +245,16 @@ public enum TraceProcessor
         long time = event.getLong( "timestamp" );
         String timestamp = String.valueOf( time );
 
-        eventNumber++;
-        Event e = new Event( timestamp, type, thread, eventNumber, loc );
+        // --- OPTIONAL FIELDS ---
+        //use event id from trace if it's present in the JSON object
+        //otherwise, use global event counter as id
+        long eventId = event.has( "id" ) ? event.getLong( "id" ) : eventNumber++;
+        Event e = new Event( timestamp, type, thread, eventId, loc );
 
-        //optional fields
-        e.setDependency( event.optString( "dependency", null ) );
+        String dependency = event.optString( "dependency" );
+        if(dependency.length() == 0 || dependency.equals( "null" ))
+            dependency = null;
+        e.setDependency( dependency );
         if ( event.has( "data" ) )
             e.setData( event.optJSONObject( "data" ) );
 
@@ -277,19 +282,17 @@ public enum TraceProcessor
                 String socket = event.getString( "socket" );
                 se.setSocket( socket );
                 se.setSocketType( event.getString( "socket_type" ) );
-                if ( type == EventType.RCV || type == EventType.SND )
-                {
-                    se.setSrc( event.getString( "src" ) );
-                    se.setSrcPort( event.getInt( "src_port" ) );
-                    se.setDst( event.getString( "dst" ) );
-                    se.setDstPort( event.getInt( "dst_port" ) );
-                    se.setSize( event.getInt( "size" ) );
-                    se.setMessageId( event.optString( "message", null ) );
-                }
+                se.setSrc( event.getString( "src" ) );
+                se.setSrcPort( event.getInt( "src_port" ) );
+                se.setDst( event.getString( "dst" ) );
+                se.setDstPort( event.getInt( "dst_port" ) );
 
                 //handle SND and RCV
                 if ( type == EventType.SND || type == EventType.RCV )
                 {
+                    se.setSize( event.getInt( "size" ) );
+                    se.setMessageId( event.optString( "message", null ) );
+
                     //handle UDP cases by matching message id
                     if ( se.getSocketType() == SocketEvent.SocketType.UDP )
                     {
@@ -588,7 +591,9 @@ public enum TraceProcessor
             Deque<SocketEvent> rcvEvents = new ArrayDeque<SocketEvent>();
             MyPair<Deque<SocketEvent>, Deque<SocketEvent>> pendingEventsPair =
                             new MyPair<Deque<SocketEvent>, Deque<SocketEvent>>( sndEvents, rcvEvents );
+
             pendingEventsSndRcv.put( socket, pendingEventsPair );
+
             return pendingEventsPair;
         }
 
@@ -720,7 +725,7 @@ public enum TraceProcessor
         }
         else
         {
-            msgid = String.valueOf( full.getEventNumber() );
+            msgid = String.valueOf( full.getEventId() );
             full.setMessageId( msgid );
         }
         msgid = msgid + "." + full.getSize();

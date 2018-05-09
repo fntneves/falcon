@@ -27,7 +27,7 @@ public class EventIterator
                         public int compare( MyPair<ListIterator<Event>, Event> o1,
                                             MyPair<ListIterator<Event>, Event> o2 )
                         {
-                            return o1.getSecond().getEventNumber() - o2.getSecond().getEventNumber();
+                            return (int) (o1.getSecond().getEventId() - o2.getSecond().getEventId());
                         }
                     };
 

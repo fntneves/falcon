@@ -2,7 +2,6 @@ package pt.haslab.taz.events;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import sun.rmi.runtime.Log;
 
 /**
  * Created by nunomachado on 06/05/18.
@@ -62,7 +61,7 @@ public class LogEvent extends Event
         LogEvent tmp = (LogEvent) o;
         return ( tmp.getLineOfCode().equals( this.loc )
                         && tmp.getMessage().equals( this.message )
-                        && tmp.getEventNumber() == this.eventNumber
+                        && tmp.getEventId() == this.eventId
         );
     }
 
@@ -71,7 +70,7 @@ public class LogEvent extends Event
     {
         //since there can be multiple LOG events per thread
         //we need to uniquely identify each one
-        String res = type + "_" + eventNumber + "_" + thread;
+        String res = type + "_" + eventId + "_" + thread;
 
         return res;
     }

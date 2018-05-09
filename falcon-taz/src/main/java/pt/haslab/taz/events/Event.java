@@ -24,7 +24,7 @@ public class Event
     String loc;
 
     /* indicates that the event is the n-th event in the trace file */
-    int eventNumber;
+    long eventId;
 
     //--- OPTIONAL PARAMETERS ---
     /* name of the event that causally precedes this event (useful when drawing space-time diagrams) */
@@ -35,24 +35,24 @@ public class Event
 
     /* Execution order given by the constraint solver (according to a given criteria).
      *  This variable should only be set after the constraint solving process has taken place. */
-    int scheduleOrder;
+    long scheduleOrder;
 
     public Event()
     {
     }
 
-    public Event( String timestamp, EventType type, String thread, int eventNumber, String lineOfCode )
+    public Event( String timestamp, EventType type, String thread, long eventId, String lineOfCode )
     {
         this.timestamp = timestamp;
         this.type = type;
         this.thread = thread;
         this.dependency = null;
-        this.eventNumber = eventNumber;
+        this.eventId = eventId;
         this.data = null;
         this.loc = lineOfCode;
-        //initially, set scheduleOrder equal to eventNumber
+        //initially, set scheduleOrder equal to eventId
         //override scheduleOrder after having causal order
-        this.scheduleOrder = eventNumber;
+        this.scheduleOrder = eventId;
     }
 
     public Event( Event e )
@@ -61,7 +61,7 @@ public class Event
         this.type = e.getType();
         this.thread = e.getThread();
         this.dependency = e.getDependency();
-        this.eventNumber = e.getEventNumber();
+        this.eventId = e.getEventId();
         this.data = e.getData();
         this.scheduleOrder = e.getScheduleOrder();
         this.loc = e.getLineOfCode();
@@ -117,14 +117,19 @@ public class Event
         this.dependency = dependency;
     }
 
-    public int getEventNumber()
+    public void setDependency( Event dependency )
     {
-        return eventNumber;
+        this.dependency = String.valueOf( dependency.getEventId() );
     }
 
-    public void setEventNumber( int eventNumber )
+    public long getEventId()
     {
-        this.eventNumber = eventNumber;
+        return eventId;
+    }
+
+    public void setEventId( int eventId )
+    {
+        this.eventId = eventId;
     }
 
     public JSONObject getData()
@@ -146,7 +151,7 @@ public class Event
         this.data = data;
     }
 
-    public int getScheduleOrder()
+    public long getScheduleOrder()
     {
         return scheduleOrder;
     }
@@ -195,7 +200,7 @@ public class Event
         json.put( "thread", thread );
         json.put( "loc", loc );
         json.put( "order", scheduleOrder );
-        json.put( "id", this.hashCode() );
+        json.put( "id", eventId );
         json.put( "timestamp", timestamp );
         json.put( "dependency", dependency == null ? JSONObject.NULL : dependency );
         json.putOpt( "data", data );

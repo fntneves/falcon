@@ -40,7 +40,7 @@ public class SyncEvent
     @Override
     public String toString()
     {
-        String res = type + "_" + var + "_" + thread + "_" + eventNumber + "@" + loc;
+        String res = type + "_" + var + "_" + thread + "_" + eventId + "@" + loc;
         return res;
     }
 
