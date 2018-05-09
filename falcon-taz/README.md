@@ -163,7 +163,7 @@ class Event {
     String thread;
     EventType type;
     String dependency; //indicates the event that causally precedes this event
-    int eventNumber; 
+    int eventId;
     String loc;
     Object data;
     int scheduleOrder; //order given by the solver according to the desired criteria

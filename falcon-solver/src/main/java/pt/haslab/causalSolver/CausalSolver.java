@@ -246,7 +246,7 @@ public class CausalSolver
         {
             if ( pair.getFirst() != null && pair.getSecond() != null )
             {
-                pair.getSecond().setDependency( String.valueOf( pair.getFirst().hashCode() ) ); //set dependency
+                pair.getSecond().setDependency( pair.getFirst() );
                 String cnst = solver.cLt( pair.getFirst().toString(), pair.getSecond().toString() );
                 solver.writeConstraint( solver.postNamedAssert( cnst, tagSND_RCV + counterSND_RCV++ ) );
             }
@@ -259,7 +259,7 @@ public class CausalSolver
         {
             if ( pair.getFirst() != null && pair.getSecond() != null )
             {
-                pair.getSecond().setDependency( String.valueOf( pair.getFirst().hashCode() ) ); //set dependency
+                pair.getSecond().setDependency( pair.getFirst() );
                 String cnst = solver.cLt( pair.getFirst().toString(), pair.getSecond().toString() );
                 solver.writeConstraint( solver.postNamedAssert( cnst, tagCON_ACC + counterCON_ACC++ ) );
             }
@@ -272,7 +272,7 @@ public class CausalSolver
         {
             if ( pair.getFirst() != null && pair.getSecond() != null )
             {
-                pair.getSecond().setDependency( String.valueOf( pair.getFirst().hashCode() ) ); //set dependency
+                pair.getSecond().setDependency( pair.getFirst() );
                 String cnst = solver.cLt( pair.getFirst().toString(), pair.getSecond().toString() );
                 solver.writeConstraint( solver.postNamedAssert( cnst, tagCLS_SHT + counterCLS_SHT++ ) );
             }
@@ -331,7 +331,7 @@ public class CausalSolver
                 String cnst = solver.cLt( forkevent.toString(), startEvent );
                 solver.writeConstraint( solver.postNamedAssert( cnst, tagFRK_STR + counterFRK_STR++ ) );
                 //set dependency
-                allEvents.get( startEvent ).setDependency( String.valueOf( forkevent.hashCode() ) );
+                allEvents.get( startEvent ).setDependency( forkevent );
             }
         }
     }
@@ -356,7 +356,7 @@ public class CausalSolver
                     String cnst = solver.cLt( endEvent.toString(), joinEvent.toString() );
                     solver.writeConstraint( solver.postNamedAssert( cnst, tagJOIN_END + counterJOIN_END++ ) );
                     //set dependency
-                    allEvents.get( joinEvent.toString() ).setDependency( String.valueOf( endEvent.hashCode() ) );
+                    allEvents.get( joinEvent.toString() ).setDependency( endEvent );
                 }
             }
         }
