@@ -156,7 +156,7 @@ public enum TraceProcessor
                     }
                     catch ( JSONException objError )
                     {
-                        logger.error( "Not a JSON object! Ignoring event: " + line );
+                        logger.error( "Invalid JSON: " + line );
                     }
                     finally
                     {
@@ -269,8 +269,8 @@ public enum TraceProcessor
         {
             case LOG:
                 String msg = event.getString( "message" );
-                LogEvent le = new LogEvent( e, msg );
-                eventsPerThread.get( thread ).add( le );
+                LogEvent logEvent = new LogEvent( e, msg );
+                eventsPerThread.get( thread ).add( logEvent );
                 break;
             case CONNECT:
             case ACCEPT:
@@ -278,34 +278,34 @@ public enum TraceProcessor
             case SHUTDOWN:
             case RCV:
             case SND:
-                SocketEvent se = new SocketEvent( e );
+                SocketEvent socketEvent = new SocketEvent( e );
                 String socket = event.getString( "socket" );
-                se.setSocket( socket );
-                se.setSocketType( event.getString( "socket_type" ) );
-                se.setSrc( event.getString( "src" ) );
-                se.setSrcPort( event.getInt( "src_port" ) );
-                se.setDst( event.getString( "dst" ) );
-                se.setDstPort( event.getInt( "dst_port" ) );
+                socketEvent.setSocket( socket );
+                socketEvent.setSocketType( event.getString( "socket_type" ) );
+                socketEvent.setSrc( event.getString( "src" ) );
+                socketEvent.setSrcPort( event.getInt( "src_port" ) );
+                socketEvent.setDst( event.getString( "dst" ) );
+                socketEvent.setDstPort( event.getInt( "dst_port" ) );
 
                 //handle SND and RCV
                 if ( type == EventType.SND || type == EventType.RCV )
                 {
-                    se.setSize( event.getInt( "size" ) );
-                    se.setMessageId( event.optString( "message", null ) );
+                    socketEvent.setSize( event.getInt( "size" ) );
+                    socketEvent.setMessageId( event.optString( "message", null ) );
 
                     //handle UDP cases by matching message id
-                    if ( se.getSocketType() == SocketEvent.SocketType.UDP )
+                    if ( socketEvent.getSocketType() == SocketEvent.SocketType.UDP )
                     {
                         //update existing entry or create one if necessary
-                        if ( msgEvents.containsKey( se.getMessageId() ) )
+                        if ( msgEvents.containsKey( socketEvent.getMessageId() ) )
                         {
                             if ( type == EventType.SND )
                             {
-                                msgEvents.get( se.getMessageId() ).setFirst( se );
+                                msgEvents.get( socketEvent.getMessageId() ).setFirst( socketEvent );
                             }
                             else
                             {
-                                msgEvents.get( se.getMessageId() ).setSecond( se );
+                                msgEvents.get( socketEvent.getMessageId() ).setSecond( socketEvent );
                             }
                         }
                         else
@@ -313,24 +313,24 @@ public enum TraceProcessor
                             MyPair<SocketEvent, SocketEvent> pair;
                             if ( type == EventType.SND )
                             {
-                                pair = new MyPair<SocketEvent, SocketEvent>( se, null );
+                                pair = new MyPair<SocketEvent, SocketEvent>( socketEvent, null );
                             }
                             else
                             {
-                                pair = new MyPair<SocketEvent, SocketEvent>( null, se );
+                                pair = new MyPair<SocketEvent, SocketEvent>( null, socketEvent );
                             }
-                            msgEvents.put( se.getMessageId(), pair );
+                            msgEvents.put( socketEvent.getMessageId(), pair );
                         }
                     }
 
                     //handle TCP cases that may not have message id and/or partitioned messages
-                    else if ( se.getSocketType() == SocketEvent.SocketType.TCP )
+                    else if ( socketEvent.getSocketType() == SocketEvent.SocketType.TCP )
                     {
                         if ( type == EventType.SND )
-                            handleSndSocketEvent( se );
+                            handleSndSocketEvent( socketEvent );
 
                         if ( type == EventType.RCV )
-                            handleRcvSocketEvent( se );
+                            handleRcvSocketEvent( socketEvent );
                     }
                 }
                 //handle CONNECT and ACCEPT
@@ -341,11 +341,11 @@ public enum TraceProcessor
                         //put the ACCEPT event if pair.second == null or CONNECT otherwise
                         if ( connAcptEvents.get( socket ).getSecond() == null )
                         {
-                            connAcptEvents.get( socket ).setSecond( se );
+                            connAcptEvents.get( socket ).setSecond( socketEvent );
                         }
                         else
                         {
-                            connAcptEvents.get( socket ).setFirst( se );
+                            connAcptEvents.get( socket ).setFirst( socketEvent );
                         }
                     }
                     else
@@ -354,11 +354,11 @@ public enum TraceProcessor
                         MyPair<SocketEvent, SocketEvent> pair = new MyPair<SocketEvent, SocketEvent>( null, null );
                         if ( type == EventType.CONNECT )
                         {
-                            pair.setFirst( se );
+                            pair.setFirst( socketEvent );
                         }
                         else
                         {
-                            pair.setSecond( se );
+                            pair.setSecond( socketEvent );
                         }
                         connAcptEvents.put( socket, pair );
                     }
@@ -372,7 +372,7 @@ public enum TraceProcessor
                         //put the SHUTDOWN event if pair.second == null and thread is different or CLOSE otherwise
                         if ( closeShutEvents.get( socket ).getSecond() == null && type == EventType.SHUTDOWN )
                         {
-                            closeShutEvents.get( socket ).setSecond( se );
+                            closeShutEvents.get( socket ).setSecond( socketEvent );
                         }
                         else
                         {
@@ -381,9 +381,9 @@ public enum TraceProcessor
                             SocketEvent shutevent = closeShutEvents.get( socket ).getSecond();
                             if ( closeEvent == null
                                             || ( shutevent != null && !shutevent.getThread().equals(
-                                            se.getThread() ) ) )
+                                            socketEvent.getThread() ) ) )
                             {
-                                closeShutEvents.get( socket ).setFirst( se );
+                                closeShutEvents.get( socket ).setFirst( socketEvent );
                             }
                         }
                     }
@@ -393,20 +393,20 @@ public enum TraceProcessor
                         MyPair<SocketEvent, SocketEvent> pair = new MyPair<SocketEvent, SocketEvent>( null, null );
                         if ( type == EventType.CLOSE )
                         {
-                            pair.setFirst( se );
+                            pair.setFirst( socketEvent );
                         }
                         else
                         {
-                            pair.setSecond( se );
+                            pair.setSecond( socketEvent );
                         }
                         closeShutEvents.put( socket, pair );
                     }
                 }
 
-                if ( se.getTimestamp() != null && !se.getTimestamp().equals( "" ) )
-                    sortedByTimestamp.add( se );
+                if ( socketEvent.getTimestamp() != null && !socketEvent.getTimestamp().equals( "" ) )
+                    sortedByTimestamp.add( socketEvent );
 
-                eventsPerThread.get( thread ).add( se );
+                eventsPerThread.get( thread ).add( socketEvent );
                 break;
             case START:
             case END:
@@ -415,15 +415,15 @@ public enum TraceProcessor
             case CREATE:
             case JOIN:
                 String child = event.getString( "child" );
-                ThreadCreationEvent tce = new ThreadCreationEvent( e );
-                tce.setChildThread( child );
+                ThreadCreationEvent creationEvent = new ThreadCreationEvent( e );
+                creationEvent.setChildThread( child );
                 if ( type == EventType.CREATE )
                 {
                     if ( !forkEvents.containsKey( thread ) )
                     {
                         forkEvents.put( thread, new LinkedList<ThreadCreationEvent>() );
                     }
-                    forkEvents.get( thread ).add( tce );
+                    forkEvents.get( thread ).add( creationEvent );
                 }
                 else
                 {
@@ -431,15 +431,15 @@ public enum TraceProcessor
                     {
                         joinEvents.put( thread, new LinkedList<ThreadCreationEvent>() );
                     }
-                    joinEvents.get( thread ).add( tce );
+                    joinEvents.get( thread ).add( creationEvent );
                 }
-                eventsPerThread.get( thread ).add( tce );
+                eventsPerThread.get( thread ).add( creationEvent );
                 break;
             case WRITE:
             case READ:
                 String var = event.getString( "variable" );
-                RWEvent rwe = new RWEvent( e );
-                rwe.setVariable( var );
+                RWEvent rwEvent = new RWEvent( e );
+                rwEvent.setVariable( var );
 
                 if ( type == EventType.READ )
                 {
@@ -447,7 +447,7 @@ public enum TraceProcessor
                     {
                         readEvents.put( var, new LinkedList<RWEvent>() );
                     }
-                    readEvents.get( var ).add( rwe );
+                    readEvents.get( var ).add( rwEvent );
                 }
                 else
                 {
@@ -455,22 +455,22 @@ public enum TraceProcessor
                     {
                         writeEvents.put( var, new LinkedList<RWEvent>() );
                     }
-                    writeEvents.get( var ).add( rwe );
+                    writeEvents.get( var ).add( rwEvent );
                 }
-                eventsPerThread.get( thread ).add( rwe );
+                eventsPerThread.get( thread ).add( rwEvent );
                 break;
             case HNDLBEG:
             case HNDLEND:
-                HandlerEvent he = new HandlerEvent( e );
-                eventsPerThread.get( thread ).add( he );
+                HandlerEvent handlerEvent = new HandlerEvent( e );
+                eventsPerThread.get( thread ).add( handlerEvent );
                 if ( type == EventType.HNDLBEG )
                     hasHandlers.add( thread );
                 break;
             case LOCK:
             case UNLOCK:
                 var = event.getString( "variable" );
-                SyncEvent syne = new SyncEvent( e );
-                syne.setVariable( var );
+                SyncEvent syncEvent = new SyncEvent( e );
+                syncEvent.setVariable( var );
 
                 if ( type == EventType.LOCK )
                 {
@@ -481,8 +481,8 @@ public enum TraceProcessor
                     {
                         // Only adds the lock event if the previous lock event has a corresponding unlock
                         // in order to handle Reentrant Locks
-                        Utils.insertInMapToLists( lockEvents, var, new MyPair<SyncEvent, SyncEvent>( syne, null ) );
-                        eventsPerThread.get( thread ).add( syne );
+                        Utils.insertInMapToLists( lockEvents, var, new MyPair<SyncEvent, SyncEvent>( syncEvent, null ) );
+                        eventsPerThread.get( thread ).add( syncEvent );
                     }
                 }
                 else if ( type == EventType.UNLOCK )
@@ -493,28 +493,28 @@ public enum TraceProcessor
                                     ( pairList != null ) ? pairList.get( pairList.size() - 1 ) : null;
                     if ( pair == null )
                     {
-                        Utils.insertInMapToLists( lockEvents, var, new MyPair<SyncEvent, SyncEvent>( null, syne ) );
+                        Utils.insertInMapToLists( lockEvents, var, new MyPair<SyncEvent, SyncEvent>( null, syncEvent ) );
                     }
                     else
                     {
-                        pair.setSecond( syne );
+                        pair.setSecond( syncEvent );
                     }
-                    eventsPerThread.get( thread ).add( syne );
+                    eventsPerThread.get( thread ).add( syncEvent );
                 }
                 break;
             case NOTIFY:
             case NOTIFYALL:
             case WAIT:
                 var = event.getString( "variable" );
-                syne = new SyncEvent( e );
-                syne.setVariable( var );
+                syncEvent = new SyncEvent( e );
+                syncEvent.setVariable( var );
                 if ( type == EventType.WAIT )
                 {
                     if ( !waitEvents.containsKey( var ) )
                     {
                         waitEvents.put( var, new LinkedList<SyncEvent>() );
                     }
-                    waitEvents.get( var ).add( syne );
+                    waitEvents.get( var ).add( syncEvent );
                 }
                 else if ( type == EventType.NOTIFY || type == EventType.NOTIFYALL )
                 {
@@ -522,9 +522,9 @@ public enum TraceProcessor
                     {
                         notifyEvents.put( var, new LinkedList<SyncEvent>() );
                     }
-                    notifyEvents.get( var ).add( syne );
+                    notifyEvents.get( var ).add( syncEvent );
                 }
-                eventsPerThread.get( thread ).add( syne );
+                eventsPerThread.get( thread ).add( syncEvent );
                 break;
             default:
                 throw new JSONException( "Unknown event type: " + type );

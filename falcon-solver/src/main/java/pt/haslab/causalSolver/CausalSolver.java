@@ -547,7 +547,8 @@ public class CausalSolver
             for ( Event e : orderedEvents )
             {
                 JSONObject json = e.toJSONObject();
-                logger.debug( json.toString() );
+                if(logger.isDebugEnabled())
+                    logger.debug( json.toString() );
                 jsonEvents.put( json );
             }
             fileWriter.write( jsonEvents.toString() );
