@@ -5,10 +5,11 @@ import org.json.JSONObject;
 
 /**
  * Created by nunomachado on 05/03/18.
- *
  * Class Event represents a generic event in Taz. All the other event types inherit from this class.
  */
-public class Event implements Comparable {
+public class Event
+                implements Comparable
+{
     //--- REQUIRED PARAMETERS ---
     /* event timestamp as given by the trace */
     String timestamp;
@@ -23,180 +24,216 @@ public class Event implements Comparable {
     String loc;
 
     /* indicates that the event is the n-th event in the trace file */
-    int eventNumber;
+    long eventId;
 
     //--- OPTIONAL PARAMETERS ---
-     /* name of the event that causally precedes this event (useful when drawing space-time diagrams) */
+    /* name of the event that causally precedes this event (useful when drawing space-time diagrams) */
     String dependency;
 
     /* JSON object with additional event details */
     JSONObject data;
 
     /* Execution order given by the constraint solver (according to a given criteria).
-    *  This variable should only be set after the constraint solving process has taken place. */
-    int scheduleOrder;
+     *  This variable should only be set after the constraint solving process has taken place. */
+    long scheduleOrder;
 
-    public Event(){}
+    public Event()
+    {
+    }
 
-    public Event(String timestamp, EventType type, String thread, int eventNumber, String lineOfCode) {
+    public Event( String timestamp, EventType type, String thread, long eventId, String lineOfCode )
+    {
         this.timestamp = timestamp;
         this.type = type;
         this.thread = thread;
         this.dependency = null;
-        this.eventNumber = eventNumber;
+        this.eventId = eventId;
         this.data = null;
         this.loc = lineOfCode;
-        //initially, set scheduleOrder equal to eventNumber
+        //initially, set scheduleOrder equal to eventId
         //override scheduleOrder after having causal order
-        this.scheduleOrder = eventNumber;
+        this.scheduleOrder = eventId;
     }
 
-    public Event(Event e){
+    public Event( Event e )
+    {
         this.timestamp = e.getTimestamp();
         this.type = e.getType();
         this.thread = e.getThread();
         this.dependency = e.getDependency();
-        this.eventNumber = e.getEventNumber();
+        this.eventId = e.getEventId();
         this.data = e.getData();
         this.scheduleOrder = e.getScheduleOrder();
         this.loc = e.getLineOfCode();
     }
 
-    public String getTimestamp() {
+    public String getTimestamp()
+    {
         return timestamp;
     }
 
-    public void setTimestamp(String timestamp) {
+    public void setTimestamp( String timestamp )
+    {
         this.timestamp = timestamp;
     }
 
-    public EventType getType() {
+    public EventType getType()
+    {
         return type;
     }
 
-    public void setType(EventType type) {
+    public void setType( EventType type )
+    {
         this.type = type;
     }
 
-    public String getThread() {
+    public String getThread()
+    {
         return thread;
     }
 
-    public void setThread(String thread) {
+    public void setThread( String thread )
+    {
         this.thread = thread;
     }
 
-    public String getLineOfCode() {
+    public String getLineOfCode()
+    {
         return loc;
     }
 
-    public void setLineOfCode(String loc) {
+    public void setLineOfCode( String loc )
+    {
         this.loc = loc;
     }
 
-    public String getDependency() {
+    public String getDependency()
+    {
         return dependency;
     }
 
-    public void setDependency(String dependency) {
+    public void setDependency( String dependency )
+    {
         this.dependency = dependency;
     }
 
-    public int getEventNumber() {
-        return eventNumber;
+    public void setDependency( Event dependency )
+    {
+        this.dependency = String.valueOf( dependency.getEventId() );
     }
 
-    public void setEventNumber(int eventNumber) {
-        this.eventNumber = eventNumber;
+    public long getEventId()
+    {
+        return eventId;
     }
 
-    public JSONObject getData() {
+    public void setEventId( int eventId )
+    {
+        this.eventId = eventId;
+    }
+
+    public JSONObject getData()
+    {
         return data;
     }
 
-    public Object getDataField(String jsonField) throws JSONException{
-        if(this.data != null && this.data.has(jsonField))
-            return this.data.get(jsonField);
+    public Object getDataField( String jsonField )
+                    throws JSONException
+    {
+        if ( this.data != null && this.data.has( jsonField ) )
+            return this.data.get( jsonField );
         else
             return null;
     }
 
-    public void setData(JSONObject data) {
+    public void setData( JSONObject data )
+    {
         this.data = data;
     }
 
-    public int getScheduleOrder() {
+    public long getScheduleOrder()
+    {
         return scheduleOrder;
     }
 
-    public void setScheduleOrder(int scheduleOrder) {
+    public void setScheduleOrder( int scheduleOrder )
+    {
         this.scheduleOrder = scheduleOrder;
     }
 
     /**
      * Returns the identifier of the node at which the event was executed
      * (this info is obtained by parsing the thread field)
+     *
      * @return node identifier
      */
-    public String getNodeId(){
-        int start = thread.indexOf("@");
-        String node = thread.substring(start+1);
+    public String getNodeId()
+    {
+        int start = thread.indexOf( "@" );
+        String node = thread.substring( start + 1 );
         return node;
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         return super.hashCode();
     }
 
     @Override
-    public String toString() {
-        String res = type+"_"+thread;
+    public String toString()
+    {
+        String res = type + "_" + thread;
         return res;
     }
 
     /**
      * Returns a JSONObject representing the event.
+     *
      * @return
      */
-    public JSONObject toJSONObject() throws JSONException{
+    public JSONObject toJSONObject()
+                    throws JSONException
+    {
         JSONObject json = new JSONObject();
-        json.put("type", type.toString());
-        json.put("thread", thread);
-        json.put("loc", loc);
-        json.put("pid", this.getNodeId());
-        json.put("order", scheduleOrder);
-        json.put("id", this.hashCode());
-        json.put("timestamp", timestamp);
-        json.put("dependency", dependency == null ? JSONObject.NULL : dependency);
-        json.putOpt("data", data);
+        json.put( "type", type.toString() );
+        json.put( "thread", thread );
+        json.put( "loc", loc );
+        json.put( "order", scheduleOrder );
+        json.put( "id", eventId );
+        json.put( "timestamp", timestamp );
+        json.put( "dependency", dependency == null ? JSONObject.NULL : dependency );
+        json.putOpt( "data", data );
 
         return json;
     }
 
-    public int compareTo(Object o1) {
+    public int compareTo( Object o1 )
+    {
         Event e = (Event) o1;
 
-        if(this.scheduleOrder < e.getScheduleOrder())
+        if ( this.scheduleOrder < e.getScheduleOrder() )
             return -1;
-        else if(this.scheduleOrder == e.getScheduleOrder() && this.equals(e))
+        else if ( this.scheduleOrder == e.getScheduleOrder() && this.equals( e ) )
             return 0;
         else
             return 1;
     }
 
     @Override
-    public boolean equals(Object o){
-        if(o == this)
+    public boolean equals( Object o )
+    {
+        if ( o == this )
             return true;
 
-        if (o == null || getClass() != o.getClass()) return false;
+        if ( o == null || getClass() != o.getClass() )
+            return false;
 
-        Event tmp = (Event)o;
-        return (tmp.getThread() == this.thread
-                && tmp.getType() == this.type
-                && tmp.getScheduleOrder() == this.scheduleOrder
-                && tmp.getLineOfCode().equals(this.loc)
+        Event tmp = (Event) o;
+        return ( tmp.getThread() == this.thread
+                        && tmp.getType() == this.type
+                        && tmp.getScheduleOrder() == this.scheduleOrder
+                        && tmp.getLineOfCode().equals( this.loc )
         );
     }
 }
