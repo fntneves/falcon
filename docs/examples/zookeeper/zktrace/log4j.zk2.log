@@ -1,0 +1,114 @@
+{"timestamp":1525880626083, "thread": "7549@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:46 INFO  QuorumPeerConfig:109 - Reading configuration from: /home/gsd/zookeeper-3.5.0-alpha/bin/../conf/zoo.cfg", "data":{"level": "INFO"}}
+{"timestamp":1525880626113, "thread": "7549@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:46 WARN  QuorumPeerConfig:445 - No server failure will be tolerated. You need at least 3 servers.", "data":{"level": "WARN"}}
+{"timestamp":1525880626116, "thread": "7549@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:46 INFO  DatadirCleanupManager:78 - autopurge.snapRetainCount set to 3", "data":{"level": "INFO"}}
+{"timestamp":1525880626116, "thread": "7549@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:46 INFO  DatadirCleanupManager:79 - autopurge.purgeInterval set to 0", "data":{"level": "INFO"}}
+{"timestamp":1525880626116, "thread": "7549@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:46 INFO  DatadirCleanupManager:101 - Purge task is not scheduled.", "data":{"level": "INFO"}}
+{"timestamp":1525880626123, "thread": "7549@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:46 INFO  QuorumPeerMain:136 - Starting quorum peer", "data":{"level": "INFO"}}
+{"timestamp":1525880626129, "thread": "7549@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:46 INFO  NIOServerCnxnFactory:670 - Configuring NIO connection handler with 10s sessionless connection timeout, 1 selector thread(s), 8 worker threads, and 64 kB direct buffers.", "data":{"level": "INFO"}}
+{"timestamp":1525880626133, "thread": "7549@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:46 INFO  NIOServerCnxnFactory:683 - binding to port 0.0.0.0/0.0.0.0:2181", "data":{"level": "INFO"}}
+{"timestamp":1525880626151, "thread": "7549@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:46 INFO  log:67 - Logging to org.slf4j.impl.Log4jLoggerAdapter(org.mortbay.log) via org.mortbay.log.Slf4jLog", "data":{"level": "INFO"}}
+{"timestamp":1525880626172, "thread": "7549@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:46 INFO  QuorumPeer:1205 - Local sessions disabled", "data":{"level": "INFO"}}
+{"timestamp":1525880626173, "thread": "7549@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:46 INFO  QuorumPeer:1216 - Local session upgrading disabled", "data":{"level": "INFO"}}
+{"timestamp":1525880626173, "thread": "7549@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:46 INFO  QuorumPeer:1185 - tickTime set to 2000", "data":{"level": "INFO"}}
+{"timestamp":1525880626173, "thread": "7549@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:46 INFO  QuorumPeer:1227 - minSessionTimeout set to 4000", "data":{"level": "INFO"}}
+{"timestamp":1525880626173, "thread": "7549@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:46 INFO  QuorumPeer:1238 - maxSessionTimeout set to 40000", "data":{"level": "INFO"}}
+{"timestamp":1525880626173, "thread": "7549@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:46 INFO  QuorumPeer:1253 - initLimit set to 10", "data":{"level": "INFO"}}
+{"timestamp":1525880626186, "thread": "7549@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:46 INFO  FileSnap:83 - Reading snapshot /home/gsd/zookeeper-3.5.0-alpha/data/version-2/snapshot.b00000004", "data":{"level": "INFO"}}
+{"timestamp":1525880626199, "thread": "7549@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:46 INFO  log:67 - jetty-6.1.26", "data":{"level": "INFO"}}
+{"timestamp":1525880626213, "thread": "7549@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:46 INFO  log:67 - Started SocketConnector@0.0.0.0:8080", "data":{"level": "INFO"}}
+{"timestamp":1525880626214, "thread": "7549@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:46 INFO  JettyAdminServer:93 - Started AdminServer on port 8080, command URL /commands", "data":{"level": "INFO"}}
+{"timestamp":1525880626217, "thread": "7571@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:46 INFO  QuorumCnxManager:550 - My election bind port: cloud78/192.168.112.78:3888", "data":{"level": "INFO"}}
+{"timestamp":1525880626223, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:46 INFO  QuorumPeer:913 - LOOKING", "data":{"level": "INFO"}}
+{"timestamp":1525880626225, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:46 INFO  FastLeaderElection:888 - New election. My id =  1, proposed zxid=0xc00000003", "data":{"level": "INFO"}}
+{"timestamp":1525880626229, "thread": "7572@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:46 WARN  QuorumCnxManager:384 - Cannot open channel to 2 at election address cloud83/192.168.112.83:3888", "data":{"level": "WARN"}}
+java.net.ConnectException: Connection refused (Connection refused)
+	at java.net.PlainSocketImpl.socketConnect(Native Method)
+	at java.net.AbstractPlainSocketImpl.doConnect(AbstractPlainSocketImpl.java:350)
+	at java.net.AbstractPlainSocketImpl.connectToAddress(AbstractPlainSocketImpl.java:206)
+	at java.net.AbstractPlainSocketImpl.connect(AbstractPlainSocketImpl.java:188)
+	at java.net.SocksSocketImpl.connect(SocksSocketImpl.java:392)
+	at java.net.Socket.connect(Socket.java:589)
+	at org.apache.zookeeper.server.quorum.QuorumCnxManager.connectOne(QuorumCnxManager.java:369)
+	at org.apache.zookeeper.server.quorum.QuorumCnxManager.connectOne(QuorumCnxManager.java:407)
+	at org.apache.zookeeper.server.quorum.QuorumCnxManager.toSend(QuorumCnxManager.java:346)
+	at org.apache.zookeeper.server.quorum.FastLeaderElection$Messenger$WorkerSender.process(FastLeaderElection.java:480)
+	at org.apache.zookeeper.server.quorum.FastLeaderElection$Messenger$WorkerSender.run(FastLeaderElection.java:459)
+	at java.lang.Thread.run(Thread.java:748)
+{"timestamp":1525880626229, "thread": "7573@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:46 INFO  FastLeaderElection:682 - Notification: 2 (message format version), 1 (n.leader), 0xc00000003 (n.zxid), 0x1 (n.round), LOOKING (n.state), 1 (n.sid), 0xc (n.peerEPoch), LOOKING (my state)100000000 (n.config version)", "data":{"level": "INFO"}}
+{"timestamp":1525880626432, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:46 WARN  QuorumCnxManager:384 - Cannot open channel to 2 at election address cloud83/192.168.112.83:3888", "data":{"level": "WARN"}}
+java.net.ConnectException: Connection refused (Connection refused)
+	at java.net.PlainSocketImpl.socketConnect(Native Method)
+	at java.net.AbstractPlainSocketImpl.doConnect(AbstractPlainSocketImpl.java:350)
+	at java.net.AbstractPlainSocketImpl.connectToAddress(AbstractPlainSocketImpl.java:206)
+	at java.net.AbstractPlainSocketImpl.connect(AbstractPlainSocketImpl.java:188)
+	at java.net.SocksSocketImpl.connect(SocksSocketImpl.java:392)
+	at java.net.Socket.connect(Socket.java:589)
+	at org.apache.zookeeper.server.quorum.QuorumCnxManager.connectOne(QuorumCnxManager.java:369)
+	at org.apache.zookeeper.server.quorum.QuorumCnxManager.connectOne(QuorumCnxManager.java:407)
+	at org.apache.zookeeper.server.quorum.QuorumCnxManager.connectAll(QuorumCnxManager.java:435)
+	at org.apache.zookeeper.server.quorum.FastLeaderElection.lookForLeader(FastLeaderElection.java:913)
+	at org.apache.zookeeper.server.quorum.QuorumPeer.run(QuorumPeer.java:967)
+{"timestamp":1525880626432, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:46 INFO  FastLeaderElection:922 - Notification time out: 400", "data":{"level": "INFO"}}
+{"timestamp":1525880626835, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:46 WARN  QuorumCnxManager:384 - Cannot open channel to 2 at election address cloud83/192.168.112.83:3888", "data":{"level": "WARN"}}
+java.net.ConnectException: Connection refused (Connection refused)
+	at java.net.PlainSocketImpl.socketConnect(Native Method)
+	at java.net.AbstractPlainSocketImpl.doConnect(AbstractPlainSocketImpl.java:350)
+	at java.net.AbstractPlainSocketImpl.connectToAddress(AbstractPlainSocketImpl.java:206)
+	at java.net.AbstractPlainSocketImpl.connect(AbstractPlainSocketImpl.java:188)
+	at java.net.SocksSocketImpl.connect(SocksSocketImpl.java:392)
+	at java.net.Socket.connect(Socket.java:589)
+	at org.apache.zookeeper.server.quorum.QuorumCnxManager.connectOne(QuorumCnxManager.java:369)
+	at org.apache.zookeeper.server.quorum.QuorumCnxManager.connectOne(QuorumCnxManager.java:407)
+	at org.apache.zookeeper.server.quorum.QuorumCnxManager.connectAll(QuorumCnxManager.java:435)
+	at org.apache.zookeeper.server.quorum.FastLeaderElection.lookForLeader(FastLeaderElection.java:913)
+	at org.apache.zookeeper.server.quorum.QuorumPeer.run(QuorumPeer.java:967)
+{"timestamp":1525880626835, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:46 INFO  FastLeaderElection:922 - Notification time out: 800", "data":{"level": "INFO"}}
+{"timestamp":1525880627638, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:47 WARN  QuorumCnxManager:384 - Cannot open channel to 2 at election address cloud83/192.168.112.83:3888", "data":{"level": "WARN"}}
+java.net.ConnectException: Connection refused (Connection refused)
+	at java.net.PlainSocketImpl.socketConnect(Native Method)
+	at java.net.AbstractPlainSocketImpl.doConnect(AbstractPlainSocketImpl.java:350)
+	at java.net.AbstractPlainSocketImpl.connectToAddress(AbstractPlainSocketImpl.java:206)
+	at java.net.AbstractPlainSocketImpl.connect(AbstractPlainSocketImpl.java:188)
+	at java.net.SocksSocketImpl.connect(SocksSocketImpl.java:392)
+	at java.net.Socket.connect(Socket.java:589)
+	at org.apache.zookeeper.server.quorum.QuorumCnxManager.connectOne(QuorumCnxManager.java:369)
+	at org.apache.zookeeper.server.quorum.QuorumCnxManager.connectOne(QuorumCnxManager.java:407)
+	at org.apache.zookeeper.server.quorum.QuorumCnxManager.connectAll(QuorumCnxManager.java:435)
+	at org.apache.zookeeper.server.quorum.FastLeaderElection.lookForLeader(FastLeaderElection.java:913)
+	at org.apache.zookeeper.server.quorum.QuorumPeer.run(QuorumPeer.java:967)
+{"timestamp":1525880627639, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:47 INFO  FastLeaderElection:922 - Notification time out: 1600", "data":{"level": "INFO"}}
+{"timestamp":1525880628800, "thread": "7571@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:48 INFO  QuorumCnxManager:556 - Received connection request /192.168.112.83:37916", "data":{"level": "INFO"}}
+{"timestamp":1525880628811, "thread": "7573@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:48 INFO  FastLeaderElection:682 - Notification: 2 (message format version), 2 (n.leader), 0xc00000003 (n.zxid), 0x1 (n.round), LOOKING (n.state), 2 (n.sid), 0xc (n.peerEPoch), LOOKING (my state)100000000 (n.config version)", "data":{"level": "INFO"}}
+{"timestamp":1525880628819, "thread": "7573@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:48 INFO  FastLeaderElection:682 - Notification: 2 (message format version), 2 (n.leader), 0xc00000003 (n.zxid), 0x1 (n.round), LOOKING (n.state), 1 (n.sid), 0xc (n.peerEPoch), LOOKING (my state)100000000 (n.config version)", "data":{"level": "INFO"}}
+{"timestamp":1525880629021, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:49 INFO  MBeanRegistry:119 - Unregister MBean [org.apache.ZooKeeperService:name0=ReplicatedServer_id1,name1=replica.1,name2=LeaderElection]", "data":{"level": "INFO"}}
+{"timestamp":1525880629022, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:49 INFO  QuorumPeer:989 - FOLLOWING", "data":{"level": "INFO"}}
+{"timestamp":1525880629035, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:49 INFO  Learner:93 - TCP NoDelay set to: true", "data":{"level": "INFO"}}
+{"timestamp":1525880629051, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:49 INFO  ZooKeeperServer:109 - Server environment:zookeeper.version=3.5.0-alpha-1615249, built on 08/01/2014 22:13 GMT", "data":{"level": "INFO"}}
+{"timestamp":1525880629052, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:49 INFO  ZooKeeperServer:109 - Server environment:host.name=cloud78.cluster.lsd.di.uminho.pt", "data":{"level": "INFO"}}
+{"timestamp":1525880629052, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:49 INFO  ZooKeeperServer:109 - Server environment:java.version=1.8.0_144", "data":{"level": "INFO"}}
+{"timestamp":1525880629052, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:49 INFO  ZooKeeperServer:109 - Server environment:java.vendor=Oracle Corporation", "data":{"level": "INFO"}}
+{"timestamp":1525880629053, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:49 INFO  ZooKeeperServer:109 - Server environment:java.home=/usr/lib/jvm/java-8-oracle/jre", "data":{"level": "INFO"}}
+{"timestamp":1525880629053, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:49 INFO  ZooKeeperServer:109 - Server environment:java.class.path=/home/gsd/zookeeper-3.5.0-alpha/bin/../build/classes:/home/gsd/zookeeper-3.5.0-alpha/bin/../build/lib/*.jar:/home/gsd/zookeeper-3.5.0-alpha/bin/../lib/slf4j-log4j12-1.7.5.jar:/home/gsd/zookeeper-3.5.0-alpha/bin/../lib/slf4j-api-1.7.5.jar:/home/gsd/zookeeper-3.5.0-alpha/bin/../lib/servlet-api-2.5-20081211.jar:/home/gsd/zookeeper-3.5.0-alpha/bin/../lib/netty-3.7.0.Final.jar:/home/gsd/zookeeper-3.5.0-alpha/bin/../lib/log4j-appender-1.0-SNAPSHOT-jar-with-dependencies.jar:/home/gsd/zookeeper-3.5.0-alpha/bin/../lib/log4j-1.2.16.jar:/home/gsd/zookeeper-3.5.0-alpha/bin/../lib/jline-2.11.jar:/home/gsd/zookeeper-3.5.0-alpha/bin/../lib/jetty-util-6.1.26.jar:/home/gsd/zookeeper-3.5.0-alpha/bin/../lib/jetty-6.1.26.jar:/home/gsd/zookeeper-3.5.0-alpha/bin/../lib/javacc.jar:/home/gsd/zookeeper-3.5.0-alpha/bin/../lib/jackson-mapper-asl-1.9.11.jar:/home/gsd/zookeeper-3.5.0-alpha/bin/../lib/jackson-core-asl-1.9.11.jar:/home/gsd/zookeeper-3.5.0-alpha/bin/../lib/commons-cli-1.2.jar:/home/gsd/zookeeper-3.5.0-alpha/bin/../zookeeper-3.5.0-alpha.jar:/home/gsd/zookeeper-3.5.0-alpha/bin/../src/java/lib/*.jar:/home/gsd/zookeeper-3.5.0-alpha/bin/../conf:", "data":{"level": "INFO"}}
+{"timestamp":1525880629053, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:49 INFO  ZooKeeperServer:109 - Server environment:java.library.path=/usr/java/packages/lib/amd64:/usr/lib64:/lib64:/lib:/usr/lib", "data":{"level": "INFO"}}
+{"timestamp":1525880629054, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:49 INFO  ZooKeeperServer:109 - Server environment:java.io.tmpdir=/tmp", "data":{"level": "INFO"}}
+{"timestamp":1525880629054, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:49 INFO  ZooKeeperServer:109 - Server environment:java.compiler=<NA>", "data":{"level": "INFO"}}
+{"timestamp":1525880629054, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:49 INFO  ZooKeeperServer:109 - Server environment:os.name=Linux", "data":{"level": "INFO"}}
+{"timestamp":1525880629055, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:49 INFO  ZooKeeperServer:109 - Server environment:os.arch=amd64", "data":{"level": "INFO"}}
+{"timestamp":1525880629055, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:49 INFO  ZooKeeperServer:109 - Server environment:os.version=4.8.0-41-generic", "data":{"level": "INFO"}}
+{"timestamp":1525880629056, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:49 INFO  ZooKeeperServer:109 - Server environment:user.name=gsd", "data":{"level": "INFO"}}
+{"timestamp":1525880629056, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:49 INFO  ZooKeeperServer:109 - Server environment:user.home=/home/gsd", "data":{"level": "INFO"}}
+{"timestamp":1525880629056, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:49 INFO  ZooKeeperServer:109 - Server environment:user.dir=/home/gsd/zookeeper-3.5.0-alpha", "data":{"level": "INFO"}}
+{"timestamp":1525880629057, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:49 INFO  ZooKeeperServer:109 - Server environment:os.memory.free=96MB", "data":{"level": "INFO"}}
+{"timestamp":1525880629057, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:49 INFO  ZooKeeperServer:109 - Server environment:os.memory.max=889MB", "data":{"level": "INFO"}}
+{"timestamp":1525880629058, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:49 INFO  ZooKeeperServer:109 - Server environment:os.memory.total=119MB", "data":{"level": "INFO"}}
+{"timestamp":1525880629060, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:49 INFO  ZooKeeperServer:781 - minSessionTimeout set to 4000", "data":{"level": "INFO"}}
+{"timestamp":1525880629060, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:49 INFO  ZooKeeperServer:790 - maxSessionTimeout set to 40000", "data":{"level": "INFO"}}
+{"timestamp":1525880629061, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:49 INFO  ZooKeeperServer:152 - Created server with tickTime 2000 minSessionTimeout 4000 maxSessionTimeout 40000 datadir /home/gsd/zookeeper-3.5.0-alpha/data/version-2 snapdir /home/gsd/zookeeper-3.5.0-alpha/data/version-2", "data":{"level": "INFO"}}
+{"timestamp":1525880629062, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:49 INFO  Learner:65 - FOLLOWING - LEADER ELECTION TOOK - 40", "data":{"level": "INFO"}}
+{"timestamp":1525880629091, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:49 INFO  Learner:332 - Getting a diff from the leader 0xc00000003", "data":{"level": "INFO"}}
+{"timestamp":1525880629093, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:49 INFO  Learner:475 - Learner received NEWLEADER message", "data":{"level": "INFO"}}
+{"timestamp":1525880629094, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:49 INFO  FileTxnSnapLog:298 - Snapshotting: 0xc00000003 to /home/gsd/zookeeper-3.5.0-alpha/data/version-2/snapshot.c00000003", "data":{"level": "INFO"}}
+{"timestamp":1525880629115, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:49 INFO  Learner:459 - Learner received UPTODATE message", "data":{"level": "INFO"}}
+{"timestamp":1525880629119, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:49 INFO  CommitProcessor:253 - Configuring CommitProcessor with 4 worker threads.", "data":{"level": "INFO"}}
+{"timestamp":1525880632906, "thread": "7574@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:52 WARN  Learner:121 - Got zxid 0xd00000001 expected 0x1", "data":{"level": "WARN"}}
+{"timestamp":1525880632907, "thread": "7579@cloud78.cluster.lsd.di.uminho.pt", "type": "LOG", "message": "2018-05-09 16:43:52 INFO  FileTxnLog:200 - Creating new log file: log.d00000001", "data":{"level": "INFO"}}
