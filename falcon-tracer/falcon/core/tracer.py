@@ -15,7 +15,7 @@ import pkg_resources
 logging.config.fileConfig(pkg_resources.resource_filename('falcon', '../conf/logging.ini'))
 
 class Tracer:
-    def run(self, pid=0):
+    def run(self, pid=0, signal_child=False):
         program_filepath = pkg_resources.resource_filename('falcon', 'core/resources/ebpf/probes.c')
 
         with open(program_filepath, 'r') as program_file:
@@ -29,9 +29,8 @@ class Tracer:
                 handlers.append(handler)
 
             logging.info('Running eBPF listener...')
-            bpf_listener_worker = events.bpf.BpfEventListener(program, handlers[0])
-            bpf_listener_worker.run()
-            os.kill(pid, signal.SIGCONT)
+            bpf_listener_worker = events.bpf.BpfEventListener(program, handlers[0], pid)
+            bpf_listener_worker.run(signal_child)
 
             # Shutdown handlers
             logging.info('Shutting handlers down...')
@@ -59,7 +58,11 @@ def run_program(program):
 
         while paused[0]:
             signal.pause()
-        os.execvp(program[0], program)
+        try:
+            os.execvp(program[0], program)
+        except:
+            logging.warning("Could not execute program")
+            os._exit(1)
     else:
         return pid
 
@@ -68,18 +71,17 @@ def main():
     """Main entry point for the script."""
     parser = argparse.ArgumentParser(prog='falcon-tracer', description='This program is the tracer of the Falcon pipeline tool.')
 
-    parser.add_argument('--pid', type=int, nargs='?', default=0,
-                        help="filter events of the given PID. (0 = all PIDs)")
-    parser.add_argument('--run', nargs='+', default='',
-                        metavar=('PROGRAM', 'ARGS'),
-                        help="program to run and filter events")
-    args = parser.parse_args()
-    if args.run != '':
-        prog_pid = run_program(args.run)
+    parser.add_argument('--pid', type=int, nargs='?', default=-1,
+                        help="filter events of the given PID.")
+    args, cmd = parser.parse_known_args()
+    signal_child = False
+    if args.pid == -1:
+        prog_pid = run_program(cmd)
+        signal_child = True
     else:
         prog_pid = args.pid
     sys.exit(Tracer().run(
-        pid=prog_pid))
+        pid=prog_pid, signal_child=signal_child))
 
 if __name__ == '__main__':
     main()

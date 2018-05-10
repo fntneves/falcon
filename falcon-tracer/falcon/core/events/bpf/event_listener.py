@@ -5,23 +5,25 @@ import socket
 import multiprocessing
 import signal
 import logging
+import os
 from falcon import util
 from falcon.core.events.types.event import EventData
 
 class BpfEventListener():
-    def __init__(self, bpf, handler):
+    def __init__(self, bpf, handler, pid):
         self._bpf = bpf
         self._handler = handler
+        self._pid = pid
 
-    def run(self):
+    def run(self, signal_child):
         self._bpf.prepare()
         self._bpf.open_event_buffer('process_events', self.handle)
         self._bpf.open_event_buffer('socket_events', self.handle)
 
-        # Give some time to open buffers.
-        time.sleep(1)
-
         self._bpf.attach_probes()
+        # signal traced process to continue
+        # (paused when executed by the tracer)
+        os.kill(self._pid, signal.SIGCONT)
 
         exit = [False]
 
@@ -30,7 +32,8 @@ class BpfEventListener():
                 str(multiprocessing.current_process().pid)))
             exit[0] = True
 
-        signal.signal(signal.SIGINT, start_shutdown)
+        if signal_child:
+            signal.signal(signal.SIGINT, start_shutdown)
 
         # Poll the kprobe events queue
         while not exit[0]:
