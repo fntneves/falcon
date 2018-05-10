@@ -18,6 +18,10 @@ class Tracer:
     def run(self, pid=0, signal_child=False):
         program_filepath = pkg_resources.resource_filename('falcon', 'core/resources/ebpf/probes.c')
 
+        def shutdown_tracer(signum, frame):
+            os.kill(multiprocessing.current_process().pid, signal.SIGINT)
+        signal.signal(signal.SIGCHLD, shutdown_tracer)
+
         with open(program_filepath, 'r') as program_file:
             program = BpfProgram(text=program_file.read())
             program.filter_pid(pid)
@@ -61,7 +65,7 @@ def run_program(program):
         try:
             os.execvp(program[0], program)
         except:
-            logging.warning("Could not execute program")
+            logging.error("Could not execute program")
             os._exit(1)
     else:
         return pid

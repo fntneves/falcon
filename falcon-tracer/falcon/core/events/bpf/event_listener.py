@@ -10,19 +10,18 @@ from falcon import util
 from falcon.core.events.types.event import EventData
 
 class BpfEventListener():
-    def __init__(self, bpf, handler, pid):
+    def __init__(self, bpf, handler, traced_pid):
         self._bpf = bpf
         self._handler = handler
-        self._pid = pid
+        self._traced_pid = traced_pid
 
     def run(self, signal_child):
         self._bpf.prepare()
         self._bpf.open_event_buffer('events', self.handle)
 
         self._bpf.attach_probes()
-        # signal traced process to continue
-        # (paused when executed by the tracer)
-        os.kill(self._pid, signal.SIGCONT)
+        if signal_child:
+            os.kill(self._traced_pid, signal.SIGCONT)
 
         exit = [False]
 
@@ -31,8 +30,7 @@ class BpfEventListener():
                 str(multiprocessing.current_process().pid)))
             exit[0] = True
 
-        if signal_child:
-            signal.signal(signal.SIGINT, start_shutdown)
+        signal.signal(signal.SIGINT, start_shutdown)
 
         # Poll the kprobe events queue
         while not exit[0]:
