@@ -5,45 +5,55 @@ import org.json.JSONObject;
 
 /**
  * Created by nunomachado on 05/03/18.
- *
  * Represents synchronization events.
  * SyncEvent is associated with event types  LOCK, UNLOCK, NOTIFY, NOTIFYALL and WAIT.
  */
-public class SyncEvent extends Event {
+public class SyncEvent
+                extends Event
+{
     /* reference of the mutex object (lock or monitor) accessed */
     String var;
 
-    public SyncEvent(String timestamp, EventType type, String thread, int eventNumber, String variable, String lineOfCode) {
-        super(timestamp, type, thread, eventNumber, lineOfCode);
+    public SyncEvent( String timestamp, EventType type, String thread, int eventNumber, String variable,
+                      String lineOfCode )
+    {
+        super( timestamp, type, thread, eventNumber, lineOfCode );
         this.var = variable;
     }
 
-    public SyncEvent(Event e){
-        super(e);
+    public SyncEvent( Event e )
+    {
+        super( e );
         this.var = "";
     }
 
-    public String getVariable() {
+    public String getVariable()
+    {
         return var;
     }
 
-    public void setVariable(String variable) {
+    public void setVariable( String variable )
+    {
         this.var = variable;
     }
 
     @Override
-    public String toString() {
-        String res = type+"_"+var+"_"+thread+"_"+eventNumber+"@"+loc;
+    public String toString()
+    {
+        String res = type + "_" + var + "_" + thread + "_" + eventId + "@" + loc;
         return res;
     }
 
     /**
      * Returns a JSONObject representing the event.
+     *
      * @return
      */
-    public JSONObject toJSONObject() throws JSONException {
+    public JSONObject toJSONObject()
+                    throws JSONException
+    {
         JSONObject json = super.toJSONObject();
-        json.put("variable", var);
+        json.put( "variable", var );
 
         return json;
     }

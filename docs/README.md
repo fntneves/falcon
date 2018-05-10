@@ -1,20 +1,7 @@
-# Tutorial - Falcon with Zookeeper
+# Tutorials
 
-This tutorial shows how one can use Falcon to analyze an execution of [Apache Zookeeper](https://zookeeper.apache.org). The tutorial is divided into the three steps, corresponding to the three phases of the Falcon's workflow pipeline.
+Check our tutorials to learn how to use Falcon in practice.
 
-TO-DO: describe setup
+- [Apache Zookeeper](https://github.com/fntneves/falcon/tree/nmac-docs_tutorial/docs/examples/zookeeper)
 
-**Requirements:**
-
-- [Apache Zookeeper](https://zookeeper.apache.org/doc/current/zookeeperStarted.html)
-
-## Initial Setup
-
-## Event Tracing
-
-TO-DO: describe how to run falcon-tracer
-
-## Causality Inference
-
-## Diagram Visualization
 

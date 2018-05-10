@@ -17,8 +17,7 @@ class BpfEventListener():
 
     def run(self, signal_child):
         self._bpf.prepare()
-        self._bpf.open_event_buffer('process_events', self.handle)
-        self._bpf.open_event_buffer('socket_events', self.handle)
+        self._bpf.open_event_buffer('events', self.handle)
 
         self._bpf.attach_probes()
         # signal traced process to continue

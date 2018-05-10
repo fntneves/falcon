@@ -48,7 +48,7 @@ export default class EventUniverse {
       }
     });
     this[clusterThreadsByPid]();
-    this[filterUnrelevantThreads]();
+    // this[filterUnrelevantThreads]();
   }
 
   [clusterThreadsByPid]() {

@@ -21,8 +21,10 @@ class BpfProgram():
     def attach_probes(self):
         self._attach_socket_probes()
         self._attach_process_probes()
+        self._bpf.attach_tracepoint(tp="sched:sched_process_fork", fn_name="on_fork")
 
     def detach_probes(self):
+        self._bpf.detach_tracepoint(tp="sched:sched_process_fork")
         self._bpf.cleanup()
 
     def filter_pid(self, pid):
@@ -66,7 +68,6 @@ class BpfProgram():
         syscall_probes = {}
         # Prefix with 're' to indicate it is a regex.
         syscall_probes['re_' + syscall_regex + 'wait'] = (None, 'exit__sys_wait')
-        syscall_probes['re_' + syscall_regex + 'clone'] = ('entry__sys_clone', 'exit__sys_clone')
 
         self._probes = {'socket': socket_probes, 'process': syscall_probes}
 
