@@ -169,6 +169,29 @@ VectorTimestamp.prototype.increment = function() {
 
 /**
  * <p>
+ * Gets the vector timestamp that is identical to this current one, except its
+ * own hosts clock has been incremented by the specified delta.
+ * </p>
+ *
+ * <p>
+ * Note that this method does not modify this, as VectorTimestamps are
+ * immutable.
+ * </p>
+ *
+ * @returns {VectorTimestamp} A vector timestamp identical to this, except with
+ *          its own host's clock incremented by the specified delta
+ */
+VectorTimestamp.prototype.incrementBy = function(delta) {
+    var clock = {};
+    for (var key in this.clock) {
+        clock[key] = this.clock[key];
+    }
+    clock[this.host] += delta;
+    return new VectorTimestamp(clock, this.host);
+}
+
+/**
+ * <p>
  * Checks if this VectorTimestamp is equal to another. Two vector timestamps are
  * considered equal if they have they exact same host and the exact same
  * key-value pairs.
