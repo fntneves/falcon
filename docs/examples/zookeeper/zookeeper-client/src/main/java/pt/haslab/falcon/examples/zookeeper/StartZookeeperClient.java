@@ -10,7 +10,6 @@ public class StartZookeeperClient
         {
             final String serverIP = args[0];
             final ZooKeeper conn = new ZooKeeperConnection().connect( serverIP );
-            ;
 
             ZKExists zkExists = new ZKExists( conn );
             zkExists.main( new String[] { serverIP } );
