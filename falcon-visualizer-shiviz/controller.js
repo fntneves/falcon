@@ -622,8 +622,14 @@ Controller.prototype.bindHiddenHosts = function(host, node) {
  */
 Controller.prototype.onScroll = function(e) {
     var x = window.pageXOffset;
-    $("#hostBar, .dialog.host:not(.hidden)").css("margin-left", -x);
+
+    // applying a margin-left of -x to the #hostbar moves viewLabelL out of place,
+    // so apply the margin only to the host's squares (svg element of the hostBar)
+    $("#hostBar svg, .dialog.host:not(.hidden)").css("margin-left", -x); 
     $(".log").css("margin-left", x);
+    // ".logLabelL" is a child of ".log" and the margin-left of x by itself moves ".logLabelL" out of place.
+    // To avoid that, we have to compensate by applying a margin-left of -x to ".log .logLabelL"
+    $(".log .logLabelL").css("margin-left", -x);
 
     if ($(".line.focus").length) {
         $(".highlight").css({
