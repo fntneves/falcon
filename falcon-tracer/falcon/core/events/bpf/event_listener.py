@@ -5,26 +5,27 @@ import socket
 import multiprocessing
 import signal
 import logging
+import os
 from falcon import util
 from falcon.core.events.types.event import EventData
 
 class BpfEventListener():
-    def __init__(self, bpf, handler):
+    def __init__(self, bpf, handler, traced_pid):
         self._bpf = bpf
         self._handler = handler
+        self._traced_pid = traced_pid
 
-    def run(self):
+    def run(self, signal_child):
         self._bpf.prepare()
         self._bpf.open_event_buffer('events', self.handle)
 
-        # Give some time to open buffers.
-        time.sleep(1)
-
         self._bpf.attach_probes()
+        if signal_child:
+            os.kill(self._traced_pid, signal.SIGCONT)
 
         exit = [False]
 
-        def start_shutdown(sigum, frame):
+        def start_shutdown(signum, frame):
             logging.info('BPF event listener {} was interrupted...'.format(
                 str(multiprocessing.current_process().pid)))
             exit[0] = True
@@ -44,4 +45,3 @@ class BpfEventListener():
         event = ctypes.cast(data, ctypes.POINTER(EventData)).contents
 
         self._handler.handle(cpu, event, size)
-
