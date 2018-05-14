@@ -40,4 +40,4 @@ sudo falcon-tracer --pid 123
 
 ---
 
-See all the available options by running `sudo falcon-tracer --help` in your terminal.
+See all the available options by running `falcon-tracer --help` in your terminal.
