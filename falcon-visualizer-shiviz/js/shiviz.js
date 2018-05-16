@@ -25,7 +25,7 @@ function Shiviz() {
     $("#delim_regex_label").hide();
 
     var context = this;
-//  var defaultParser = "(?<event>.*)\\n(?<host>\\S*) (?<clock>{.*})";
+    //  var defaultParser = "(?<event>.*)\\n(?<host>\\S*) (?<clock>{.*})";
     var defaultOrdering = "descending";
     var defaultHostSort = "#hostsortLength";
 
@@ -61,8 +61,8 @@ function Shiviz() {
     function handleResponse(response, e) {
         $("#input").val(response);
         context.resetView();
-//      $("#delimiter").val($(e.target).data("delimiter"));
-//      $("#parser").val($(e.target).data("parser") || defaultParser);
+        // $("#delimiter").val($(e.target).data("delimiter"));
+        // $("#parser").val($(e.target).data("parser") || defaultParser);
         $("#ordering").val($(e.target).data("ordering") || defaultOrdering);
         $($(e.target).data("hostsort") || defaultHostSort).prop("checked", true);
         // Clears the file input value by replacing the file input component with a clone
@@ -106,52 +106,52 @@ function Shiviz() {
 
     // Clears the file input value whenever 'Choose File' is clicked
     $("#file").on("click", function() {
-       this.value = "";
-       $("#input").val("");
+        this.value = "";
+        $("#input").val("");
     });
 
     $("#file").on("change", function(e) {
 
-       var file = e.target.files[0];
-       var reader = new FileReader();
+        var file = e.target.files[0];
+        var reader = new FileReader();
 
-       reader.onload = function(e) {
-          // Get the text string containing the file's data
-          var text = reader.result;
-          // Split the text string by the new line character
-          // to get the first 2 lines as substrings in an array
-//        var lines = text.split("\n",2);
+        reader.onload = function (e) {
+            // Get the text string containing the file's data
+            var text = reader.result;
+            // Split the text string by the new line character
+            // to get the first 2 lines as substrings in an array
+            //        var lines = text.split("\n",2);
 
-          var defaultOrdering = "descending";
+            var defaultOrdering = "descending";
 
-          // If the first line is not empty and not just white space,
-          // set it as the 'log parsing regular expression' value.
-          // Otherwise, use the default log parsing regular expression
-//        if (lines[0].trim()) { $("#parser").val(lines[0]);}
-//        else { $("#parser").val(defaultParser);}
+            // If the first line is not empty and not just white space,
+            // set it as the 'log parsing regular expression' value.
+            // Otherwise, use the default log parsing regular expression
+            //        if (lines[0].trim()) { $("#parser").val(lines[0]);}
+            //        else { $("#parser").val(defaultParser);}
 
-          // Set the 'multiple executions regular expression delimiter' field
-          // to the second line and set the ordering of the processes to descending
-//        $("#delimiter").val(lines[1].trim());
-          $("#ordering").val(defaultOrdering);
+            // Set the 'multiple executions regular expression delimiter' field
+            // to the second line and set the ordering of the processes to descending
+            //        $("#delimiter").val(lines[1].trim());
+            $("#ordering").val(defaultOrdering);
 
-          // Get the position of the new line character that occurs at the end of the second line
-//        var startOfLog = text.indexOf("\n", (text.indexOf("\n")) + 1);
-          // The log will start at the position above + 1;
-          // fill in the log text area with the rest of the lines of the file
-          $("#input").val(text);
+            // Get the position of the new line character that occurs at the end of the second line
+            //        var startOfLog = text.indexOf("\n", (text.indexOf("\n")) + 1);
+            // The log will start at the position above + 1;
+            // fill in the log text area with the rest of the lines of the file
+            $("#input").val(text);
 
-          context.resetView();
-//        $("#visualize").click();
+            context.resetView();
+            //        $("#visualize").click();
 
-          // Clears the file input value whenever the log text area or regular expression
-          // fields are modified
-          $("#input").on("input", function() {
-             $("#file").replaceWith($("#file").clone(true));
-          });
-       }
+            // Clears the file input value whenever the log text area or regular expression
+            // fields are modified
+            $("#input").on("input", function() {
+                $("#file").replaceWith($("#file").clone(true));
+            });
+        }
 
-       reader.readAsText(file);
+        reader.readAsText(file);
     });
 
     if (window.location.hash) {
@@ -214,15 +214,15 @@ Shiviz.prototype.visualize = function(log, /* regexpString, delimiterString, */ 
         console.log(fileName);
         d3.selectAll("#vizContainer svg").remove();
 
-//      delimiterString = delimiterString.trim();
-//      var delimiter = delimiterString == "" ? null : new NamedRegExp(delimiterString, "m");
-//      regexpString = regexpString.trim();
+        // delimiterString = delimiterString.trim();
+        // var delimiter = delimiterString == "" ? null : new NamedRegExp(delimiterString, "m");
+        // regexpString = regexpString.trim();
 
-//      if (regexpString == "")
-//          throw new Exception("The parser regexp field must not be empty.", true);
+        // if (regexpString == "")
+        //     throw new Exception("The parser regexp field must not be empty.", true);
 
-//      var regexp = new NamedRegExp(regexpString, "m");
-//      var parser = new LogParser(log, delimiter, regexp);
+        // var regexp = new NamedRegExp(regexpString, "m");
+        // var parser = new LogParser(log, delimiter, regexp);
 
         var hostPermutation = null;
 
@@ -239,27 +239,27 @@ Shiviz.prototype.visualize = function(log, /* regexpString, delimiterString, */ 
             throw new Exception("You must select a way to sort processes.", true);
         }
 
-//      var labelGraph = {};
+        // var labelGraph = {};
 
-//      var labels = parser.getLabels();
-//      labels.forEach(function(label) {
-//          var graph = new ModelGraph(parser.getLogEvents(label));
-//          labelGraph[label] = graph;
-//
-//          hostPermutation.addGraph(graph);
-//          if (sortType == "order") {
-//              hostPermutation.addLogs(parser.getLogEvents(label));
-//          }
-//      });
+        // var labels = parser.getLabels();
+        // labels.forEach(function(label) {
+        //      var graph = new ModelGraph(parser.getLogEvents(label));
+        //      labelGraph[label] = graph;
+        //
+        //      hostPermutation.addGraph(graph);
+        //      if (sortType == "order") {
+        //          hostPermutation.addLogs(parser.getLogEvents(label));
+        //      }
+        // });
         const logObject = JSON.parse(log);
 
         console.time("toShivizLogEvents");
-        //const logEvents = toShivizLogEvents(logObject);
+        // const logEvents = toShivizLogEvents(logObject);
         const res = toShivizLogEvents(logObject);
         const logEvents = res["logEvents"];
         const graph = res["graph"];
         console.timeEnd("toShivizLogEvents");
-        //const graph = new ModelGraph(logEvents);
+        // const graph = new ModelGraph(logEvents);
 
         hostPermutation.addGraph(graph);
         if (sortType == "order") {
@@ -270,13 +270,13 @@ Shiviz.prototype.visualize = function(log, /* regexpString, delimiterString, */ 
 
         var views = [];
         views.push(new View(graph, hostPermutation, fileName));
-//      for(var i = 0; i < labels.length; i++) {
-//          var label = labels[i];
-//
-//          var graph = labelGraph[label];
-//          var view = new View(graph, hostPermutation, label);
-//          views.push(view);
-//      }
+        // for(var i = 0; i < labels.length; i++) {
+        //     var label = labels[i];
+        //
+        //     var graph = labelGraph[label];
+        //     var view = new View(graph, hostPermutation, label);
+        //     views.push(view);
+        // }
 
         // initial properties for the diffButton
         $(".diffButton").hide();
@@ -354,7 +354,7 @@ Shiviz.prototype.go = function(index, store, force) {
             try {
                 if (!$("#vizContainer svg").length || force)
                     this.visualize($("#input").val(), /* $("#parser").val(),  $("#delimiter").val(), */ $("input[name=host_sort]:checked").val().trim(), $("#ordering option:selected").val().trim() == "descending", $("#file").val().replace(/^.*[\\\/]/, ''));
-            } catch(e) {
+            } catch (e) {
                 $(".visualization").hide();
                 throw e;
             }

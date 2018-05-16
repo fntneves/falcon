@@ -102,7 +102,7 @@ VectorTimestamp.prototype.getOwnTime = function() {
  */
 VectorTimestamp.prototype.getClock = function() {
     var clock = {};
-    for(var key in this.clock) {
+    for (var key in this.clock) {
         clock[key] = this.clock[key];
     }
     return clock;

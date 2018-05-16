@@ -1,10 +1,11 @@
-
+/*
 function ModelGraph() {
 
-  AbstractGraph.call(this);
+    AbstractGraph.call(this);
 
-  this.pidsToHosts = {};
+    this.pidToHosts = {};
 }
+*/
 
 /**
  * Constructs a ModelGraph from an array of {@link LogEvent}s
@@ -21,9 +22,14 @@ function ModelGraph() {
  * @param {Array<LogEvent>} logEvents The array of LogEvents from which to
  *            generate the model.
  */
-/*function ModelGraph(logEvents) {
+function ModelGraph(logEvents) {
 
     AbstractGraph.call(this);
+
+    this.pidToHosts = {};
+
+    if (logEvents == undefined)
+        return; // The graph will be built with addLogEvent, since parent-child relationships are already known
 
     // Dictionary linking host name to array of nodes
     var hostToNodes = {};
@@ -44,6 +50,7 @@ function ModelGraph() {
     function initHosts() {
         for (var i = 0; i < logEvents.length; i++) {
             var logEvent = logEvents[i];
+            var pid = logEvent.pid;
             var host = logEvent.getHost();
             var node = new ModelNode([ logEvent ]);
             node.host = host;
@@ -72,6 +79,11 @@ function ModelGraph() {
 
                 mg.hostToHead[host] = head;
                 mg.hostToTail[host] = tail;
+
+                if (mg.pidToHosts[pid] == undefined) {
+                    mg.pidToHosts[pid] = [];
+                }
+                mg.pidToHosts[pid].push(host);
             }
 
             hostToNodes[host].push(node);
@@ -277,7 +289,7 @@ function ModelGraph() {
         exception.setUserFriendly(true);
         return exception;
     }
-}*/
+}
 
 // ModelGraph extends AbstractGraph
 ModelGraph.prototype = Object.create(AbstractGraph.prototype);
@@ -285,53 +297,53 @@ ModelGraph.prototype.constructor = ModelGraph;
 
 
 ModelGraph.prototype.addLogEvent = function(logEvent, parentModelNode) {
-  var host = logEvent.getHost();
-  var pid = logEvent.pid;
-  var node = new ModelNode([logEvent], pid);
-  node.host = host;
-  node.graph = this;
+    var host = logEvent.getHost();
+    var pid = logEvent.pid;
+    var node = new ModelNode([logEvent], pid);
+    node.host = host;
+    node.graph = this;
 
-  if (this.hosts.includes(host) == false) {
-    initHost(this, host, pid);
-  }
-
-  var lastNode = this.hostToTail[host];
-  lastNode.insertPrev(node);
-
-  if (parentModelNode != undefined) {
-    node.addParent(parentModelNode);
-  }
-
-  return node;
-
-
-  function initHost(mg, host, pid) {
-    mg.hosts.push(host);
-
-    if (mg.pidsToHosts[pid] == undefined) {
-      mg.pidsToHosts[pid] = [];
+    if (this.hosts.includes(host) == false) {
+        initHost(this, host, pid);
     }
-    mg.pidsToHosts[pid].push(host);
 
-    var head = new ModelNode([], pid);
-    head.isHeadInner = true;
-    head.host = host;
-    head.graph = mg;
+    var lastNode = this.hostToTail[host];
+    lastNode.insertPrev(node);
 
-    var tail = new ModelNode([], pid);
-    tail.isTailInner = true;
-    tail.host = host;
-    tail.graph = mg;
+    if (parentModelNode != undefined) {
+        node.addParent(parentModelNode);
+    }
 
-    head.prev = null;
-    head.next = tail;
+    return node;
 
-    tail.prev = head;
-    tail.next = null;
 
-    mg.hostToHead[host] = head;
-    mg.hostToTail[host] = tail;
-  }
+    function initHost(mg, host, pid) {
+        mg.hosts.push(host);
+
+        if (mg.pidToHosts[pid] == undefined) {
+            mg.pidToHosts[pid] = [];
+        }
+        mg.pidToHosts[pid].push(host);
+
+        var head = new ModelNode([], pid);
+        head.isHeadInner = true;
+        head.host = host;
+        head.graph = mg;
+
+        var tail = new ModelNode([], pid);
+        tail.isTailInner = true;
+        tail.host = host;
+        tail.graph = mg;
+
+        head.prev = null;
+        head.next = tail;
+
+        tail.prev = head;
+        tail.next = null;
+
+        mg.hostToHead[host] = head;
+        mg.hostToTail[host] = tail;
+    }
 };
 
 /**

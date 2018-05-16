@@ -172,14 +172,14 @@ HostPermutation.prototype.update = function() {
 
     for (var i = 0; i < this.graphs.length; i++) {
         var graph = this.graphs[i];
-        var pidsToHosts = graph.pidsToHosts;
+        var pidToHosts = graph.pidToHosts;
 
-        for (pid in pidsToHosts) {
+        for (pid in pidToHosts) {
             var pidColor = pidsColors[pid];
             if (pidColor == undefined) {
                 pidColor = pidsColors[pid] = this.color(pid);
             }
-            var hosts = pidsToHosts[pid];
+            var hosts = pidToHosts[pid];
             for (var j = 0; j < hosts.length; j++) {
                 var host = hosts[j];
                 this.hostColors[host] = pidColor;
@@ -309,7 +309,7 @@ LogOrderPermutation.prototype.update = function() {
 
 
 function ProcessPermutation(reverse) {
-  HostPermutation.call(this, reverse);
+    HostPermutation.call(this, reverse);
 }
 
 // LogOrderPermutation extends HostPermutation
@@ -318,33 +318,33 @@ ProcessPermutation.prototype.constructor = ProcessPermutation;
 
 ProcessPermutation.prototype.update = function() {
 
-  HostPermutation.prototype.update.call(this);
+    HostPermutation.prototype.update.call(this);
 
-  var globalPidsToHosts = {};
+    var globalpidToHosts = {};
 
-  for (var i = 0; i < this.graphs.length; i++) {
-      var graph = this.graphs[i];
-      var pidsToHosts = graph.pidsToHosts;
+    for (var i = 0; i < this.graphs.length; i++) {
+        var graph = this.graphs[i];
+        var pidToHosts = graph.pidToHosts;
 
-      for (var pid in pidsToHosts) {
-          var hosts = pidsToHosts[pid];
-          if (globalPidsToHosts[pid] == undefined) {
-              globalPidsToHosts[pid] = hosts;
-          }
-          else {
-              for (var j = 0; j < hosts.length; j++) {
-                if(globalPidsToHosts.includes(hosts[j]) == false) {
-                    globalPidsToHosts.push(hosts[j]);
+        for (var pid in pidToHosts) {
+            var hosts = pidToHosts[pid];
+            if (globalpidToHosts[pid] == undefined) {
+                globalpidToHosts[pid] = hosts;
+            }
+            else {
+                for (var j = 0; j < hosts.length; j++) {
+                    if (globalpidToHosts.includes(hosts[j]) == false) {
+                        globalpidToHosts.push(hosts[j]);
+                    }
                 }
-              }
-          }
-      }
-  }
-
-  for (var pid in globalPidsToHosts) {
-    var threads = globalPidsToHosts[pid];
-    for (i in threads) {
-      this.hosts.push(threads[i]);
+            }
+        }
     }
-  }
+
+    for (var pid in globalpidToHosts) {
+        var threads = globalpidToHosts[pid];
+        for (i in threads) {
+            this.hosts.push(threads[i]);
+        }
+    }
 }

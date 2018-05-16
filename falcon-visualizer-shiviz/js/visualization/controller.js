@@ -65,7 +65,7 @@ function Controller(global) {
         $(window).unbind("scroll");
 
         self.removeSelectionHighlights(["circle.sel", "rect.sel", "polygon.sel"]);
-        
+
         self.bindScroll();
     });
 
@@ -315,7 +315,7 @@ Controller.prototype.hideProc = function(pid) {
     this.global.getViews().forEach(function(view) {
         const transformer = view.getTransformer();
 
-        view.getModel().pidsToHosts[pid].forEach(function(host) {
+        view.getModel().pidToHosts[pid].forEach(function(host) {
             transformer.hideHost(host);
         });
     });
@@ -350,13 +350,13 @@ Controller.prototype.unhideProc = function(clickedHost) {
 
         var pid;
 
-        for (pid in model.pidsToHosts) {
-            if (model.pidsToHosts[pid].includes(clickedHost)) {
+        for (pid in model.pidToHosts) {
+            if (model.pidToHosts[pid].includes(clickedHost)) {
                 break;
             }
         }
 
-        view.getModel().pidsToHosts[pid].forEach(function(host) {
+        view.getModel().pidToHosts[pid].forEach(function(host) {
             transformer.unhideHost(host);
         });
     });
@@ -736,7 +736,7 @@ Controller.prototype.showDialog = function(e, type, elem) {
             highlightWithCircle(e);
         }
     }
-    
+
     if (!type) // e is a regular node
         highlightSelected(e);
 
