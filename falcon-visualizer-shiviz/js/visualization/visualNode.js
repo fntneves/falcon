@@ -11,32 +11,32 @@
  * @constructor
  * @param {ModelNode} node The node to associate with this VisualNode. This
  *            object will then be a visualization of the argument
- */ 
+ */
 function VisualNode(node) {
-    
+
     /** @private */
     this.id = VisualNode.id++;
 
     /** @private */
     this.node = node;
-    
+
     /** @private */
     this.$svg = Util.svgElement("g");
-    
+
     this.$title = $("<title></title>");
-    
+
     this.$circle = Util.svgElement("circle");
-    
+
     this.$text = Util.svgElement("text");
-    
+
     this.$hiddenParentLine = Util.svgElement("line");
-    
+
     this.$hiddenChildLine = Util.svgElement("line");
 
     this.$rect = Util.svgElement("rect");
-	
+
     this.$diamond = Util.svgElement("polygon");
-    
+
     this.$highlightRect = Util.svgElement("rect");
 
     /** @private */
@@ -50,16 +50,16 @@ function VisualNode(node) {
 
     /** @private */
     this.translateY = 0;
-    
+
     this.setX(0);
     this.setY(0);
-
+    
     /** @private */
     this.radius = 0;
     this.setRadius(5);
-	
+
     /** @private */
-    this.points = [0,0,0,0,0,0,0,0];
+    this.points = [0, 0, 0, 0, 0, 0, 0, 0];
 
     /** @private */
     this.fillColor;
@@ -86,7 +86,7 @@ function VisualNode(node) {
 
     /** @private */
     this.hasHiddenChildInner = false;
-	
+
     /** @private */
     this._isHighlighted = false;
 
@@ -114,12 +114,13 @@ function VisualNode(node) {
             "width": Global.MOUSE_OVER_RECT_SIZE,
             "height": Global.MOUSE_OVER_RECT_SIZE
         });
-        
+
         if (this.isLog()) {
-            const xy = -(Global.MOUSE_OVER_RECT_SIZE - Global.TYPE_LOG_NODE_SIZE) / 2;
+            const mouseOverRectXY = -(Global.MOUSE_OVER_RECT_SIZE - Global.TYPE_LOG_NODE_SIZE) / 2;
+            
             mouseOverRect.attr({
-                "x": xy,
-                "y": xy
+                "x": mouseOverRectXY,
+                "y": mouseOverRectXY
             });
             // use a rectangle for non start nodes of type LOG
             this.$rect.attr({
@@ -127,12 +128,10 @@ function VisualNode(node) {
                 "height": Global.TYPE_LOG_NODE_SIZE,
                 "class": "log-rect"
             });
-            
+
             this.$svg.append(this.$rect);
         } else {
             mouseOverRect.attr({
-                "width": Global.MOUSE_OVER_RECT_SIZE,
-                "height": Global.MOUSE_OVER_RECT_SIZE,
                 "x": -Global.MOUSE_OVER_RECT_SIZE / 2,
                 "y": -Global.MOUSE_OVER_RECT_SIZE / 2
             });
@@ -253,15 +252,15 @@ VisualNode.prototype.getRadius = function() {
 VisualNode.prototype.setRadius = function(newRadius) {
     this.radius = newRadius;
     this.$circle.attr("r", newRadius);
-    
-    if(this.hasHiddenParent()) {
+
+    if (this.hasHiddenParent()) {
         this.$hiddenParentLine.attr({
             "x2": Global.HIDDEN_EDGE_LENGTH + newRadius,
             "y2": -(Global.HIDDEN_EDGE_LENGTH + newRadius)
         });
     }
-    
-    if(this.hasHiddenChild()) {
+
+    if (this.hasHiddenChild()) {
         this.$hiddenChildLine.attr({
             "x2": Global.HIDDEN_EDGE_LENGTH + newRadius,
             "y2": Global.HIDDEN_EDGE_LENGTH + newRadius
@@ -286,15 +285,15 @@ VisualNode.prototype.getPoints = function() {
  */
 VisualNode.prototype.setPoints = function(x,y) {
     this.updateNodeShape(x,y);
-    
-    if(this.hasHiddenParent()) {
+
+    if (this.hasHiddenParent()) {
         this.$hiddenParentLine.attr({
             "x2": Global.HIDDEN_EDGE_LENGTH + x,
             "y2": -(Global.HIDDEN_EDGE_LENGTH + y)
         });
     }
-    
-    if(this.hasHiddenChild()) {
+
+    if (this.hasHiddenChild()) {
         this.$hiddenChildLine.attr({
             "x2": Global.HIDDEN_EDGE_LENGTH + x,
             "y2": Global.HIDDEN_EDGE_LENGTH + y
@@ -437,10 +436,10 @@ VisualNode.prototype.getLabel = function() {
  */
 VisualNode.prototype.setLabel = function(newLabel) {
     newLabel += "";
-    if(this.label.trim() == "" && newLabel.trim() != "") {
+    if (this.label.trim() == "" && newLabel.trim() != "") {
         this.$svg.append(this.$text);
     }
-    if(this.label.trim() != "" && newLabel.trim() == "") {
+    if (this.label.trim() != "" && newLabel.trim() == "") {
         this.$text.remove();
     }
     this.label = newLabel;
@@ -526,10 +525,9 @@ VisualNode.prototype.hasHiddenParent = function() {
  * @param {Boolean} val True if edge should be drawn
  */
 VisualNode.prototype.setHasHiddenParent = function(val) {
-    if(this.hasHiddenParentInner && !val) {
+    if (this.hasHiddenParentInner && !val) {
         this.$hiddenParentLine.remove();
-    }
-    else if(!this.hasHiddenParentInner && val) {
+    } else if (!this.hasHiddenParentInner && val) {
         this.$hiddenParentLine.attr({
             "x2": Global.HIDDEN_EDGE_LENGTH + this.getRadius(),
             "y2": -(Global.HIDDEN_EDGE_LENGTH + this.getRadius())
@@ -554,10 +552,9 @@ VisualNode.prototype.hasHiddenChild = function() {
  * @param {Boolean} val True if edge should be drawn
  */
 VisualNode.prototype.setHasHiddenChild = function(val) {
-    if(this.hasHiddenChildInner && !val) {
+    if (this.hasHiddenChildInner && !val) {
         this.$hiddenChildLine.remove();
-    }
-    else if(!this.hasHiddenChildInner && val) {
+    } else if (!this.hasHiddenChildInner && val) {
         this.$hiddenChildLine.attr({
             "x2": Global.HIDDEN_EDGE_LENGTH + this.getRadius(),
             "y2": Global.HIDDEN_EDGE_LENGTH + this.getRadius()
@@ -592,10 +589,9 @@ VisualNode.prototype.isHighlighted = function() {
  * @param {Boolean} val True if this node is highlighted
  */
 VisualNode.prototype.setHighlight = function(val) {
-    if(this._isHighlighted && !val) {
+    if (this._isHighlighted && !val) {
         this.$highlightRect.remove();
-    }
-    else {
+    } else {
         this.$highlightRect.attr({
             "width": "15px",
             "height": "15px",
@@ -604,7 +600,7 @@ VisualNode.prototype.setHighlight = function(val) {
         });
         this.$svg.append(this.$highlightRect);
     }
-    
+
     this._isHighlighted = val;
 
 };
@@ -633,14 +629,14 @@ VisualNode.prototype.setSelected = function(val) {
  */
 
 VisualNode.prototype.drawHostAsRhombus = function() {
-    this.points = [12,0,22,12,12,24,2,12];
+    this.points = [12, 0, 22, 12, 12, 24, 2, 12];
     this.$diamond.attr({
-      "width": Global.HOST_SIZE,
-      "height": Global.HOST_SIZE,
-      "points": this.points.join()
-     });
-     this.$rect.remove();
-     this.$svg.append(this.$diamond);
+        "width": Global.HOST_SIZE,
+        "height": Global.HOST_SIZE,
+        "points": this.points.join()
+    });
+    this.$rect.remove();
+    this.$svg.append(this.$diamond);
 };
 
 /**
@@ -649,7 +645,7 @@ VisualNode.prototype.drawHostAsRhombus = function() {
  */
 
 VisualNode.prototype.drawEventAsRhombus = function(x,y) {
-    this.points = [0,-y,x,0,0,y,-x,0];
+    this.points = [0, -y, x, 0, 0, y, -x, 0];
     this.$diamond.attr("points", this.points.join());
     this.$circle.remove();
     this.$svg.append(this.$diamond);

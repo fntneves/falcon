@@ -11,16 +11,16 @@
  * @param {String} label
  */
 function View(model, hostPermutation, label) {
-    
+
     /** @private */
     this.$svg = $(document.createElementNS('http://www.w3.org/2000/svg', 'svg'));
-    
+
     /** @private */
     this.$hostSVG = $(document.createElementNS('http://www.w3.org/2000/svg', 'svg'));
-    
+
     /** @private */
     this.logTable = $("<td></td>");
-    
+
     /** @private */
     this.hostPermutation = hostPermutation;
 
@@ -38,10 +38,10 @@ function View(model, hostPermutation, label) {
 
     /** @private */
     this.transformer = new Transformer();
-    
+
     /** @private */
     this.controller = null;
-    
+
     /**
      * Cacheed mapping of hostnames to abbreviated hostnames
      * @private
@@ -149,7 +149,7 @@ View.prototype.hasHost = function(host) {
  */
 View.prototype.hasQueryMatch = function() {
     var hmt = this.getTransformer().getHighlightMotifTransformation();
-    if (hmt != null) { 
+    if (hmt != null) {
         hmt.findMotifs(this.initialModel);
         return hmt.getHighlighted().getMotifs().length > 0;
     } else {
@@ -178,7 +178,7 @@ View.prototype.draw = function(viewPosition) {
         "height": this.visualGraph.getHeight(),
         "width": this.visualGraph.getWidth()
     });
-    
+
     var hackyFixRect = Util.svgElement("rect");
     hackyFixRect.attr({
         "height": this.visualGraph.getHeight() + "px",
@@ -221,9 +221,9 @@ View.prototype.draw = function(viewPosition) {
     }
 
     function drawHosts() {
-        
+
         view.$hostSVG.children("*").remove();
-        
+
         view.$hostSVG.attr({
             "width": view.visualGraph.getWidth(),
             "height": Global.HOST_SIZE,
@@ -233,7 +233,7 @@ View.prototype.draw = function(viewPosition) {
         if (viewPosition == "R") {
             view.$hostSVG.css("margin-left", ".15em");
         }
-        
+
         else {
             view.$hostSVG.css("margin-left", "0em");
         }
@@ -306,14 +306,14 @@ View.prototype.draw = function(viewPosition) {
             });
             return textsToFitter;
         }
-        
+
         function getD3SetterMap(d3Texts) {
             const textsToSetter = new Map();
             d3Texts.each(function() {
                 const d3Text = d3.select(this);
                 const setAbbrevText = makeAbbrevTextSetter(this);
                 textsToSetter.set(d3Text.text(), setAbbrevText);
-                    
+
             });
             return textsToSetter;
         }
@@ -335,7 +335,7 @@ View.prototype.draw = function(viewPosition) {
             var node = visualNodes[i];
             var y = node.getY();
             if (lines[y] === undefined)
-                lines[y] = [ node ];
+                lines[y] = [node];
             // nodes with the same y coordinate saved in lines[y]
             else
                 lines[y].push(node);

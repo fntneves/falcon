@@ -22,7 +22,7 @@ function Global($vizContainer, $sidebar, $hostBar, $logTable, views) {
 
     /** @private */
     this.viewL = this.views.length > 0 ? this.views[0] : null;
-    
+
     /** @private */
     this.viewR = this.views.length > 1 ? this.views[1] : null;
 
@@ -31,22 +31,22 @@ function Global($vizContainer, $sidebar, $hostBar, $logTable, views) {
 
     /** @private */
     this.controller = new Controller(this);
-    
+
     /** @private */
     this.$vizContainer = $vizContainer;
-    
+
     /** @private */
     this.$sidebar = $sidebar;
-    
+
     /** @private */
     this.$hostBar = $hostBar;
 
     /** @private */
     this.searchbar = SearchBar.getInstance();
-    
+
     /** @private */
     this.$logTable = $logTable;
-  
+
     /** @private */
     this.showDiff = false;
 
@@ -56,12 +56,12 @@ function Global($vizContainer, $sidebar, $hostBar, $logTable, views) {
     this.$sidebar.css({
         width: Global.SIDE_BAR_WIDTH + "px"
     });
-    
+
     var context = this;
     views.forEach(function(view) {
         view.controller = context.controller; //TODO
     });
-    
+
 }
 
 /**
@@ -130,7 +130,7 @@ Global.prototype.drawAll = function() {
     this.$logTable.empty(); //TODO: check
     this.$vizContainer.children("*").remove();
     this.$hostBar.children("*").remove();
-    
+
     this.$vizContainer.height(global.getMaxViewHeight());
     var viewLabelDiv = $('<div id="viewLabelDiv"></div>');
 
@@ -172,16 +172,16 @@ Global.prototype.drawAll = function() {
 
                 // Remove fading for executions that match the search term
                 this.views.forEach(function(view) {
-                  if (view.hasQueryMatch()) {
-                      var label = view.getLabel();
-                      if (baseDropdown.is(":visible") && selected.val() == label) {
-                          baseDropdown.removeClass("fade");
-                      } else {
-                        $("table.clusterResults a").filter(function() {
-                            return $(this).attr("href") == label;
-                        }).removeClass("execFade");
-                      }
-                  }
+                    if (view.hasQueryMatch()) {
+                        var label = view.getLabel();
+                        if (baseDropdown.is(":visible") && selected.val() == label) {
+                            baseDropdown.removeClass("fade");
+                        } else {
+                            $("table.clusterResults a").filter(function() {
+                                return $(this).attr("href") == label;
+                            }).removeClass("execFade");
+                        }
+                    }
                 });
             }
         }
@@ -196,41 +196,41 @@ Global.prototype.drawAll = function() {
         $(".visualization .left #tabs").css("height", "4.5em");
 
         var rightLabel = this.viewR.getLabel();
-       // If there are only two executions in pairwise view, use labels instead of drop-downs
-       if (numViews == 2 && global.getPairwiseView()) {
-          this.$hostBar.append(viewLabelDiv);
-          var viewLabelR = $('<p id="viewLabelR"></p>').text(rightLabel).append(labelIconR);
-          viewLabelDiv.append(viewLabelL, viewLabelR);
+        // If there are only two executions in pairwise view, use labels instead of drop-downs
+        if (numViews == 2 && global.getPairwiseView()) {
+            this.$hostBar.append(viewLabelDiv);
+            var viewLabelR = $('<p id="viewLabelR"></p>').text(rightLabel).append(labelIconR);
+            viewLabelDiv.append(viewLabelL, viewLabelR);
 
-       // Otherwise, use drop-downs
-       } else {
-            this.$hostBar.append(viewSelectDiv); 
+            // Otherwise, use drop-downs
+        } else {
+            this.$hostBar.append(viewSelectDiv);
             var viewSelectR = $('<select id="viewSelectR"></select>').hide();
             viewSelectDiv.append(selectIconL, selectIconR, viewSelectL);
             if (numViews != 2) {
                 viewSelectDiv.append(viewSelectR);
             }
-      
-            this.views.forEach(function(view) {
-               var label = view.getLabel();
 
-               if (global.getPairwiseView()) {
-                  if (label != rightLabel) {
-                      viewSelectL.append('<option value="' + label + '">' + label + '</option>');
-                  }
-               // Include every view as an option for the left drop-down when not in pairwise view
-               } else {
+            this.views.forEach(function(view) {
+                var label = view.getLabel();
+
+                if (global.getPairwiseView()) {
+                    if (label != rightLabel) {
+                        viewSelectL.append('<option value="' + label + '">' + label + '</option>');
+                    }
+                    // Include every view as an option for the left drop-down when not in pairwise view
+                } else {
                     viewSelectL.append('<option value="' + label + '">' + label + '</option>');
-               }
-               if (label != leftLabel) {
-                  viewSelectR.append('<option value="' + label + '">' + label + '</option>');
-               }
+                }
+                if (label != leftLabel) {
+                    viewSelectR.append('<option value="' + label + '">' + label + '</option>');
+                }
             });
-      
-           viewSelectL.children("option[value='" + leftLabel + "']").prop("selected", true);
-           viewSelectR.children("option[value='" + rightLabel + "']").prop("selected", true);
-      
-           viewSelectR.unbind().on("change", function(e) {
+
+            viewSelectL.children("option[value='" + leftLabel + "']").prop("selected", true);
+            viewSelectR.children("option[value='" + rightLabel + "']").prop("selected", true);
+
+            viewSelectR.unbind().on("change", function(e) {
                 var valR = $("#viewSelectR option:selected").val();
                 var valL = $("#viewSelectL option:selected").val();
                 global.controller.hideDiff();
@@ -250,13 +250,13 @@ Global.prototype.drawAll = function() {
                 if ($("#clusterNumProcess").is(":checked") || $("#clusterComparison").is(":checked")) {
                     global.drawClusterIcons();
                 }
-           });
-       }          
+            });
+        }
     }
     // If there is a single execution
     else {
         // The label here is "" but it'll help shift the hostbar down
-        this.$hostBar.append(viewLabelDiv); 
+        this.$hostBar.append(viewLabelDiv);
         viewLabelDiv.append(viewLabelL);
         $(".visualization .left #tabs").css("height", "2.5em");
     }
@@ -287,13 +287,13 @@ Global.prototype.drawAll = function() {
             global.drawClusterIcons();
         }
     });
-    
+
     this.viewL.draw("L");
     this.$vizContainer.append(this.viewL.getSVG());
     this.$hostBar.append(this.viewL.getHostSVG());
     this.$logTable.append(this.viewL.getLogTable());
     this.controller.bindLines(this.viewL.getLogTable().find(".line:not(.more)"));
-  
+
     if (this.getPairwiseView()) {
         $(".diffButton").show(); $("#viewSelectR").show();
 
@@ -301,11 +301,11 @@ Global.prototype.drawAll = function() {
         // Draw the separator between the two views - this separator is only visible when
         // at least one process is present (not hidden) in both views
         if ((this.viewL.getTransformer().getHiddenHosts().length < this.viewL.getHosts().length) &&
-           (this.viewR.getTransformer().getHiddenHosts().length < this.viewR.getHosts().length)) {
-              var viewSeparator = $('<div id="viewSeparator"></div>');
-              viewSeparator.css("height", global.getMaxViewHeight());
-              this.$vizContainer.append(viewSeparator);
-        }   
+            (this.viewR.getTransformer().getHiddenHosts().length < this.viewR.getHosts().length)) {
+            var viewSeparator = $('<div id="viewSeparator"></div>');
+            viewSeparator.css("height", global.getMaxViewHeight());
+            this.$vizContainer.append(viewSeparator);
+        }
         this.$vizContainer.append(this.viewR.getSVG());
         this.$hostBar.append(this.viewR.getHostSVG());
         this.$logTable.append($("<td></td>").addClass("spacer"));
@@ -351,16 +351,16 @@ Global.prototype.getViews = function() {
 
 Global.prototype.getActiveViews = function() {
     var result = [this.viewL];
-    if(this.viewR != null) {
+    if (this.viewR != null) {
         result.push(this.viewR);
     }
     return result;
 };
 
 Global.prototype.getViewByLabel = function(label) {
-    for(var i = 0; i < this.views.length; i++) {
+    for (var i = 0; i < this.views.length; i++) {
         var view = this.views[i];
-        if(view.getLabel() == label) {
+        if (view.getLabel() == label) {
             return view;
         }
     }
@@ -445,8 +445,8 @@ Global.prototype.setView = function(position, anchorHref) {
             if (position == "L") {
                 $("#viewSelectL").children("option[value='" + anchorHref + "']").prop("selected", true).change();
             } else {
-                $("#viewSelectR").children("option[value='" + anchorHref + "']").prop("selected", true).change();                 
-            }                
+                $("#viewSelectR").children("option[value='" + anchorHref + "']").prop("selected", true).change();
+            }
         }
     }
 }
@@ -463,21 +463,21 @@ Global.prototype.getController = function() {
  * Resizes the graph
  */
 Global.prototype.resize = function() {
-    
+
     var viewLNumHosts = getNumVisibleHosts(this.viewL.getHosts(), this.viewL.getTransformer().getSpecifiedHiddenHosts());
-    
+
     var viewRNumHosts = 0;
     if (this.viewR != null && this.getPairwiseView()) {
         viewRNumHosts = getNumVisibleHosts(this.viewR.getHosts(), this.viewR.getTransformer().getSpecifiedHiddenHosts());
     }
-    
+
     var visibleHosts = viewLNumHosts + viewRNumHosts;
 
     // TODO: rename to sidebarLeft sidebarRight middleWidth
     var headerWidth = $(".visualization header").outerWidth();
     var sidebarWidth = this.$sidebar.outerWidth();
     var globalWidth = $(window).width() - headerWidth - sidebarWidth;
-    
+
     $("#searchbar").width(globalWidth);
 
     var widthPerHost = Math.max(Global.MIN_HOST_WIDTH, globalWidth / visibleHosts);
@@ -485,12 +485,12 @@ Global.prototype.resize = function() {
 
     this.viewL.setWidth(viewLNumHosts * widthPerHost);
     this.viewL.setLogTableWidth(logTableWidth);
-    
+
     if (this.viewR != null && this.getPairwiseView()) {
         this.viewR.setWidth(viewRNumHosts * widthPerHost);
         this.viewR.setLogTableWidth(logTableWidth);
     }
-    
+
     var sel = d3.select("circle.sel").data()[0];
     if (sel) {
         var $svg = $(d3.select("circle.sel").node()).parents("svg");
@@ -510,16 +510,16 @@ Global.prototype.resize = function() {
         allHosts.forEach(function(host) {
             hostSet[host] = true;
         });
-        
+
         hiddenHosts.forEach(function(host) {
             delete hostSet[host];
         });
-        
+
         var count = 0;
-        for(var key in hostSet) {
+        for (var key in hostSet) {
             count++;
         }
-        
+
         return count;
     }
 };
@@ -562,7 +562,7 @@ Global.prototype.drawClusterIcons = function() {
 
     // Set margin for base dropdown to zero initially
     $(".clusterBase").removeClass("baseIndent");
-    
+
     // If the selected execution is hidden in a condensed list, click the Show all button to make it visible
     if (!leftLink.is(":visible")) {
         $(leftLink.nextAll("a").filter(function() {
@@ -584,7 +584,7 @@ Global.prototype.drawClusterIcons = function() {
             if (this.getPairwiseView()) {
                 $(rightLink.before(clusterIconR).next()).after($("<br class=right>").hide());;
             }
-        // If the right graph is the specified base execution, draw the right arrow icon next to the dropdown
+            // If the right graph is the specified base execution, draw the right arrow icon next to the dropdown
         } else if (this.getPairwiseView() && rightLabel == $("select.clusterBase").val()) {
             $("#baseLabel").after($("<br class='spaceR'>").hide());
             $(".clusterBase").before(clusterIconR.addClass("baseIcon")).addClass("baseIndent");
@@ -604,8 +604,8 @@ Global.prototype.drawClusterIcons = function() {
  * @private
  */
 Global.prototype.drawSideBar = function() {
-    
-    var global = this;  
+
+    var global = this;
     this.$sidebar.children("#hiddenHosts").remove();
     this.$sidebar.children("#viewSelectDiv").remove();
 
@@ -614,13 +614,13 @@ Global.prototype.drawSideBar = function() {
     this.viewL.getTransformer().getHiddenHosts().forEach(function(host) {
         hiddenHosts[host] = true;
     });
-    
+
     if (this.viewR != null && this.getPairwiseView()) {
         this.viewR.getTransformer().getHiddenHosts().forEach(function(host) {
             hiddenHosts[host] = true;
         });
     }
-  
+
     var hh = Object.keys(hiddenHosts);
     if (hh.length <= 0) {
         return;
@@ -629,7 +629,7 @@ Global.prototype.drawSideBar = function() {
     this.$sidebar.append('<div id="hiddenHosts">Hidden processes:</div>');
     var hiddenHostsSelection = d3.select("#hiddenHosts");
     var hiddenHostsSVG = hiddenHostsSelection.append("svg");
-  
+
     var hostsPerLine = Math.floor((Global.SIDE_BAR_WIDTH + 5) / (Global.HOST_SIZE + 5));
     hiddenHostsSVG
         .attr("width", this.$sidebar.width())
@@ -638,75 +638,75 @@ Global.prototype.drawSideBar = function() {
 
     var hiddenHostsGroup = hiddenHostsSVG.append("g");
     hiddenHostsGroup.append("title").text("Double click to view");
-  
+
     var first = true; var count = 0;
     // initial points for a unique host (ie. x and y coordinates for each corner of the rhombus shape)
     var x1 = 12; var y1 = 0; var x2 = 22; var y2 = 12;
     var x3 = 12; var y3 = 24; var x4 = 2; var y4 = 12;
     // initial x and y coordinates for a normal host
-    var rectx = 0; var recty = 0; 
-  
+    var rectx = 0; var recty = 0;
+
     hh.forEach(function(host) {
-       var hiddenHost = global.drawHiddenHost(hiddenHostsSVG);  
+        var hiddenHost = global.drawHiddenHost(hiddenHostsSVG);
 
-      // If showDiff is true, check if this hidden host needs to be drawn as a rhombus
-      if (global.getShowDiff()) {
-          var uniqueHostsL = global.viewL.getTransformer().getUniqueHosts();
-          //check if this hidden host is in the list of unique hosts for viewL     
-          if (uniqueHostsL && uniqueHostsL.indexOf(host) != -1) {
-              hiddenHost = global.drawHiddenHostAsRhombus(hiddenHostsSVG);
-          }
-          else if (global.viewR != null && global.getPairwiseView()) {
-              //check if this hidden host is in the list of unique hosts for viewR
-              var uniqueHostsR = global.viewR.getTransformer().getUniqueHosts();
-              if (uniqueHostsR && uniqueHostsR.indexOf(host) != -1) {
-                  hiddenHost = global.drawHiddenHostAsRhombus(hiddenHostsSVG);
-              }
-          }
-      }
-      
-      hiddenHost.attr("width", Global.HOST_SIZE);
-      hiddenHost.attr("height", Global.HOST_SIZE);
-      hiddenHost.style("fill", global.hostPermutation.getHostColor(host));
-      hiddenHost.append("title").text("Double click to view");
+        // If showDiff is true, check if this hidden host needs to be drawn as a rhombus
+        if (global.getShowDiff()) {
+            var uniqueHostsL = global.viewL.getTransformer().getUniqueHosts();
+            //check if this hidden host is in the list of unique hosts for viewL     
+            if (uniqueHostsL && uniqueHostsL.indexOf(host) != -1) {
+                hiddenHost = global.drawHiddenHostAsRhombus(hiddenHostsSVG);
+            }
+            else if (global.viewR != null && global.getPairwiseView()) {
+                //check if this hidden host is in the list of unique hosts for viewR
+                var uniqueHostsR = global.viewR.getTransformer().getUniqueHosts();
+                if (uniqueHostsR && uniqueHostsR.indexOf(host) != -1) {
+                    hiddenHost = global.drawHiddenHostAsRhombus(hiddenHostsSVG);
+                }
+            }
+        }
 
-      // start over on a new line once the hidden hosts have taken up the side bar width
-      if (count == hostsPerLine) { 
-          if (global.getShowDiff()) {
-            x1 = 12; y1 += Global.HOST_SIZE + 5; 
-            x2 = 22; y2 += Global.HOST_SIZE + 5; 
-            x3 = 12; y3 += Global.HOST_SIZE + 5; 
-            x4 = 2; y4 += Global.HOST_SIZE + 5;
-          }
-          rectx = 0; recty += Global.HOST_SIZE + 5;
-          first = true;
-          count = 0;
-      }
+        hiddenHost.attr("width", Global.HOST_SIZE);
+        hiddenHost.attr("height", Global.HOST_SIZE);
+        hiddenHost.style("fill", global.hostPermutation.getHostColor(host));
+        hiddenHost.append("title").text("Double click to view");
 
-      // increment x coordinates so that the next hidden host will be drawn
-      // next to the currently hidden hosts without any overlap
-      if (!first) { 
-          if (global.getShowDiff()) {
-            x1 += Global.HOST_SIZE + 5;
-            x2 += Global.HOST_SIZE + 5;
-            x3 += Global.HOST_SIZE + 5;
-            x4 += Global.HOST_SIZE + 5;
-          }
-          rectx += Global.HOST_SIZE + 5;    
-      }
-      first = false;
-     
-      // update attributes of the drawn node
-      if (global.getShowDiff()) {
-        var points = [x1,y1,x2,y2,x3,y3,x4,y4];
-        hiddenHost.attr("points", points.join());
-      }
-      hiddenHost.attr("x", rectx);
-      hiddenHost.attr("y", recty);
-      count++;
-     
-      // bind the hidden host nodes to user input
-      global.controller.bindHiddenHosts(host, hiddenHost);     
-  });
+        // start over on a new line once the hidden hosts have taken up the side bar width
+        if (count == hostsPerLine) {
+            if (global.getShowDiff()) {
+                x1 = 12; y1 += Global.HOST_SIZE + 5;
+                x2 = 22; y2 += Global.HOST_SIZE + 5;
+                x3 = 12; y3 += Global.HOST_SIZE + 5;
+                x4 = 2; y4 += Global.HOST_SIZE + 5;
+            }
+            rectx = 0; recty += Global.HOST_SIZE + 5;
+            first = true;
+            count = 0;
+        }
+
+        // increment x coordinates so that the next hidden host will be drawn
+        // next to the currently hidden hosts without any overlap
+        if (!first) {
+            if (global.getShowDiff()) {
+                x1 += Global.HOST_SIZE + 5;
+                x2 += Global.HOST_SIZE + 5;
+                x3 += Global.HOST_SIZE + 5;
+                x4 += Global.HOST_SIZE + 5;
+            }
+            rectx += Global.HOST_SIZE + 5;
+        }
+        first = false;
+
+        // update attributes of the drawn node
+        if (global.getShowDiff()) {
+            var points = [x1, y1, x2, y2, x3, y3, x4, y4];
+            hiddenHost.attr("points", points.join());
+        }
+        hiddenHost.attr("x", rectx);
+        hiddenHost.attr("y", recty);
+        count++;
+
+        // bind the hidden host nodes to user input
+        global.controller.bindHiddenHosts(host, hiddenHost);
+    });
 
 };
