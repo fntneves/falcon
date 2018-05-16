@@ -35,14 +35,7 @@ function Controller(global) {
         if (e.which == 27) {
             $(".dialog").hide();
 
-            d3.select("circle.sel").each(function(d) {
-                $(this).remove();
-                d.setSelected(false);
-            });
-            d3.select("rect.sel").each(function(d) {
-                $(this).remove();
-                d.setSelected(false);
-            });
+            self.removeSelectionHighlights(["circle.sel", "rect.sel"]);
         }
         self.bindScroll();
     });
@@ -71,21 +64,8 @@ function Controller(global) {
         // remove the scrolling behavior for hiding/showing dialog boxes once we click outside the box
         $(window).unbind("scroll");
 
-        d3.select(".sel").each(function(d) {
-            $(this).remove();
-            d.setSelected(false);
-        });
-        /*
-        d3.select("circle.sel").each(function(d) {
-            $(this).remove();
-            d.setSelected(false);
-        });
-
-        d3.select("polygon.sel").each(function(d) {
-            $(this).remove();
-            d.setSelected(false);
-        });
-        */
+        self.removeSelectionHighlights(["circle.sel", "rect.sel", "polygon.sel"]);
+        
         self.bindScroll();
     });
 
@@ -176,7 +156,7 @@ function Controller(global) {
             $("table.clusterResults #clusterIconR").remove();
             // Remove differences when viewing graphs individually
             if (global.getShowDiff()) {
-               $(".diffButton").click();
+                $(".diffButton").click();
             }
             $(".diffButton").hide();
             global.setPairwiseView(false);
@@ -289,7 +269,7 @@ Controller.prototype.clearHighlight = function() {
  *
  * @returns {Boolean} True if a motif is being highlighted
  */
-Controller.prototype.hasHighlight = function() {
+Controller.prototype.hasHighlight = function () {
     var views = this.global.getViews();
     for (var i = 0; i < views.length; i++) {
         if (views[i].getTransformer().hasHighlightedMotif()) {
@@ -336,7 +316,7 @@ Controller.prototype.hideProc = function(pid) {
         const transformer = view.getTransformer();
 
         view.getModel().pidsToHosts[pid].forEach(function(host) {
-          transformer.hideHost(host);
+            transformer.hideHost(host);
         });
     });
 
@@ -377,7 +357,7 @@ Controller.prototype.unhideProc = function(clickedHost) {
         }
 
         view.getModel().pidsToHosts[pid].forEach(function(host) {
-          transformer.unhideHost(host);
+            transformer.unhideHost(host);
         });
     });
 
@@ -482,21 +462,21 @@ Controller.prototype.bindNodes = function(nodes) {
         // Reset normal size of circles that are focused but no longer selected
         d3.selectAll("g.focus").select("circle:not(.sel)").transition().duration(100)
             .attr("r", d => d.getRadius());
-      
-        // Set all focus attributes to false and reset normal size of rectangles that are focused but no longer selected
+
+        // Set all focus attributes to false and reset normal size of log rectangles that are focused but no longer selected
         d3.selectAll("g.focus").classed("focus", false).select(".log-rect:not(.sel)").transition().duration(100)
             .attr("width", d => Global.TYPE_LOG_NODE_SIZE)
-            .attr("height", d => Global.TYPE_LOG_NODE_SIZE);   
-        
+            .attr("height", d => Global.TYPE_LOG_NODE_SIZE);
+
         d3.select(this).classed("focus", true).select("circle:not(.sel)").transition().duration(100)
             .attr("r", d => d.getRadius() + 2);
-        
+
         d3.select(this).classed("focus", true).select(".log-rect:not(.sel)").transition().duration(100)
             .attr("width", d => Global.TYPE_LOG_NODE_SIZE + 2)
             .attr("height", d => Global.TYPE_LOG_NODE_SIZE + 2);
-        
+
         d3.selectAll("g.focus circle.sel").transition().duration(100)
-            .attr("r", d =>  d.getRadius() + 6);
+            .attr("r", d => d.getRadius() + 6);
         d3.selectAll("g.focus rect.sel").transition().duration(100)
             .attr("width", d => Global.TYPE_LOG_NODE_SIZE + 8)
             .attr("height", d => Global.TYPE_LOG_NODE_SIZE + 8)
@@ -535,7 +515,6 @@ Controller.prototype.bindNodes = function(nodes) {
         var $parent = $line.parent(".line").addClass("reveal");
 
         // Only highlight log lines on the Log Lines tab
-
         if ($(".leftTabLinks li").first().hasClass("default")) {
 
             $line.addClass("focus").css({
@@ -651,10 +630,10 @@ Controller.prototype.onScroll = function(e) {
     var x = window.pageXOffset;
 
     // applying a margin-left of -x to the #hostbar moves viewLabelL out of place,
-    // so apply the margin only to the host's squares (svg element of the hostBar)
-    $("#hostBar svg, .dialog.host:not(.hidden)").css("margin-left", -x); 
+    // so apply the margin only to the host's squares (i.e.: the svg element of the hostBar)
+    $("#hostBar svg, .dialog.host:not(.hidden)").css("margin-left", -x);
     $(".log").css("margin-left", x);
-    // ".logLabelL" is a child of ".log" and the margin-left of x by itself moves ".logLabelL" out of place.
+    // ".logLabelL" is a child of ".log" and the margin-left of x moves ".logLabelL" out of place.
     // To avoid that, we have to compensate by applying a margin-left of -x to ".log .logLabelL"
     $(".log .logLabelL").css("margin-left", -x);
 
@@ -668,6 +647,20 @@ Controller.prototype.onScroll = function(e) {
 };
 
 /**
+ * Removes the selection highlights from the elements matching any of the provided selectors.
+ * 
+ * @param {Array.<String>} selectors The selectors for the highlighted elements.
+ */
+Controller.prototype.removeSelectionHighlights = function(selectors) {
+    for (const s of selectors) {
+        d3.select(s).each(function(d) {
+            $(this).remove();
+            d.setSelected(false);
+        })
+    }
+}
+
+/**
  * Shows the node selection popup dialog
  *
  * @param {VisualNode} e The VisualNode that is selected
@@ -678,23 +671,14 @@ Controller.prototype.onScroll = function(e) {
 Controller.prototype.showDialog = function(e, type, elem) {
     const controller = this;
 
-    // Removes the selection highlights from the elements matching any of the provided selectors
-    function removeSelectionHighlights(selectors) {
-        for (const s of selectors) {
-            d3.select(s).each(function(d) {
-                $(this).remove();
-                d.setSelected(false);
-            });
-        }
-    }
-    removeSelectionHighlights(["circle.sel", "rect.sel", "polygon.sel"]);
+    this.removeSelectionHighlights(["circle.sel", "rect.sel", "polygon.sel"]);
 
     // Used for highlighting selected nodes that are not unique and don't have type LOG
     function highlightWithCircle(e) {
         var selcirc = d3.select("#node" + e.getId()).insert("circle", "circle");
         selcirc.style("fill", d => d.getFillColor());
         selcirc.attr("class", "sel")
-               .attr("r", d => d.getRadius() + 6);
+            .attr("r", d => d.getRadius() + 6);
     }
 
     // Used for highlighting selected nodes of type LOG that are not unique
@@ -702,27 +686,29 @@ Controller.prototype.showDialog = function(e, type, elem) {
         var selrect = d3.select("#node" + e.getId()).insert("rect", "rect");
         selrect.style("fill", d => d.getFillColor());
         selrect.attr("class", "sel")
-               .attr("width", d => Global.TYPE_LOG_NODE_SIZE + 8)
-               .attr("height", d => Global.TYPE_LOG_NODE_SIZE + 8)
-               .attr("x", -3)
-               .attr("y", -3);
+            .attr("width", d => Global.TYPE_LOG_NODE_SIZE + 8)
+            .attr("height", d => Global.TYPE_LOG_NODE_SIZE + 8)
+            .attr("x", -3)
+            .attr("y", -3);
     }
 
     // Used for highlighting unique nodes
     function highlightWithRhombus(e) {
         var selrhombus = d3.select("#node" + e.getId()).insert("polygon", "polygon");
         selrhombus.style("stroke", d => d.getFillColor())
-                  .style("stroke-width", 2)
-                  .style("fill", "white");
-        
+            .style("stroke-width", 2)
+            .style("fill", "white");
+
         selrhombus.attr("class", "sel")
-                  .attr("points", d => {
-                      var points = d.getPoints();
-                      var newPoints = [points[0], points[1]-3, points[2]+3,
-                          points[3], points[4], points[5]+3, points[6]-3, points[7]];
-                
-                      return newPoints.join();
-                  });
+            .attr("points", d => {
+                var points = d.getPoints();
+                var newPoints = [
+                    points[0], points[1] - 3, points[2] + 3, points[3],
+                    points[4], points[5] + 3, points[6] - 3, points[7]
+                ];
+
+                return newPoints.join();
+            });
     }
 
     function highlightSelected(e) {
@@ -730,6 +716,7 @@ Controller.prototype.showDialog = function(e, type, elem) {
         var id = e.getId();
         var views = controller.global.getActiveViews();
 
+        // TODO: Reduce nesting in the following conditionals
         // If showDiff is true, check if the selected node should be outlined with a rhombus
         if (controller.global.getShowDiff()) {
             var uniqueEventsL = views[0].getTransformer().getUniqueEvents();
@@ -740,7 +727,7 @@ Controller.prototype.showDialog = function(e, type, elem) {
                     highlightWithSquare(e);
                 else
                     highlightWithCircle(e);
-            } else { // this node is a unique event, highlight it with a rhombus outline
+            } else { // this node is a unique event, highlight it with a rhombus outline
                 highlightWithRhombus(e);
             }
         } else if (e.isLog()) {
@@ -749,8 +736,9 @@ Controller.prototype.showDialog = function(e, type, elem) {
             highlightWithCircle(e);
         }
     }
+    
     if (!type) // e is a regular node
-      highlightSelected(e);
+        highlightSelected(e);
 
     const $rect = $(elem).is("rect") ? $(elem) : $(elem).find("rect");
     var $svg = $rect.parents("svg");
@@ -836,13 +824,11 @@ Controller.prototype.showDialog = function(e, type, elem) {
         else
             $dialog.find(".collapse").show().text("Collapse");
 
-    }
-    else if (!type) {
+    } else if (!type) {
         // Show uncollapse button for collapsed nodes
         $dialog.find(".collapse").show().text("Expand");
         $dialog.find(".filter").hide();
-    }
-    else {
+    } else {
         // Show highlight button if only one execution
         if (type == 2 || this.global.getViews().length > 1)
             $dialog.find(".filter").hide();
@@ -920,11 +906,11 @@ Controller.prototype.toggleGreyHostNodes = function () {
 
     // VisualNode => Boolean
     function isAboveHostbar(visualNode) {
-        const $circle = visualNode.getSVG().find("circle");
-        if ($circle.length > 0) {
-            const circleTop = $circle.offset().top;
+        const $regularNode = visualNode.getSVG().find("circle, rect");
+        if ($regularNode.length > 0) {
+            const regularNodeTop = $regularNode.offset().top;
             const hostBarBottom = getHostbarBottomOffset();
-            return circleTop < hostBarBottom;
+            return regularNodeTop < hostBarBottom;
         } else {
             return true;
         }
@@ -932,7 +918,7 @@ Controller.prototype.toggleGreyHostNodes = function () {
 
 };
 
-Controller.prototype.bindScroll = function(){
+Controller.prototype.bindScroll = function() {
     var self = this;
     $(window).unbind("scroll");
     $(window).bind("scroll", function(e) {
