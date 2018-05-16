@@ -5,7 +5,7 @@
     <link rel="canonical" href="http://bestchai.bitbucket.io/shiviz/">
     <link rel="shortcut icon" href="bestchai-shiviz-5c13c5afbf19/images/favico.ico" type="image/x-icon" />
     <title>ShiViz</title>
-    <link href="bestchai-shiviz-5c13c5afbf19/css/style.css" type="text/css" rel="stylesheet">
+    <link href="style.css" type="text/css" rel="stylesheet">
     <!-- DEPENDENCIES -->
 
     <!--<script src="local_scripts/d3.min.js"></script>-->
@@ -272,13 +272,11 @@
                     </header>
                     <h3>Options</h3>
                     <div id="file_input">
-                        <label>Select a file: <input type="file" id="file"></label>
+                        <label>Select a file:</label>
+                        <input type="file" id="file">
                         <span id="file_icon">d</span>
-                        <div id="file_desc">Upload a log by selecting a file with the following format: <br><br>
-                        <li> The first line of the file is the log parsing regular expression. If left empty, the default regular expression
-                        <span class="regex">"(?&ltevent&gt.*)\n(?&lthost&gt\S*) (?&ltclock&gt{.*})"</span> will be used.<br>
-                        <li> The second line of the file is the multiple executions regular expression delimiter. This can be left empty if the log does not contain multiple executions. <br>
-                        <li> The rest of the file is the log.
+                        <div id="file_desc">
+                            Upload a trace produced by <a href="https://github.com/fntneves/falcon/tree/master/falcon-taz">Falcon TAZ</a>
                         </div>
                     </div>
                     <div class="option">
@@ -546,13 +544,13 @@
     <script type="text/javascript" src="bestchai-shiviz-5c13c5afbf19/js/util/util.js"></script>
 
     <script type="text/javascript" src="controller.js"></script> <!-- Falcon's adaptation -->
-    <script type="text/javascript" src="bestchai-shiviz-5c13c5afbf19/js/visualization/global.js"></script>
+    <script type="text/javascript" src="global.js"></script> <!-- Falcon's adaptation -->
     <script type="text/javascript" src="hostPermutation.js"></script> <!-- Falcon's adaptation -->
     <script type="text/javascript" src="bestchai-shiviz-5c13c5afbf19/js/visualization/layout.js"></script>
-    <script type="text/javascript" src="bestchai-shiviz-5c13c5afbf19/js/visualization/view.js"></script>
+    <script type="text/javascript" src="view.js"></script> <!-- Falcon's adaptation -->
     <script type="text/javascript" src="bestchai-shiviz-5c13c5afbf19/js/visualization/visualEdge.js"></script>
     <script type="text/javascript" src="bestchai-shiviz-5c13c5afbf19/js/visualization/visualGraph.js"></script>
-    <script type="text/javascript" src="bestchai-shiviz-5c13c5afbf19/js/visualization/visualNode.js"></script>
+    <script type="text/javascript" src="visualNode.js"></script> <!-- Falcon's adaptation -->
     <script type="text/javascript" src="bestchai-shiviz-5c13c5afbf19/js/visualization/abbreviation.js"></script>
 
     <!-- For converting Falcon's JSON format to arrays of Shiviz's LogEvent -->
