@@ -1,4 +1,4 @@
-class BaseHandler:
+class BaseHandler(object):
     def boot(self):
         pass
 

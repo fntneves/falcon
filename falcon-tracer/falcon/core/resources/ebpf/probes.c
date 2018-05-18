@@ -10,13 +10,13 @@
 #define PID_FILTER //PID_FILTER//
 
 enum event_type {
-    SOCKET_CONNECT = 101,
-    SOCKET_ACCEPT = 102,
-    SOCKET_SEND = 103,
-    SOCKET_RECEIVE = 104,
+    SOCKET_SEND = 8,
+    SOCKET_RECEIVE = 9,
+    SOCKET_CONNECT = 11,
+    SOCKET_ACCEPT = 12,
 
-    PROCESS_CREATE = 203,
-    PROCESS_JOIN = 204,
+    PROCESS_CREATE = 1,
+    PROCESS_JOIN = 4,
 };
 
 struct socket_info_t {
@@ -157,6 +157,7 @@ struct socket_info_t static socket_info(struct sock * skp) {
     u16 sport = 0;
     u16 dport = 0;
     u16 family = 0;
+    short type = 0;
     struct socket_info_t sk = {};
 
     bpf_probe_read(&family, sizeof(family), &skp->sk_family);
@@ -168,8 +169,8 @@ struct socket_info_t static socket_info(struct sock * skp) {
         bpf_probe_read(&saddr, sizeof(saddr), &skp->sk_rcv_saddr);
         bpf_probe_read(&daddr, sizeof(daddr), &skp->sk_daddr);
 
-        sk.saddr[0] = saddr;
-        sk.daddr[0] = daddr;
+        sk.saddr[1] = saddr;
+        sk.daddr[1] = daddr;
     } else if (family == AF_INET6) {
         bpf_probe_read(sk.saddr, sizeof(sk.saddr), &skp->sk_v6_rcv_saddr);
         bpf_probe_read(sk.daddr, sizeof(sk.daddr), &skp->sk_v6_daddr);

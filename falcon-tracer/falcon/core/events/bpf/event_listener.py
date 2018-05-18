@@ -7,7 +7,7 @@ import signal
 import logging
 import os
 from falcon import util
-from falcon.core.events.types.event import EventData
+from falcon.core.events.base_event import EventData
 
 class BpfEventListener():
     def __init__(self, bpf, handler, traced_pid):

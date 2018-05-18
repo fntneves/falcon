@@ -24,6 +24,8 @@ setup(
     install_requires=[
         'ujson',
     ],
+    test_suite='nose.collector',
+    tests_require=['nose'],
     include_package_data=True,
     scripts=['falcon/bin/falcon-tracer.py'],
     entry_points={'console_scripts': [

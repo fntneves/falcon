@@ -26,30 +26,18 @@ class Tracer:
             program = BpfProgram(text=program_file.read())
             program.filter_pid(pid)
 
-            logging.info('Creating and booting handlers...')
-            handlers = []
-            for handler in Tracer.get_handlers():
-                handler.boot()
-                handlers.append(handler)
+            logging.info('Creating and booting handlers and appenders...')
+            handler = events.handling.FalconEventLogger(events.handling.appenders.BinaryWriter("falcon_tracer.bin"))
+            handler.boot()
 
             logging.info('Running eBPF listener...')
-            bpf_listener_worker = events.bpf.BpfEventListener(program, handlers[0], pid)
+            bpf_listener_worker = events.bpf.BpfEventListener(program, handler, pid)
             bpf_listener_worker.run(signal_child)
 
-            # Shutdown handlers
-            logging.info('Shutting handlers down...')
-            for handler in handlers:
-                handler.shutdown()
+            logging.info('Shutting handler down...')
+            handler.shutdown()
 
         return 0
-
-    @staticmethod
-    def get_handlers():
-        handler_instances = [
-            events.handling.logger.EventLogger()
-        ]
-
-        return handler_instances
 
 def run_program(program):
     pid = os.fork()
@@ -64,8 +52,8 @@ def run_program(program):
             signal.pause()
         try:
             os.execvp(program[0], program)
-        except:
-            logging.error("Could not execute program")
+        except Exception as e:
+            logging.error("Could not execute program: {}".format(e))
             os._exit(1)
     else:
         return pid
