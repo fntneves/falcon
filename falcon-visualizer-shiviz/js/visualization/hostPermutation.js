@@ -320,7 +320,7 @@ ProcessPermutation.prototype.update = function() {
 
     HostPermutation.prototype.update.call(this);
 
-    var globalpidToHosts = {};
+    var globalPidToHosts = {};
 
     for (var i = 0; i < this.graphs.length; i++) {
         var graph = this.graphs[i];
@@ -328,21 +328,21 @@ ProcessPermutation.prototype.update = function() {
 
         for (var pid in pidToHosts) {
             var hosts = pidToHosts[pid];
-            if (globalpidToHosts[pid] == undefined) {
-                globalpidToHosts[pid] = hosts;
+            if (globalPidToHosts[pid] == undefined) {
+                globalPidToHosts[pid] = hosts;
             }
             else {
                 for (var j = 0; j < hosts.length; j++) {
-                    if (globalpidToHosts.includes(hosts[j]) == false) {
-                        globalpidToHosts.push(hosts[j]);
+                    if (globalPidToHosts.includes(hosts[j]) == false) {
+                        globalPidToHosts.push(hosts[j]);
                     }
                 }
             }
         }
     }
 
-    for (var pid in globalpidToHosts) {
-        var threads = globalpidToHosts[pid];
+    for (var pid in globalPidToHosts) {
+        var threads = globalPidToHosts[pid];
         for (i in threads) {
             this.hosts.push(threads[i]);
         }
