@@ -27,7 +27,7 @@ class Tracer:
             program.filter_pid(pid)
 
             logging.info('Creating and booting handlers and appenders...')
-            handler = events.handling.FalconEventLogger(events.handling.appenders.BinaryWriter("falcon_tracer.bin"))
+            handler = events.handling.FalconEventLogger(events.handling.appenders.JsonWriter("falcon_tracer.json"))
             handler.boot()
 
             logging.info('Running eBPF listener...')
