@@ -46,7 +46,7 @@ public class RWEvent
     {
         JSONObject json = super.toJSONObject();
         json.put( "variable", var );
-        //json.put("loc", loc);
+        //json.put("lineOfCode", lineOfCode);
 
         return json;
     }
@@ -80,7 +80,7 @@ public class RWEvent
             return false;
 
         RWEvent tmp = (RWEvent) o;
-        return ( tmp.getLineOfCode().equals( this.loc )
+        return ( tmp.getLineOfCode().equals( this.lineOfCode )
                         && tmp.getVariable().equals( this.var )
                         && tmp.getEventId() == this.eventId
         );
@@ -89,7 +89,7 @@ public class RWEvent
     @Override
     public String toString()
     {
-        String res = type + "_" + var + "_" + thread + "_" + eventId + "@" + loc;
+        String res = type + "_" + var + "_" + thread + "_" + eventId + "@" + lineOfCode;
         return res;
     }
 }

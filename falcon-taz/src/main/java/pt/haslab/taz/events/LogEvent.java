@@ -59,7 +59,7 @@ public class LogEvent extends Event
             return false;
 
         LogEvent tmp = (LogEvent) o;
-        return ( tmp.getLineOfCode().equals( this.loc )
+        return ( tmp.getLineOfCode().equals( this.lineOfCode )
                         && tmp.getMessage().equals( this.message )
                         && tmp.getEventId() == this.eventId
         );

@@ -6,11 +6,12 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import pt.haslab.taz.causality.SocketCausalPair;
 import pt.haslab.taz.events.Event;
 import pt.haslab.taz.events.EventType;
 import pt.haslab.taz.events.HandlerEvent;
 import pt.haslab.taz.events.LogEvent;
-import pt.haslab.taz.events.MyPair;
+import pt.haslab.taz.causality.CausalPair;
 import pt.haslab.taz.events.RWEvent;
 import pt.haslab.taz.events.SocketEvent;
 import pt.haslab.taz.events.SyncEvent;
@@ -45,7 +46,7 @@ public enum TraceProcessor
     private int eventNumber = 0;
 
     /* Map: message id -> pair of events (snd,rcv) */
-    public Map<String, MyPair<SocketEvent, SocketEvent>> msgEvents;
+    public Map<String, SocketCausalPair> msgEvents;
 
     /* Map: rcv event-> list of events of the message handler
      * (list starts with HANDLERBEGIN and ends with HANDLEREND) */
@@ -55,10 +56,10 @@ public enum TraceProcessor
     private HashSet hasHandlers;
 
     /* Map: socket id -> pair of events (connect,accept) */
-    public Map<String, MyPair<SocketEvent, SocketEvent>> connAcptEvents;
+    public Map<String, CausalPair<SocketEvent, SocketEvent>> connAcptEvents;
 
     /* Map: socket id -> pair of events (close,shutdown) */
-    public Map<String, MyPair<SocketEvent, SocketEvent>> closeShutEvents;
+    public Map<String, CausalPair<SocketEvent, SocketEvent>> closeShutEvents;
 
     /* Map: thread -> list of all events in that thread's execution */
     public Map<String, List<Event>> eventsPerThread;
@@ -73,7 +74,7 @@ public enum TraceProcessor
     public HashMap<String, Event> eventNameToObject;
 
     /* Map: mutex variable -> list of pairs of locks/unlocks */
-    public Map<String, List<MyPair<SyncEvent, SyncEvent>>> lockEvents;
+    public Map<String, List<CausalPair<SyncEvent, SyncEvent>>> lockEvents;
 
     /* Map: variable -> list of reads to that variable by all threads */
     public Map<String, List<RWEvent>> readEvents;
@@ -92,12 +93,12 @@ public enum TraceProcessor
 
     //local variables (only used during parsing, but not necessary afterwards)
     /* Map: socket channel -> pair of event lists ([snd],[rcv]) */
-    private Map<String, MyPair<Deque<SocketEvent>, Deque<SocketEvent>>> pendingEventsSndRcv;
+    private Map<String, CausalPair<Deque<SocketEvent>, Deque<SocketEvent>>> pendingEventsSndRcv;
 
     TraceProcessor()
     {
-        msgEvents = new HashMap<String, MyPair<SocketEvent, SocketEvent>>();
-        lockEvents = new HashMap<String, List<MyPair<SyncEvent, SyncEvent>>>();
+        msgEvents = new HashMap<String, SocketCausalPair>();
+        lockEvents = new HashMap<String, List<CausalPair<SyncEvent, SyncEvent>>>();
         eventsPerThread = new HashMap<String, List<Event>>();
         readEvents = new HashMap<String, List<RWEvent>>();
         writeEvents = new HashMap<String, List<RWEvent>>();
@@ -105,11 +106,11 @@ public enum TraceProcessor
         joinEvents = new HashMap<String, List<ThreadCreationEvent>>();
         waitEvents = new HashMap<String, List<SyncEvent>>();
         notifyEvents = new HashMap<String, List<SyncEvent>>();
-        connAcptEvents = new HashMap<String, MyPair<SocketEvent, SocketEvent>>();
-        closeShutEvents = new HashMap<String, MyPair<SocketEvent, SocketEvent>>();
+        connAcptEvents = new HashMap<String, CausalPair<SocketEvent, SocketEvent>>();
+        closeShutEvents = new HashMap<String, CausalPair<SocketEvent, SocketEvent>>();
         eventNameToObject = new HashMap<String, Event>();
         sortedByTimestamp = new TreeSet<Event>( new TimestampComparator() );
-        pendingEventsSndRcv = new HashMap<String, MyPair<Deque<SocketEvent>, Deque<SocketEvent>>>();
+        pendingEventsSndRcv = new HashMap<String, CausalPair<Deque<SocketEvent>, Deque<SocketEvent>>>();
         handlerEvents = new HashMap<SocketEvent, List<Event>>();
         hasHandlers = new HashSet();
     }
@@ -187,23 +188,18 @@ public enum TraceProcessor
 
     public SocketEvent sndFromMessageId( String messageId )
     {
-        MyPair<SocketEvent, SocketEvent> pair = msgEvents.get( messageId );
-        if ( pair != null )
-        {
-            SocketEvent send = pair.getFirst();
-            if ( send != null && send.getMessageId().equals( messageId ) )
-            {
-                return send;
-            }
-        }
-        return null;
+        SocketCausalPair pair = msgEvents.get( messageId );
+        if ( pair == null )
+            return null;
+
+        return pair.getSnd();
     }
 
     public SyncEvent getCorrespondingUnlock( SyncEvent lockEvent )
     {
         String thread = lockEvent.getThread();
-        List<MyPair<SyncEvent, SyncEvent>> pairs = lockEvents.get( lockEvent.getVariable() );
-        for ( MyPair<SyncEvent, SyncEvent> se : pairs )
+        List<CausalPair<SyncEvent, SyncEvent>> pairs = lockEvents.get( lockEvent.getVariable() );
+        for ( CausalPair<SyncEvent, SyncEvent> se : pairs )
         {
             if ( se.getFirst().equals( lockEvent ) )
             {
@@ -301,23 +297,25 @@ public enum TraceProcessor
                         {
                             if ( type == EventType.SND )
                             {
-                                msgEvents.get( socketEvent.getMessageId() ).setFirst( socketEvent );
+                                msgEvents.get( socketEvent.getMessageId() ).addSnd( socketEvent );
                             }
                             else
                             {
-                                msgEvents.get( socketEvent.getMessageId() ).setSecond( socketEvent );
+                                msgEvents.get( socketEvent.getMessageId() ).addRcv( socketEvent );
                             }
                         }
                         else
                         {
-                            MyPair<SocketEvent, SocketEvent> pair;
+                            SocketCausalPair pair;
                             if ( type == EventType.SND )
                             {
-                                pair = new MyPair<SocketEvent, SocketEvent>( socketEvent, null );
+                                pair = new SocketCausalPair();
+                                pair.addSnd( socketEvent );
                             }
                             else
                             {
-                                pair = new MyPair<SocketEvent, SocketEvent>( null, socketEvent );
+                                pair = new SocketCausalPair();
+                                pair.addRcv( socketEvent );
                             }
                             msgEvents.put( socketEvent.getMessageId(), pair );
                         }
@@ -327,10 +325,14 @@ public enum TraceProcessor
                     else if ( socketEvent.getSocketType() == SocketEvent.SocketType.TCP )
                     {
                         if ( type == EventType.SND )
+                        {
                             handleSndSocketEvent( socketEvent );
+                        }
 
                         if ( type == EventType.RCV )
+                        {
                             handleRcvSocketEvent( socketEvent );
+                        }
                     }
                 }
                 //handle CONNECT and ACCEPT
@@ -351,7 +353,7 @@ public enum TraceProcessor
                     else
                     {
                         //create a new pair (CONNECT,ACCEPT)
-                        MyPair<SocketEvent, SocketEvent> pair = new MyPair<SocketEvent, SocketEvent>( null, null );
+                        CausalPair<SocketEvent, SocketEvent> pair = new CausalPair<SocketEvent, SocketEvent>( null, null );
                         if ( type == EventType.CONNECT )
                         {
                             pair.setFirst( socketEvent );
@@ -390,7 +392,7 @@ public enum TraceProcessor
                     else
                     {
                         //create a new pair (CLOSE,SHUTDOWN)
-                        MyPair<SocketEvent, SocketEvent> pair = new MyPair<SocketEvent, SocketEvent>( null, null );
+                        CausalPair<SocketEvent, SocketEvent> pair = new CausalPair<SocketEvent, SocketEvent>( null, null );
                         if ( type == EventType.CLOSE )
                         {
                             pair.setFirst( socketEvent );
@@ -474,26 +476,26 @@ public enum TraceProcessor
 
                 if ( type == EventType.LOCK )
                 {
-                    List<MyPair<SyncEvent, SyncEvent>> pairList = lockEvents.get( var );
-                    MyPair<SyncEvent, SyncEvent> pair =
+                    List<CausalPair<SyncEvent, SyncEvent>> pairList = lockEvents.get( var );
+                    CausalPair<SyncEvent, SyncEvent> pair =
                                     ( pairList != null ) ? pairList.get( pairList.size() - 1 ) : null;
                     if ( pair == null || pair.getSecond() != null )
                     {
                         // Only adds the lock event if the previous lock event has a corresponding unlock
                         // in order to handle Reentrant Locks
-                        Utils.insertInMapToLists( lockEvents, var, new MyPair<SyncEvent, SyncEvent>( syncEvent, null ) );
+                        Utils.insertInMapToLists( lockEvents, var, new CausalPair<SyncEvent, SyncEvent>( syncEvent, null ) );
                         eventsPerThread.get( thread ).add( syncEvent );
                     }
                 }
                 else if ( type == EventType.UNLOCK )
                 {
                     // second component is the unlock event associated with the lock
-                    List<MyPair<SyncEvent, SyncEvent>> pairList = lockEvents.get( var );
-                    MyPair<SyncEvent, SyncEvent> pair =
+                    List<CausalPair<SyncEvent, SyncEvent>> pairList = lockEvents.get( var );
+                    CausalPair<SyncEvent, SyncEvent> pair =
                                     ( pairList != null ) ? pairList.get( pairList.size() - 1 ) : null;
                     if ( pair == null )
                     {
-                        Utils.insertInMapToLists( lockEvents, var, new MyPair<SyncEvent, SyncEvent>( null, syncEvent ) );
+                        Utils.insertInMapToLists( lockEvents, var, new CausalPair<SyncEvent, SyncEvent>( null, syncEvent ) );
                     }
                     else
                     {
@@ -583,14 +585,14 @@ public enum TraceProcessor
         }
     }
 
-    private MyPair<Deque<SocketEvent>, Deque<SocketEvent>> getOrCreatePartialEventsPairs( String socket )
+    private CausalPair<Deque<SocketEvent>, Deque<SocketEvent>> getOrCreatePartialEventsPairs( String socket )
     {
         if ( !pendingEventsSndRcv.containsKey( socket ) )
         {
             Deque<SocketEvent> sndEvents = new ArrayDeque<SocketEvent>();
             Deque<SocketEvent> rcvEvents = new ArrayDeque<SocketEvent>();
-            MyPair<Deque<SocketEvent>, Deque<SocketEvent>> pendingEventsPair =
-                            new MyPair<Deque<SocketEvent>, Deque<SocketEvent>>( sndEvents, rcvEvents );
+            CausalPair<Deque<SocketEvent>, Deque<SocketEvent>> pendingEventsPair =
+                            new CausalPair<Deque<SocketEvent>, Deque<SocketEvent>>( sndEvents, rcvEvents );
 
             pendingEventsSndRcv.put( socket, pendingEventsPair );
 
@@ -602,7 +604,7 @@ public enum TraceProcessor
 
     private void handleSndSocketEvent( SocketEvent snd )
     {
-        MyPair<Deque<SocketEvent>, Deque<SocketEvent>> eventPairs =
+        CausalPair<Deque<SocketEvent>, Deque<SocketEvent>> eventPairs =
                         getOrCreatePartialEventsPairs( snd.getDirectedSocket() );
         Deque<SocketEvent> sndEvents = eventPairs.getFirst();
         Deque<SocketEvent> rcvEvents = eventPairs.getSecond();
@@ -615,48 +617,81 @@ public enum TraceProcessor
             return;
         }
 
-        // Pair this SND with the already enqueued RCV events and if even after
-        // this match there are bytes remaining, enqueue it in SND list.
-        while ( snd.getSize() > 0 && rcvEvents.size() > 0 )
+        SocketEvent rcv = rcvEvents.peek();
+        String msgId = computeMessageId(snd, rcv);
+
+        // Create new causal pair if necessary
+        if(!msgEvents.containsKey( msgId ))
         {
-            SocketEvent rcv = rcvEvents.peek();
+            SocketCausalPair socketPair = new SocketCausalPair(  );
+            msgEvents.put( msgId, socketPair );
+        }
+
+        // Flag that indicates whether the socket pair ([SND], [RCV]) is complete,
+        // meaning that all bytes sent were received
+        boolean hasRCVtoMatch = true;
+
+        // Pair this SND with the pending enqueued RCV events and, if there are bytes remaining
+        // at the end, add SND event to the pending queue
+        while ( rcvEvents.size() > 0 && hasRCVtoMatch)
+        {
+            rcv = rcvEvents.peek();
+
+            if( rcv.getMessageId() == null )
+            {
+                msgId = computeMessageId( snd, rcv );
+            }
+
+            SocketCausalPair socketPair = msgEvents.get( msgId );
 
             if ( snd.getSize() > rcv.getSize() )
             {
-                // 1. Dequeue RCV message from partial receives
-                rcv = rcvEvents.pop();
+                // Move partitioned RCV from the pending queue to the causal pair
+                rcvEvents.pop();
+                socketPair.addRcv( rcv );
 
-                // 2. Decrement read bytes from SND message
-                String msgid = computePartitionedMessageId( snd, rcv );
+                // Subtract read bytes from SND event
                 snd.setSize( snd.getSize() - rcv.getSize() );
+            }
+            else if ( rcv.getSize() == snd.getSize() )
+            {
+                // Move partitioned RCV from the pending queue to the causal pair
+                rcvEvents.pop();
+                socketPair.addRcv( rcv );
 
-                // 3. Associate RCV message with SND message
-                msgEvents.put( msgid, new MyPair<SocketEvent, SocketEvent>( snd, rcv ) );
+                // Move SND from the pending queue to the causal pair
+                if( !sndEvents.isEmpty() && sndEvents.peek().equals( snd ))
+                    sndEvents.pop();
+
+                socketPair.addSnd( snd );
+
+                //rebalance bytes sent/received
+                socketPair.recomputeSize();
+
+                hasRCVtoMatch = false;
             }
             else
             {
-                // 1. Decrement sent bytes from RCV message
+                // Subtract sent bytes from RCV event
                 rcv.setSize( rcv.getSize() - snd.getSize() );
-                snd.setSize( 0 );
 
-                // 2. Associate RCV message with SND message
-                String msgid = computePartitionedMessageId( rcv, snd );
-                msgEvents.put( msgid, new MyPair<SocketEvent, SocketEvent>( snd, rcv ) );
+                // Add partitioned SND to the causal pair
+                socketPair.addSnd( snd );
 
-                // 3. Remove enqueued RCV if there are no more bytes remaining
-                if ( rcv.getSize() < 1 )
-                    rcvEvents.pop();
+                // Account for case in which there was already a pending RCV in the queue
+                // that is larger than the incoming SND
+                hasRCVtoMatch = false;
             }
         }
 
-        // Enqueue SND if there are bytes remaining
-        if ( snd.getSize() > 0 )
+        // add SND to the pending queue if not already present
+        if( hasRCVtoMatch && ( !sndEvents.isEmpty() && !sndEvents.peek().equals( snd ) ) )
             sndEvents.add( snd );
     }
 
     private void handleRcvSocketEvent( SocketEvent rcv )
     {
-        MyPair<Deque<SocketEvent>, Deque<SocketEvent>> eventPairs =
+        CausalPair<Deque<SocketEvent>, Deque<SocketEvent>> eventPairs =
                         getOrCreatePartialEventsPairs( rcv.getDirectedSocket() );
         Deque<SocketEvent> sndEvents = eventPairs.getFirst();
         Deque<SocketEvent> rcvEvents = eventPairs.getSecond();
@@ -669,69 +704,127 @@ public enum TraceProcessor
             return;
         }
 
-        // Pair this RCV with the already enqueued SND messages and if even after
-        // this match there are bytes remaining, enqueue it in RCV list.
-        while ( rcv.getSize() > 0 && sndEvents.size() > 0 )
+        SocketEvent snd = sndEvents.peek();
+        String msgId = computeMessageId(snd, rcv);
+
+        // Create new causal pair if necessary
+        if(!msgEvents.containsKey( msgId ))
         {
-            SocketEvent snd = sndEvents.peek();
+            SocketCausalPair socketPair = new SocketCausalPair(  );
+            msgEvents.put( msgId, socketPair );
+        }
+
+        // Flag that indicates whether the socket pair ([SND], [RCV]) is complete,
+        // meaning that all bytes sent were received
+        boolean hasSNDtoMatch = true;
+
+        // Pair this RCV with the pending enqueued SND events and, if there are bytes remaining
+        // at the end, add RCV event to the pending queue
+        while ( sndEvents.size() > 0 && hasSNDtoMatch )
+        {
+            snd = sndEvents.peek();
+            if( snd.getMessageId() == null )
+            {
+                msgId = computeMessageId( snd, rcv );
+            }
+
+            SocketCausalPair socketPair = msgEvents.get( msgId );
 
             if ( rcv.getSize() > snd.getSize() )
             {
-                // 1. Dequeue SND message from partial receives
-                snd = sndEvents.pop();
+                // Move partitioned SND from the pending queue to the causal pair
+                sndEvents.pop();
+                socketPair.addSnd( snd );
 
-                // 2. Decrement read bytes from RCV message
+                // Subtract read bytes from RCV event
                 rcv.setSize( rcv.getSize() - snd.getSize() );
+            }
+            else if ( rcv.getSize() == snd.getSize() )
+            {
+                // Move (partitioned) SND from the pending queue to the causal pair
+                sndEvents.pop();
+                socketPair.addSnd( snd );
 
-                // 3. Associate RCV message with SND message
-                String msgid = computePartitionedMessageId( rcv, snd );
-                msgEvents.put( msgid, new MyPair<SocketEvent, SocketEvent>( snd, rcv ) );
+                // Move RCV from the pending queue to the causal pair
+                if( !rcvEvents.isEmpty() && rcvEvents.peek().equals( rcv ))
+                    rcvEvents.pop();
+
+                socketPair.addRcv( rcv );
+
+                //rebalance bytes sent/received
+                socketPair.recomputeSize();
+
+                hasSNDtoMatch = false;
             }
             else
             {
-                // 1. Decrement sent bytes from SND message
+                // Subtract sent bytes from SND event
                 snd.setSize( snd.getSize() - rcv.getSize() );
-                rcv.setSize( 0 );
 
-                // 2. Associate RCV message with SND message
-                String msgid = computePartitionedMessageId( snd, rcv );
-                msgEvents.put( msgid, new MyPair<SocketEvent, SocketEvent>( snd, rcv ) );
+                // Add partitioned RCV to the causal pair
+                socketPair.addRcv( rcv );
 
-                // 3. Remove enqueued SND if there are no more bytes remaining
-                if ( snd.getSize() < 1 )
-                    sndEvents.pop();
+                // Account for case in which there was already a pending SND in the queue
+                // that is larger than the incoming RCV
+                hasSNDtoMatch = false;
             }
         }
 
-        // Enqueue SND if there are bytes remaining
-        if ( rcv.getSize() > 0 )
+        // add RCV to the pending queue if not already present
+        if( hasSNDtoMatch && ( !rcvEvents.isEmpty() && !rcvEvents.peek().equals( rcv ) ) )
             rcvEvents.add( rcv );
     }
 
     /**
-     * Augments a socket event with a message id with a suffix ".X" indicating that the event is partitioned
-     *
-     * @param full - socket event with full message size
-     * @param part - socket event with partial message size
-     * @return
+     *  Compute message id for a pair of SND and RCV events (potentially partitioned).
+     *  The message id is computed as follows:
+     *    i) msgId = SND's event id if SND's bytes >= RCV's bytes
+     *   ii) msgId = RCV's event id if RCV's bytes > SND's bytes
+     * @param snd
+     * @param rcv
+     * @return message Id for the pair
      */
-    private String computePartitionedMessageId( SocketEvent full, SocketEvent part )
+    public String computeMessageId(SocketEvent snd, SocketEvent rcv)
     {
-        // the message id will be augmented with a suffix ".X" indicating that the event is partitioned
-        String msgid = "";
-        if ( full.getMessageId() != null )
+        String msgId = String.valueOf( snd.getEventId() );
+
+        // case i) msgId = SND's event because SND's bytes >= RCV's bytes
+        if (  snd.getSize() >= rcv.getSize() )
         {
-            msgid = full.getMessageId();
+            // Account for cases in which RCV's size == SND's size because RCV's bytes were already decremented:
+            //  i) rcv.msgId == null -> use SND's event id as message Id
+            // ii) rcv.msgId != null -> RCV's bytes were decremented, thus use RCV's event id as message Id
+            if( rcv.getMessageId() == null )
+            {
+                rcv.setMessageId( msgId );
+            }
+            else
+            {
+                msgId = rcv.getMessageId();
+            }
+
+            snd.setMessageId( msgId );
         }
+        // case ii) msgId = RCV's event id because RCV's bytes > SND's bytes
         else
         {
-            msgid = String.valueOf( full.getEventId() );
-            full.setMessageId( msgid );
+            msgId = String.valueOf( rcv.getEventId() );
+            snd.setMessageId( msgId );
+            rcv.setMessageId( msgId );
         }
-        msgid = msgid + "." + full.getSize();
-        part.setMessageId( msgid );
 
-        return msgid;
+        return msgId;
+    }
+
+    /**
+     * Combines partitioned SNDs or RCVs into single coarse-grained events
+     */
+    public void aggregateAllPartitionedMessages()
+    {
+        for( SocketCausalPair pair : msgEvents.values() )
+        {
+            pair.aggregatePartitionedMessages();
+        }
     }
 
     public void printDataStructures()
@@ -752,9 +845,9 @@ public enum TraceProcessor
 
         debugMsg = new StringBuilder();
         debugMsg.append( "SEND/RECEIVE EVENTS\n" );
-        for ( MyPair<SocketEvent, SocketEvent> se : msgEvents.values() )
+        for ( SocketCausalPair se : msgEvents.values() )
         {
-            debugMsg.append( se.getFirst() + " -> " + se.getSecond() + "\n" );
+            debugMsg.append( se.toString() + "\n" );
         }
         logger.debug( debugMsg.toString() );
 
@@ -772,7 +865,7 @@ public enum TraceProcessor
 
         debugMsg = new StringBuilder();
         debugMsg.append( "CONNECT/ACCEPT EVENTS\n" );
-        for ( MyPair<SocketEvent, SocketEvent> se : connAcptEvents.values() )
+        for ( CausalPair<SocketEvent, SocketEvent> se : connAcptEvents.values() )
         {
             debugMsg.append( se.getFirst() + " -> " + se.getSecond() + "\n" );
         }
@@ -780,7 +873,7 @@ public enum TraceProcessor
 
         debugMsg = new StringBuilder();
         debugMsg.append( "CLOSE/SHUTDOWN EVENTS\n" );
-        for ( MyPair<SocketEvent, SocketEvent> se : closeShutEvents.values() )
+        for ( CausalPair<SocketEvent, SocketEvent> se : closeShutEvents.values() )
         {
             debugMsg.append( se.getFirst() + " -> " + se.getSecond() + "\n" );
         }
@@ -828,9 +921,9 @@ public enum TraceProcessor
 
         debugMsg = new StringBuilder();
         debugMsg.append( "LOCKING EVENTS\n" );
-        for ( List<MyPair<SyncEvent, SyncEvent>> pairs : lockEvents.values() )
+        for ( List<CausalPair<SyncEvent, SyncEvent>> pairs : lockEvents.values() )
         {
-            for ( MyPair<SyncEvent, SyncEvent> p : pairs )
+            for ( CausalPair<SyncEvent, SyncEvent> p : pairs )
             {
                 debugMsg.append( p.toString() + "\n" );
             }

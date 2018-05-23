@@ -21,7 +21,7 @@ public class Event
     String thread;
 
     /* line of code of the event, with format "className.methodName.lineOfCode" */
-    String loc;
+    String lineOfCode;
 
     /* indicates that the event is the n-th event in the trace file */
     long eventId;
@@ -49,7 +49,7 @@ public class Event
         this.dependency = null;
         this.eventId = eventId;
         this.data = null;
-        this.loc = lineOfCode;
+        this.lineOfCode = lineOfCode;
         //initially, set scheduleOrder equal to eventId
         //override scheduleOrder after having causal order
         this.scheduleOrder = eventId;
@@ -64,7 +64,7 @@ public class Event
         this.eventId = e.getEventId();
         this.data = e.getData();
         this.scheduleOrder = e.getScheduleOrder();
-        this.loc = e.getLineOfCode();
+        this.lineOfCode = e.getLineOfCode();
     }
 
     public String getTimestamp()
@@ -99,12 +99,12 @@ public class Event
 
     public String getLineOfCode()
     {
-        return loc;
+        return lineOfCode;
     }
 
     public void setLineOfCode( String loc )
     {
-        this.loc = loc;
+        this.lineOfCode = loc;
     }
 
     public String getDependency()
@@ -198,7 +198,7 @@ public class Event
         JSONObject json = new JSONObject();
         json.put( "type", type.toString() );
         json.put( "thread", thread );
-        json.put( "loc", loc );
+        json.put( "loc", lineOfCode );
         json.put( "order", scheduleOrder );
         json.put( "id", eventId );
         json.put( "timestamp", timestamp );
@@ -233,7 +233,7 @@ public class Event
         return ( tmp.getThread() == this.thread
                         && tmp.getType() == this.type
                         && tmp.getScheduleOrder() == this.scheduleOrder
-                        && tmp.getLineOfCode().equals( this.loc )
+                        && tmp.getLineOfCode().equals( this.lineOfCode )
         );
     }
 }

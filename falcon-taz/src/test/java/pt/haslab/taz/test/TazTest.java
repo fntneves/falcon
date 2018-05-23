@@ -1,17 +1,21 @@
 package pt.haslab.taz.test;
 
+import junit.framework.TestCase;
 import org.json.JSONException;
 import org.junit.Test;
 import pt.haslab.taz.TraceProcessor;
+import pt.haslab.taz.causality.SocketCausalPair;
 import pt.haslab.taz.events.Event;
-import pt.haslab.taz.events.MyPair;
+import pt.haslab.taz.causality.CausalPair;
 import pt.haslab.taz.events.RWEvent;
+import pt.haslab.taz.events.SocketEvent;
 import pt.haslab.taz.events.SyncEvent;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
 /**
@@ -37,12 +41,15 @@ public class TazTest
     }
 
     @Test
-    public void loadTraces()
+    public void loadTracesTest()
                     throws IOException, JSONException
     {
         TraceProcessor processor = TraceProcessor.INSTANCE;
         File file = new File( processor.getClass().getClassLoader().getResource( "testEventTrace.txt" ).getFile() );
-        processor.loadEventTrace( file.getAbsolutePath() );
+        if( processor.eventsPerThread.isEmpty() )
+        {
+            processor.loadEventTrace( file.getAbsolutePath() );
+        }
 
         //expected results ---
         int expectedTotal = 41;
@@ -52,7 +59,7 @@ public class TazTest
         int expectedT2_N2 = 7;
 
         int expectedLockPairs = 5;
-        int expectedSndRcv = 5;
+        int expectedSndRcv = 3;
         int expectedFork = 2;
         int expectedJoin = 1;
         int expectedR = 2;
@@ -68,6 +75,7 @@ public class TazTest
         {
             countTotal += list.size();
         }
+
         assertTrue( "Total number of events loaded = " + countTotal + " (expected " + expectedTotal + ")",
                     countTotal == expectedTotal );
 
@@ -88,9 +96,9 @@ public class TazTest
                     processor.eventsPerThread.get( "T2@N2" ).size() == expectedT2_N2 );
 
         int countLockPairs = 0;
-        for ( List<MyPair<SyncEvent, SyncEvent>> pairs : processor.lockEvents.values() )
+        for ( List<CausalPair<SyncEvent, SyncEvent>> pairs : processor.lockEvents.values() )
         {
-            for ( MyPair<SyncEvent, SyncEvent> p : pairs )
+            for ( CausalPair<SyncEvent, SyncEvent> p : pairs )
             {
                 if ( p.getFirst() != null && p.getSecond() != null )
                     countLockPairs++;
@@ -148,6 +156,64 @@ public class TazTest
         assertTrue( "#Events notify = " + countNotify + " (expected " + expectedNotify + ")",
                     countNotify == expectedNotify );
 
-        System.out.println( "[OK] Test loadTraces()" );
+        System.out.println( "[OK] loadTracesTest" );
+    }
+
+    @Test
+    public void aggregateMessagesTest()
+                    throws IOException, JSONException
+    {
+        TraceProcessor processor = TraceProcessor.INSTANCE;
+        File file = new File( processor.getClass().getClassLoader().getResource( "testEventTrace.txt" ).getFile() );
+        if( processor.eventsPerThread.isEmpty() )
+        {
+            processor.loadEventTrace( file.getAbsolutePath() );
+        }
+
+        //expected results ---
+        int expectedSndRcvPairsBefore = 3;
+        int expectedSndRcvPairsAfter = 3;
+
+        int expectedSndRcvEventsBefore = 8;
+        int expectedSndRcvEventsAfter = 6;
+        //------
+
+        assertTrue( "#SND/RCV pairs before = " + processor.msgEvents.values().size() + " (expected " + expectedSndRcvPairsBefore + ")",
+                    processor.msgEvents.values().size() == expectedSndRcvPairsBefore );
+
+        int countEvents = 0;
+        for ( SocketCausalPair pair : processor.msgEvents.values() )
+        {
+            for ( SocketEvent snd : pair.getSndList() )
+                countEvents++;
+
+            for ( SocketEvent rcv : pair.getRcvList() )
+                countEvents++;
+        }
+
+        assertTrue( "#SND/RCV events before = " + countEvents + " (expected " + expectedSndRcvEventsBefore + ")",
+                    countEvents == expectedSndRcvEventsBefore );
+
+        processor.aggregateAllPartitionedMessages();
+
+        processor.printDataStructures();
+
+        assertTrue( "#SND/RCV pairs after = " + processor.msgEvents.values().size() + " (expected " + expectedSndRcvPairsAfter + ")",
+                    processor.msgEvents.values().size() == expectedSndRcvPairsAfter );
+
+        countEvents = 0;
+        for ( SocketCausalPair pair : processor.msgEvents.values() )
+        {
+            for ( SocketEvent snd : pair.getSndList() )
+                countEvents++;
+
+            for ( SocketEvent rcv : pair.getRcvList() )
+                countEvents++;
+        }
+
+        assertTrue( "#SND/RCV events after = " + countEvents + " (expected " + expectedSndRcvEventsAfter + ")",
+                    countEvents == expectedSndRcvEventsAfter );
+
+        System.out.println( "[OK] aggregateMessagesTest" );
     }
 }

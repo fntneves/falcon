@@ -9,9 +9,10 @@ import pt.haslab.causalSolver.solver.Solver;
 import pt.haslab.causalSolver.solver.Z3Solver;
 import pt.haslab.causalSolver.stats.Stats;
 import pt.haslab.taz.TraceProcessor;
+import pt.haslab.taz.causality.CausalPair;
+import pt.haslab.taz.causality.SocketCausalPair;
 import pt.haslab.taz.events.Event;
 import pt.haslab.taz.events.EventType;
-import pt.haslab.taz.events.MyPair;
 import pt.haslab.taz.events.SocketEvent;
 import pt.haslab.taz.events.SyncEvent;
 import pt.haslab.taz.events.ThreadCreationEvent;
@@ -242,20 +243,26 @@ public class CausalSolver
         String tagSND_RCV = "SR_";
         int counterSND_RCV = 0;
         solver.writeComment( "COMMUNICATION CONSTRAINTS - SEND / RECEIVE" );
-        for ( MyPair<SocketEvent, SocketEvent> pair : trace.msgEvents.values() )
+        for ( SocketCausalPair pair : trace.msgEvents.values() )
         {
-            if ( pair.getFirst() != null && pair.getSecond() != null )
+            if ( pair.getSnd() == null && pair.getRcv() == null )
+                continue;
+
+            for( SocketEvent snd : pair.getSndList() )
             {
-                pair.getSecond().setDependency( pair.getFirst() );
-                String cnst = solver.cLt( pair.getFirst().toString(), pair.getSecond().toString() );
-                solver.writeConstraint( solver.postNamedAssert( cnst, tagSND_RCV + counterSND_RCV++ ) );
+                for( SocketEvent rcv : pair.getRcvList() )
+                {
+                    rcv.setDependency( snd );
+                    String cnst = solver.cLt( pair.getSnd().toString(), pair.getRcv().toString() );
+                    solver.writeConstraint( solver.postNamedAssert( cnst, tagSND_RCV + counterSND_RCV++ ) );
+                }
             }
         }
 
         solver.writeComment( "COMMUNICATION CONSTRAINTS - CONNECT / ACCEPT" );
         String tagCON_ACC = "CA_";
         int counterCON_ACC = 0;
-        for ( MyPair<SocketEvent, SocketEvent> pair : trace.connAcptEvents.values() )
+        for ( CausalPair<SocketEvent, SocketEvent> pair : trace.connAcptEvents.values() )
         {
             if ( pair.getFirst() != null && pair.getSecond() != null )
             {
@@ -268,7 +275,7 @@ public class CausalSolver
         solver.writeComment( "COMMUNICATION CONSTRAINTS - CLOSE / SHUTDOWN" );
         String tagCLS_SHT = "CS_";
         int counterCLS_SHT = 0;
-        for ( MyPair<SocketEvent, SocketEvent> pair : trace.closeShutEvents.values() )
+        for ( CausalPair<SocketEvent, SocketEvent> pair : trace.closeShutEvents.values() )
         {
             if ( pair.getFirst() != null && pair.getSecond() != null )
             {
@@ -288,18 +295,18 @@ public class CausalSolver
         {
             // for two lock/unlock pairs on the same locking object,
             // one pair must be executed either before or after the other
-            ListIterator<MyPair<SyncEvent, SyncEvent>> pairIterator_i = trace.lockEvents.get( var ).listIterator( 0 );
-            ListIterator<MyPair<SyncEvent, SyncEvent>> pairIterator_j;
+            ListIterator<CausalPair<SyncEvent, SyncEvent>> pairIterator_i = trace.lockEvents.get( var ).listIterator( 0 );
+            ListIterator<CausalPair<SyncEvent, SyncEvent>> pairIterator_j;
 
             while ( pairIterator_i.hasNext() )
             {
-                MyPair<SyncEvent, SyncEvent> pair_i = pairIterator_i.next();
+                CausalPair<SyncEvent, SyncEvent> pair_i = pairIterator_i.next();
                 //advance iterator to have two different pairs
                 pairIterator_j = trace.lockEvents.get( var ).listIterator( pairIterator_i.nextIndex() );
 
                 while ( pairIterator_j.hasNext() )
                 {
-                    MyPair<SyncEvent, SyncEvent> pair_j = pairIterator_j.next();
+                    CausalPair<SyncEvent, SyncEvent> pair_j = pairIterator_j.next();
 
                     //there is no need to add constraints for locking pairs of the same thread
                     //as they are already encoded in the program order constraints

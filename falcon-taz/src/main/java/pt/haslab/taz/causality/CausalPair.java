@@ -1,16 +1,16 @@
-package pt.haslab.taz.events;
+package pt.haslab.taz.causality;
 
 /**
  * Created by nunomachado on 31/03/17.
  */
-public class MyPair<First, Second>
+public class CausalPair<First, Second>
 {
 
     private First first;
 
     private Second second;
 
-    public MyPair( First first, Second second )
+    public CausalPair( First first, Second second )
     {
         this.first = first;
         this.second = second;
@@ -50,7 +50,7 @@ public class MyPair<First, Second>
         if ( o == null || getClass() != o.getClass() )
             return false;
 
-        MyPair pair = (MyPair) o;
+        CausalPair pair = (CausalPair) o;
 
         //if (first != null ? !first.equals(pair.first) : pair.first != null) return false;
         //if (second != null ? !second.equals(pair.second) : pair.second != null) return false;

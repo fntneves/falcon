@@ -6,36 +6,36 @@ package pt.haslab.taz.events;
 public enum EventType
 {
     //thread events
-    CREATE( "CREATE" ),
-    START( "START" ),
-    END( "END" ),
-    JOIN( "JOIN" ),
-    LOG( "LOG" ),
+    CREATE( "CREATE" ), //01
+    START( "START" ),   //02
+    END( "END" ),       //03
+    JOIN( "JOIN" ),     //04
+    LOG( "LOG" ),       //05
 
     //access events
-    READ( "R" ),
-    WRITE( "W" ),
+    READ( "R" ),        //06
+    WRITE( "W" ),       //07
 
     //communication events
-    SND( "SND" ),
-    RCV( "RCV" ),
-    CLOSE( "CLOSE" ),
-    SHUTDOWN( "SHUTDOWN" ),
-    CONNECT( "CONNECT" ),
-    ACCEPT( "ACCEPT" ),
+    SND( "SND" ),               //08
+    RCV( "RCV" ),               //09
+    CLOSE( "CLOSE" ),           //10
+    CONNECT( "CONNECT" ),       //11
+    ACCEPT( "ACCEPT" ),         //12
+    SHUTDOWN( "SHUTDOWN" ),     //13
 
     //message handlers
-    HNDLBEG( "HANDLERBEGIN" ),
-    HNDLEND( "HANDLEREND" ),
+    HNDLBEG( "HANDLERBEGIN" ),  //14
+    HNDLEND( "HANDLEREND" ),    //15
 
     // lock and unlock events
-    LOCK( "LOCK" ),
-    UNLOCK( "UNLOCK" ),
+    LOCK( "LOCK" ),             //16
+    UNLOCK( "UNLOCK" ),         //17
 
     //thread synchronization events
-    WAIT( "WAIT" ),
-    NOTIFY( "NOTIFY" ),
-    NOTIFYALL( "NOTIFYALL" );
+    WAIT( "WAIT" ),             //18
+    NOTIFY( "NOTIFY" ),         //19
+    NOTIFYALL( "NOTIFYALL" );   //20
 
     private final String desc;
 
