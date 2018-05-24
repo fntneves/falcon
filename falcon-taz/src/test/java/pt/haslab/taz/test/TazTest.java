@@ -1,12 +1,11 @@
 package pt.haslab.taz.test;
 
-import junit.framework.TestCase;
 import org.json.JSONException;
 import org.junit.Test;
 import pt.haslab.taz.TraceProcessor;
-import pt.haslab.taz.causality.SocketCausalPair;
-import pt.haslab.taz.events.Event;
 import pt.haslab.taz.causality.CausalPair;
+import pt.haslab.taz.causality.MessageCausalPair;
+import pt.haslab.taz.events.Event;
 import pt.haslab.taz.events.RWEvent;
 import pt.haslab.taz.events.SocketEvent;
 import pt.haslab.taz.events.SyncEvent;
@@ -15,7 +14,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
 /**
@@ -32,7 +30,7 @@ public class TazTest
             TraceProcessor processor = TraceProcessor.INSTANCE;
             File file = new File( processor.getClass().getClassLoader().getResource( "testEventTrace.txt" ).getFile() );
             System.out.println( "Test file: " + file.getAbsolutePath() );
-            processor.loadEventTrace(file.getAbsolutePath());
+            processor.loadEventTrace( file.getAbsolutePath() );
         }
         catch ( Exception e )
         {
@@ -41,12 +39,12 @@ public class TazTest
     }
 
     @Test
-    public void loadTracesTest()
+    public void testTraceParsing()
                     throws IOException, JSONException
     {
         TraceProcessor processor = TraceProcessor.INSTANCE;
         File file = new File( processor.getClass().getClassLoader().getResource( "testEventTrace.txt" ).getFile() );
-        if( processor.eventsPerThread.isEmpty() )
+        if ( processor.eventsPerThread.isEmpty() )
         {
             processor.loadEventTrace( file.getAbsolutePath() );
         }
@@ -155,17 +153,15 @@ public class TazTest
         }
         assertTrue( "#Events notify = " + countNotify + " (expected " + expectedNotify + ")",
                     countNotify == expectedNotify );
-
-        System.out.println( "[OK] loadTracesTest" );
     }
 
     @Test
-    public void aggregateMessagesTest()
+    public void testAggregateMessages()
                     throws IOException, JSONException
     {
         TraceProcessor processor = TraceProcessor.INSTANCE;
         File file = new File( processor.getClass().getClassLoader().getResource( "testEventTrace.txt" ).getFile() );
-        if( processor.eventsPerThread.isEmpty() )
+        if ( processor.eventsPerThread.isEmpty() )
         {
             processor.loadEventTrace( file.getAbsolutePath() );
         }
@@ -178,11 +174,12 @@ public class TazTest
         int expectedSndRcvEventsAfter = 6;
         //------
 
-        assertTrue( "#SND/RCV pairs before = " + processor.msgEvents.values().size() + " (expected " + expectedSndRcvPairsBefore + ")",
+        assertTrue( "#SND/RCV pairs before = " + processor.msgEvents.values().size() + " (expected "
+                                    + expectedSndRcvPairsBefore + ")",
                     processor.msgEvents.values().size() == expectedSndRcvPairsBefore );
 
         int countEvents = 0;
-        for ( SocketCausalPair pair : processor.msgEvents.values() )
+        for ( MessageCausalPair pair : processor.msgEvents.values() )
         {
             for ( SocketEvent snd : pair.getSndList() )
                 countEvents++;
@@ -196,13 +193,12 @@ public class TazTest
 
         processor.aggregateAllPartitionedMessages();
 
-        processor.printDataStructures();
-
-        assertTrue( "#SND/RCV pairs after = " + processor.msgEvents.values().size() + " (expected " + expectedSndRcvPairsAfter + ")",
+        assertTrue( "#SND/RCV pairs after = " + processor.msgEvents.values().size() + " (expected "
+                                    + expectedSndRcvPairsAfter + ")",
                     processor.msgEvents.values().size() == expectedSndRcvPairsAfter );
 
         countEvents = 0;
-        for ( SocketCausalPair pair : processor.msgEvents.values() )
+        for ( MessageCausalPair pair : processor.msgEvents.values() )
         {
             for ( SocketEvent snd : pair.getSndList() )
                 countEvents++;
@@ -213,7 +209,5 @@ public class TazTest
 
         assertTrue( "#SND/RCV events after = " + countEvents + " (expected " + expectedSndRcvEventsAfter + ")",
                     countEvents == expectedSndRcvEventsAfter );
-
-        System.out.println( "[OK] aggregateMessagesTest" );
     }
 }

@@ -29,7 +29,7 @@ public class EventIterator
                         public int compare( CausalPair<ListIterator<Event>, Event> o1,
                                             CausalPair<ListIterator<Event>, Event> o2 )
                         {
-                            return (int) (o1.getSecond().getEventId() - o2.getSecond().getEventId());
+                            return (int) ( o1.getSecond().getEventId() - o2.getSecond().getEventId() );
                         }
                     };
 

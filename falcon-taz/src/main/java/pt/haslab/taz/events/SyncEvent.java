@@ -29,7 +29,7 @@ public class SyncEvent
 
     public String getVariable()
     {
-        return var;
+        return this.var;
     }
 
     public void setVariable( String variable )
@@ -40,7 +40,7 @@ public class SyncEvent
     @Override
     public String toString()
     {
-        String res = type + "_" + var + "_" + thread + "_" + eventId + "@" + lineOfCode;
+        String res = this.getType() + "_" + this.var + "_" + this.getThread() + "_" + this.getEventId() + "@" + this.getLineOfCode();
         return res;
     }
 
@@ -53,7 +53,7 @@ public class SyncEvent
                     throws JSONException
     {
         JSONObject json = super.toJSONObject();
-        json.put( "variable", var );
+        json.put( "variable", this.var );
 
         return json;
     }

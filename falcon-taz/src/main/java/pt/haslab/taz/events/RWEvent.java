@@ -28,7 +28,7 @@ public class RWEvent
 
     public String getVariable()
     {
-        return var;
+        return this.var;
     }
 
     public void setVariable( String variable )
@@ -45,7 +45,7 @@ public class RWEvent
                     throws JSONException
     {
         JSONObject json = super.toJSONObject();
-        json.put( "variable", var );
+        json.put( "variable", this.var );
         //json.put("lineOfCode", lineOfCode);
 
         return json;
@@ -63,11 +63,11 @@ public class RWEvent
      */
     public boolean conflictsWith( RWEvent e )
     {
-        return ( ( type == EventType.WRITE || e.getType() == EventType.WRITE )
+        return ( ( this.getType() == EventType.WRITE || e.getType() == EventType.WRITE )
                         && this.getNodeId().equals( e.getNodeId() )
                         //&& !thread.equals(e.getThread())
-                        && var.equals( e.getVariable() )
-                        && ( !thread.equals( e.getThread() ) || eventId != e.getEventId() ) );
+                        && this.var.equals( e.getVariable() )
+                        && ( !this.getThread().equals( e.getThread() ) || this.getEventId() != e.getEventId() ) );
     }
 
     @Override
@@ -80,16 +80,16 @@ public class RWEvent
             return false;
 
         RWEvent tmp = (RWEvent) o;
-        return ( tmp.getLineOfCode().equals( this.lineOfCode )
+        return ( tmp.getLineOfCode().equals( this.getLineOfCode() )
                         && tmp.getVariable().equals( this.var )
-                        && tmp.getEventId() == this.eventId
+                        && tmp.getEventId() == this.getEventId()
         );
     }
 
     @Override
     public String toString()
     {
-        String res = type + "_" + var + "_" + thread + "_" + eventId + "@" + lineOfCode;
+        String res = this.getType() + "_" + this.var + "_" + this.getThread() + "_" + this.getEventId() + "@" + this.getLineOfCode();
         return res;
     }
 }

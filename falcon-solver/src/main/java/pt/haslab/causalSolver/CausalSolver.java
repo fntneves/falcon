@@ -248,13 +248,13 @@ public class CausalSolver
             if ( pair.getSnd() == null && pair.getRcv() == null )
                 continue;
 
-            for( SocketEvent snd : pair.getSndList() )
+            for ( SocketEvent snd : pair.getSndList() )
             {
-                for( SocketEvent rcv : pair.getRcvList() )
+                for ( SocketEvent rcv : pair.getRcvList() )
                 {
                     rcv.setDependency( snd );
-                    String cnst = solver.cLt( pair.getSnd().toString(), pair.getRcv().toString() );
-                    solver.writeConstraint( solver.postNamedAssert( cnst, tagSND_RCV + counterSND_RCV++ ) );
+                    String msgConstraint = solver.cLt( pair.getSnd().toString(), pair.getRcv().toString() );
+                    solver.writeConstraint( solver.postNamedAssert( msgConstraint, tagSND_RCV + counterSND_RCV++ ) );
                 }
             }
         }
@@ -267,8 +267,8 @@ public class CausalSolver
             if ( pair.getFirst() != null && pair.getSecond() != null )
             {
                 pair.getSecond().setDependency( pair.getFirst() );
-                String cnst = solver.cLt( pair.getFirst().toString(), pair.getSecond().toString() );
-                solver.writeConstraint( solver.postNamedAssert( cnst, tagCON_ACC + counterCON_ACC++ ) );
+                String connAcptConstraint = solver.cLt( pair.getFirst().toString(), pair.getSecond().toString() );
+                solver.writeConstraint( solver.postNamedAssert( connAcptConstraint, tagCON_ACC + counterCON_ACC++ ) );
             }
         }
 
@@ -280,8 +280,8 @@ public class CausalSolver
             if ( pair.getFirst() != null && pair.getSecond() != null )
             {
                 pair.getSecond().setDependency( pair.getFirst() );
-                String cnst = solver.cLt( pair.getFirst().toString(), pair.getSecond().toString() );
-                solver.writeConstraint( solver.postNamedAssert( cnst, tagCLS_SHT + counterCLS_SHT++ ) );
+                String closeShutdownConstraint = solver.cLt( pair.getFirst().toString(), pair.getSecond().toString() );
+                solver.writeConstraint( solver.postNamedAssert( closeShutdownConstraint, tagCLS_SHT + counterCLS_SHT++ ) );
             }
         }
     }
@@ -295,7 +295,8 @@ public class CausalSolver
         {
             // for two lock/unlock pairs on the same locking object,
             // one pair must be executed either before or after the other
-            ListIterator<CausalPair<SyncEvent, SyncEvent>> pairIterator_i = trace.lockEvents.get( var ).listIterator( 0 );
+            ListIterator<CausalPair<SyncEvent, SyncEvent>> pairIterator_i =
+                            trace.lockEvents.get( var ).listIterator( 0 );
             ListIterator<CausalPair<SyncEvent, SyncEvent>> pairIterator_j;
 
             while ( pairIterator_i.hasNext() )
@@ -314,10 +315,10 @@ public class CausalSolver
                         continue;
 
                     // Ui < Lj || Uj < Li
-                    String cnstUi_Lj = solver.cLt( pair_i.getSecond().toString(), pair_j.getFirst().toString() );
-                    String cnstUj_Li = solver.cLt( pair_j.getSecond().toString(), pair_i.getFirst().toString() );
-                    String cnst = solver.cOr( cnstUi_Lj, cnstUj_Li );
-                    solver.writeConstraint( solver.postNamedAssert( cnst, "LC" ) );
+                    String constraintUi_Lj = solver.cLt( pair_i.getSecond().toString(), pair_j.getFirst().toString() );
+                    String constraintUj_Li = solver.cLt( pair_j.getSecond().toString(), pair_i.getFirst().toString() );
+                    String lockConstraint = solver.cOr( constraintUi_Lj, constraintUj_Li );
+                    solver.writeConstraint( solver.postNamedAssert( lockConstraint, "LC" ) );
                 }
             }
         }
@@ -335,8 +336,8 @@ public class CausalSolver
             for ( ThreadCreationEvent forkevent : l )
             {
                 String startEvent = "START_" + forkevent.getChildThread();
-                String cnst = solver.cLt( forkevent.toString(), startEvent );
-                solver.writeConstraint( solver.postNamedAssert( cnst, tagFRK_STR + counterFRK_STR++ ) );
+                String forkStartConstraint = solver.cLt( forkevent.toString(), startEvent );
+                solver.writeConstraint( solver.postNamedAssert( forkStartConstraint, tagFRK_STR + counterFRK_STR++ ) );
                 //set dependency
                 allEvents.get( startEvent ).setDependency( forkevent );
             }
@@ -360,8 +361,8 @@ public class CausalSolver
                     int endEventPos = trace.eventsPerThread.get( childThread ).size();
                     Event endEvent = trace.eventsPerThread.get( joinEvent.getChildThread() ).get(
                                     endEventPos - 1 );
-                    String cnst = solver.cLt( endEvent.toString(), joinEvent.toString() );
-                    solver.writeConstraint( solver.postNamedAssert( cnst, tagJOIN_END + counterJOIN_END++ ) );
+                    String joinEndConstraint = solver.cLt( endEvent.toString(), joinEvent.toString() );
+                    solver.writeConstraint( solver.postNamedAssert( joinEndConstraint, tagJOIN_END + counterJOIN_END++ ) );
                     //set dependency
                     allEvents.get( joinEvent.toString() ).setDependency( endEvent );
                 }
@@ -554,7 +555,7 @@ public class CausalSolver
             for ( Event e : orderedEvents )
             {
                 JSONObject json = e.toJSONObject();
-                if(logger.isDebugEnabled())
+                if ( logger.isDebugEnabled() )
                     logger.debug( json.toString() );
                 jsonEvents.put( json );
             }

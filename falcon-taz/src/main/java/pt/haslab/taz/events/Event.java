@@ -4,38 +4,41 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
+ * Class Event represents a generic event in Taz. All the other event types extend this class.
+ *
  * Created by nunomachado on 05/03/18.
- * Class Event represents a generic event in Taz. All the other event types inherit from this class.
  */
 public class Event
                 implements Comparable
 {
     //--- REQUIRED PARAMETERS ---
     /* event timestamp as given by the trace */
-    String timestamp;
+    private String timestamp;
 
     /* type of event (possible types are in EventType class) */
-    EventType type;
+    private EventType type;
 
     /* thread that executed the event */
-    String thread;
+    private String thread;
 
     /* line of code of the event, with format "className.methodName.lineOfCode" */
-    String lineOfCode;
+    private String lineOfCode;
 
     /* indicates that the event is the n-th event in the trace file */
-    long eventId;
+    private long eventId;
 
     //--- OPTIONAL PARAMETERS ---
     /* name of the event that causally precedes this event (useful when drawing space-time diagrams) */
-    String dependency;
+    private String dependency;
 
     /* JSON object with additional event details */
-    JSONObject data;
+    private JSONObject data;
 
-    /* Execution order given by the constraint solver (according to a given criteria).
-     *  This variable should only be set after the constraint solving process has taken place. */
-    long scheduleOrder;
+    /*
+     * Execution order should be given by the falcon-solver. Therefore, this variable should only be set if the event
+     * trace received as input was the result of the constraint solving procedure.
+     */
+    private long scheduleOrder;
 
     public Event()
     {
@@ -50,8 +53,10 @@ public class Event
         this.eventId = eventId;
         this.data = null;
         this.lineOfCode = lineOfCode;
-        //initially, set scheduleOrder equal to eventId
-        //override scheduleOrder after having causal order
+        /*
+         * Initially, set scheduleOrder to be equal to the eventId.
+         * Override scheduleOrder after computing the global causal order.
+         */
         this.scheduleOrder = eventId;
     }
 
@@ -153,7 +158,7 @@ public class Event
 
     public long getScheduleOrder()
     {
-        return scheduleOrder;
+        return this.scheduleOrder;
     }
 
     public void setScheduleOrder( int scheduleOrder )
@@ -162,15 +167,15 @@ public class Event
     }
 
     /**
-     * Returns the identifier of the node at which the event was executed
-     * (this info is obtained by parsing the thread field)
+     * Returns the hostname of the node at which the event was executed
+     * (this info is obtained by parsing the thread field).
      *
-     * @return node identifier
+     * @return the node identifier which corresponds to the hostname.
      */
     public String getNodeId()
     {
-        int start = thread.indexOf( "@" );
-        String node = thread.substring( start + 1 );
+        int start = this.thread.indexOf( "@" );
+        String node = this.thread.substring( start + 1 );
         return node;
     }
 
@@ -183,31 +188,38 @@ public class Event
     @Override
     public String toString()
     {
-        String res = type + "_" + thread;
+        String res = this.type + "_" + this.thread;
         return res;
     }
 
     /**
-     * Returns a JSONObject representing the event.
+     * Encodes the event into a JSONObject.
      *
-     * @return
+     * @return  a JSONObject representing the event.
      */
     public JSONObject toJSONObject()
                     throws JSONException
     {
         JSONObject json = new JSONObject();
-        json.put( "type", type.toString() );
-        json.put( "thread", thread );
-        json.put( "loc", lineOfCode );
-        json.put( "order", scheduleOrder );
-        json.put( "id", eventId );
-        json.put( "timestamp", timestamp );
-        json.put( "dependency", dependency == null ? JSONObject.NULL : dependency );
-        json.putOpt( "data", data );
+        json.put( "type", this.type.toString() );
+        json.put( "thread", this.thread );
+        json.put( "loc", this.lineOfCode );
+        json.put( "order", this.scheduleOrder );
+        json.put( "id", this.eventId );
+        json.put( "timestamp", this.timestamp );
+        json.put( "dependency", this.dependency == null ? JSONObject.NULL : this.dependency );
+        json.putOpt( "data", this.data );
 
         return json;
     }
 
+    /**
+     * Event comparator based on the logical clock.
+     *
+     * @param o1  another event.
+     * @return    an integer indicating whether the logical clock of this event is lower, equal, or higher than that
+     *            of another event.
+     */
     public int compareTo( Object o1 )
     {
         Event e = (Event) o1;
