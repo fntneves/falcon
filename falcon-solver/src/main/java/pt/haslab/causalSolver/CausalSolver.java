@@ -10,7 +10,7 @@ import pt.haslab.causalSolver.solver.Z3Solver;
 import pt.haslab.causalSolver.stats.Stats;
 import pt.haslab.taz.TraceProcessor;
 import pt.haslab.taz.causality.CausalPair;
-import pt.haslab.taz.causality.SocketCausalPair;
+import pt.haslab.taz.causality.MessageCausalPair;
 import pt.haslab.taz.events.Event;
 import pt.haslab.taz.events.EventType;
 import pt.haslab.taz.events.SocketEvent;
@@ -243,7 +243,7 @@ public class CausalSolver
         String tagSND_RCV = "SR_";
         int counterSND_RCV = 0;
         solver.writeComment( "COMMUNICATION CONSTRAINTS - SEND / RECEIVE" );
-        for ( SocketCausalPair pair : trace.msgEvents.values() )
+        for ( MessageCausalPair pair : trace.msgEvents.values() )
         {
             if ( pair.getSnd() == null && pair.getRcv() == null )
                 continue;
