@@ -123,37 +123,37 @@ After parsing the JSON event trace, TAZ organizes the events into the following 
 
 ```java
 enum EventType {
-    //thread events
-    CREATE("CREATE"),
-    START("START"),
-    END("END"),
-    JOIN("JOIN"),
-    LOG("LOG"),
+    // Thread events
+    CREATE( "CREATE", 1 ),
+    START( "START", 2 ),
+    END( "END", 3 ),
+    JOIN( "JOIN", 4 ),
+    LOG( "LOG", 5 ),
 
-    //access events
-    READ("R"),
-    WRITE("W"),
+    // Variable access events
+    READ( "R", 6 ),
+    WRITE( "W", 7 ),
 
-    //communication events
-    SND("SND"),
-    RCV("RCV"),
-    CLOSE("CLOSE"),
-    SHUTDOWN("SHUTDOWN"),
-    CONNECT("CONNECT"),
-    ACCEPT("ACCEPT"),
+    // Socket communication events
+    SND( "SND", 8 ),
+    RCV( "RCV", 9 ),
+    CLOSE( "CLOSE", 10 ),
+    CONNECT( "CONNECT", 11 ),
+    ACCEPT( "ACCEPT", 12 ),
+    SHUTDOWN( "SHUTDOWN", 13 ),
 
-    //message handlers
-    HNDLBEG("HANDLERBEGIN"),
-    HNDLEND("HANDLEREND"),
+    // Message handlers delimiters
+    HNDLBEG( "HANDLERBEGIN", 14 ),
+    HNDLEND( "HANDLEREND", 15 ),
 
-    // lock and unlock events
-    LOCK("LOCK"),
-    UNLOCK("UNLOCK"),
+    // Locking events
+    LOCK( "LOCK", 16 ),
+    UNLOCK( "UNLOCK", 17 ),
 
-    //thread synchronization events
-    WAIT("WAIT"),
-    NOTIFY("NOTIFY"),
-    NOTIFYALL("NOTIFYALL");
+    // Thread synchronization events
+    WAIT( "WAIT", 18 ),
+    NOTIFY( "NOTIFY", 19 ),
+    NOTIFYALL( "NOTIFYALL", 20 );
 }
 ```
 **Event** is the general class from which all the other event sub-types inherit from. It is also used for LOG events.
