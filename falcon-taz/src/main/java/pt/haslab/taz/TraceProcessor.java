@@ -164,7 +164,14 @@ public enum TraceProcessor
                     }
                     catch ( JSONException objError )
                     {
-                        logger.error( "Invalid JSON: " + line );
+                        if( objError.getMessage().contains( "event type" ))
+                        {
+                            logger.error( objError.getMessage() );
+                        }
+                        else
+                        {
+                            logger.error( "Invalid JSON: " + line );
+                        }
                     }
                     finally
                     {
@@ -206,7 +213,18 @@ public enum TraceProcessor
                     throws JSONException
     {
         /* --- Parse required fields --- */
-        EventType type = EventType.getEventType( event.getString( "type" ) );
+
+        // Check whether the type of the event is encoded as an integer value or a string.
+        String typeField = event.getString( "type" );
+        EventType type = null;
+        if( Character.isDigit( typeField.charAt( 0 ) ) )
+        {
+            type = EventType.getEventType( Integer.valueOf( typeField ) );
+        }
+        else
+        {
+            type = EventType.getEventType( typeField );
+        }
 
         if ( type == null )
             throw new JSONException( "Unknown event type: " + event.getString( "type" ) );
