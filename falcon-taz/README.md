@@ -219,13 +219,13 @@ class HandlerEvent extends Event {
 
 ```java
     /* Map: message id -> pair of events (snd,rcv) */
-    public Map<String, MyPair<SocketEvent, SocketEvent>> msgEvents;
+    public Map<String, SocketCausalPair> msgEvents;
 
     /* Map: socket id -> pair of events (connect,accept) */
-    public Map<String, MyPair<SocketEvent, SocketEvent>> connAcptEvents;
+    public Map<String, CausalPair<SocketEvent, SocketEvent>> connAcptEvents;
 
     /* Map: socket id -> pair of events (close,shutdown) */
-    public Map<String, MyPair<SocketEvent, SocketEvent>> closeShutEvents;
+    public Map<String, CausalPair<SocketEvent, SocketEvent>> closeShutEvents;
 
     /* Map: thread -> list of all events in that thread's execution */
     public Map<String, List<Event>> eventsPerThread;
@@ -240,7 +240,7 @@ class HandlerEvent extends Event {
     public HashMap<String, Event> eventNameToObject;
 
     /* Map: mutex variable -> list of pairs of locks/unlocks */
-    public Map<String, List<MyPair<SyncEvent, SyncEvent>>> lockEvents;
+    public Map<String, List<CausalPair<SyncEvent, SyncEvent>>> lockEvents;
 
     /* Map: variable -> list of reads to that variable by all threads */
     public Map<String, List<RWEvent>> readEvents;

@@ -7,7 +7,8 @@ import org.json.JSONObject;
  * Created by nunomachado on 06/05/18.
  * Represents LOG events.
  */
-public class LogEvent extends Event
+public class LogEvent
+                extends Event
 {
     /* message logged by the event */
     String message;
@@ -44,7 +45,7 @@ public class LogEvent extends Event
                     throws JSONException
     {
         JSONObject json = super.toJSONObject();
-        json.put( "message", message);
+        json.put( "message", message );
 
         return json;
     }
@@ -59,9 +60,9 @@ public class LogEvent extends Event
             return false;
 
         LogEvent tmp = (LogEvent) o;
-        return ( tmp.getLineOfCode().equals( this.loc )
+        return ( tmp.getLineOfCode().equals( this.getLineOfCode() )
                         && tmp.getMessage().equals( this.message )
-                        && tmp.getEventId() == this.eventId
+                        && tmp.getEventId() == this.getEventId()
         );
     }
 
@@ -70,7 +71,7 @@ public class LogEvent extends Event
     {
         //since there can be multiple LOG events per thread
         //we need to uniquely identify each one
-        String res = type + "_" + eventId + "_" + thread;
+        String res = this.getType() + "_" + this.getEventId() + "_" + this.getThread();
 
         return res;
     }

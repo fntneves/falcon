@@ -4,6 +4,8 @@ package pt.haslab.taz.events;
  * Created by joaopereira
  */
 
+import pt.haslab.taz.causality.CausalPair;
+
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -15,26 +17,26 @@ import java.util.PriorityQueue;
 public class EventIterator
                 implements Iterator<Event>
 {
-    private PriorityQueue<MyPair<ListIterator<Event>, Event>> eventHeap;
+    private PriorityQueue<CausalPair<ListIterator<Event>, Event>> eventHeap;
 
     //keeps track of the last Iterator next'd for the remove method
     private ListIterator<Event> lastIt;
 
-    public final Comparator<MyPair<ListIterator<Event>, Event>> heapOrder =
-                    new Comparator<MyPair<ListIterator<Event>, Event>>()
+    public final Comparator<CausalPair<ListIterator<Event>, Event>> heapOrder =
+                    new Comparator<CausalPair<ListIterator<Event>, Event>>()
                     {
                         //doesnt support null arguments
-                        public int compare( MyPair<ListIterator<Event>, Event> o1,
-                                            MyPair<ListIterator<Event>, Event> o2 )
+                        public int compare( CausalPair<ListIterator<Event>, Event> o1,
+                                            CausalPair<ListIterator<Event>, Event> o2 )
                         {
-                            return (int) (o1.getSecond().getEventId() - o2.getSecond().getEventId());
+                            return (int) ( o1.getSecond().getEventId() - o2.getSecond().getEventId() );
                         }
                     };
 
     public EventIterator( Collection<List<Event>> eventLists )
     {
         //Holds the first value of a list and an iterator of the rest of the list
-        eventHeap = new PriorityQueue<MyPair<ListIterator<Event>, Event>>( eventLists.size(), heapOrder );
+        eventHeap = new PriorityQueue<CausalPair<ListIterator<Event>, Event>>( eventLists.size(), heapOrder );
 
         for ( List<Event> eventList : eventLists )
         {
@@ -42,7 +44,7 @@ public class EventIterator
             {
                 ListIterator<Event> it = eventList.listIterator();
                 Event firstElem = it.next();
-                eventHeap.add( new MyPair<ListIterator<Event>, Event>( it, firstElem ) );
+                eventHeap.add( new CausalPair<ListIterator<Event>, Event>( it, firstElem ) );
             }
         }
     }
@@ -58,7 +60,7 @@ public class EventIterator
         {
             throw new NoSuchElementException( "There are no more elements" );
         }
-        MyPair<ListIterator<Event>, Event> heapTop = eventHeap.poll();
+        CausalPair<ListIterator<Event>, Event> heapTop = eventHeap.poll();
 
         ListIterator<Event> it = heapTop.getFirst();
         Event next = heapTop.getSecond();
@@ -67,7 +69,7 @@ public class EventIterator
         if ( it.hasNext() )
         {
             Event toInsert = it.next();
-            eventHeap.add( new MyPair<ListIterator<Event>, Event>( it, toInsert ) );
+            eventHeap.add( new CausalPair<ListIterator<Event>, Event>( it, toInsert ) );
         }
         return next;
     }

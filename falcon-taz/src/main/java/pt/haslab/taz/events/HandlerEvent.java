@@ -21,7 +21,7 @@ public class HandlerEvent
 
     public String toString()
     {
-        String res = type + "_" + thread + "_" + eventId + "@" + loc;
+        String res = this.getType() + "_" + this.getThread() + "_" + this.getEventId() + "@" + this.getLineOfCode();
         return res;
     }
 

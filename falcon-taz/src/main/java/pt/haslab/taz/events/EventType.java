@@ -1,47 +1,53 @@
 package pt.haslab.taz.events;
 
 /**
+ * This class encodes the event types supported by falcon-taz.
  * Created by nunomachado on 05/03/18.
  */
 public enum EventType
 {
-    //thread events
-    CREATE( "CREATE" ),
-    START( "START" ),
-    END( "END" ),
-    JOIN( "JOIN" ),
-    LOG( "LOG" ),
+    // Thread events
+    CREATE( "CREATE", 1 ),
+    START( "START", 2 ),
+    END( "END", 3 ),
+    JOIN( "JOIN", 4 ),
+    LOG( "LOG", 5 ),
 
-    //access events
-    READ( "R" ),
-    WRITE( "W" ),
+    // Variable access events
+    READ( "R", 6 ),
+    WRITE( "W", 7 ),
 
-    //communication events
-    SND( "SND" ),
-    RCV( "RCV" ),
-    CLOSE( "CLOSE" ),
-    SHUTDOWN( "SHUTDOWN" ),
-    CONNECT( "CONNECT" ),
-    ACCEPT( "ACCEPT" ),
+    // Socket communication events
+    SND( "SND", 8 ),
+    RCV( "RCV", 9 ),
+    CLOSE( "CLOSE", 10 ),
+    CONNECT( "CONNECT", 11 ),
+    ACCEPT( "ACCEPT", 12 ),
+    SHUTDOWN( "SHUTDOWN", 13 ),
 
-    //message handlers
-    HNDLBEG( "HANDLERBEGIN" ),
-    HNDLEND( "HANDLEREND" ),
+    // Message handlers delimiters
+    HNDLBEG( "HANDLERBEGIN", 14 ),
+    HNDLEND( "HANDLEREND", 15 ),
 
-    // lock and unlock events
-    LOCK( "LOCK" ),
-    UNLOCK( "UNLOCK" ),
+    // Locking events
+    LOCK( "LOCK", 16 ),
+    UNLOCK( "UNLOCK", 17 ),
 
-    //thread synchronization events
-    WAIT( "WAIT" ),
-    NOTIFY( "NOTIFY" ),
-    NOTIFYALL( "NOTIFYALL" );
+    // Thread synchronization events
+    WAIT( "WAIT", 18 ),
+    NOTIFY( "NOTIFY", 19 ),
+    NOTIFYALL( "NOTIFYALL", 20 );
 
+    /* Textual description of the event type. */
     private final String desc;
 
-    private EventType( String l )
+    /* Integer code representing the event type. */
+    private final int code;
+
+    private EventType( String name, int identifier )
     {
-        this.desc = l;
+        this.desc = name;
+        this.code = identifier;
     }
 
     @Override
@@ -50,16 +56,20 @@ public enum EventType
         return this.desc;
     }
 
+    public int getCode()
+    {
+        return this.code;
+    }
+
     /**
-     * Translates a string representing the type of event
+     * Translates a string representing the type of event into
      * the corresponding EventType enum element.
      *
-     * @param type
-     * @return
+     * @param type  the type of Event expressed by its textual name.
+     * @return      the corresponding EventType object.
      */
     public static EventType getEventType( String type )
     {
-
         if ( type.equals( "CREATE" ) )
             return EventType.CREATE;
         else if ( type.equals( "START" ) )
@@ -100,6 +110,60 @@ public enum EventType
             return EventType.NOTIFYALL;
         else if ( type.equals( "LOG" ) )
             return EventType.LOG;
+        else
+            return null;
+    }
+
+
+    /**
+     * Translates a integer value representing the type of event into
+     * the corresponding EventType enum element.
+     *
+     * @param type  the type of Event expressed as an integer.
+     * @return      the corresponding EventType object.
+     */
+    public static EventType getEventType( int type )
+    {
+        if ( type == 1 )
+            return EventType.CREATE;
+        else if ( type== 2 )
+            return EventType.START;
+        else if ( type == 3 )
+            return EventType.END;
+        else if ( type == 4 )
+            return EventType.JOIN;
+        else if ( type == 5 )
+            return EventType.LOG;
+        else if ( type == 6 )
+            return EventType.READ;
+        else if ( type == 7 )
+            return EventType.WRITE;
+        else if ( type ==  8 )
+            return EventType.SND;
+        else if ( type == 9 )
+            return EventType.RCV;
+        else if ( type == 10 )
+            return EventType.CLOSE;
+        else if ( type == 11 )
+            return EventType.CONNECT;
+        else if ( type == 12 )
+            return EventType.ACCEPT;
+        else if ( type == 13 )
+            return EventType.SHUTDOWN;
+        else if ( type == 14 )
+            return EventType.HNDLBEG;
+        else if ( type == 15 )
+            return EventType.HNDLEND;
+        else if ( type == 16 )
+            return EventType.LOCK;
+        else if ( type == 17 )
+            return EventType.UNLOCK;
+        else if ( type == 18 )
+            return EventType.WAIT;
+        else if ( type == 19 )
+            return EventType.NOTIFY;
+        else if ( type == 20 )
+            return EventType.NOTIFYALL;
         else
             return null;
     }

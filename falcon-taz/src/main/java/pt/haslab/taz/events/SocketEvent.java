@@ -83,14 +83,14 @@ public class SocketEvent
     }
 
     /**
-     * Gives a string indicating the direction of the socket (src:src_port-dst:dst_port).
-     * This differs from getSocket(), which returns the channel identification, regardless of the direction.
+     * Returns a string indicating the direction of the socket (src:src_port-dst:dst_port).
+     * This differs from getSocket(), which returns the channel identifier regardless of the direction.
      *
-     * @return
+     * @return  a socket channel identifier that takes into account the direction of the communication.
      */
     public String getDirectedSocket()
     {
-        String channel = src + ":" + src_port + "-" + dst + ":" + dst_port;
+        String channel = this.src + ":" + this.src_port + "-" + this.dst + ":" + this.dst_port;
         return channel;
     }
 
@@ -101,7 +101,7 @@ public class SocketEvent
 
     public String getSrc()
     {
-        return src;
+        return this.src;
     }
 
     public void setSrc( String src )
@@ -111,7 +111,7 @@ public class SocketEvent
 
     public int getSrcPort()
     {
-        return src_port;
+        return this.src_port;
     }
 
     public void setSrcPort( int src_port )
@@ -121,7 +121,7 @@ public class SocketEvent
 
     public String getDst()
     {
-        return dst;
+        return this.dst;
     }
 
     public void setDst( String dst )
@@ -131,7 +131,7 @@ public class SocketEvent
 
     public int getDstPort()
     {
-        return dst_port;
+        return this.dst_port;
     }
 
     public void setDstPort( int dst_port )
@@ -141,7 +141,7 @@ public class SocketEvent
 
     public SocketType getSocketType()
     {
-        return socket_type;
+        return this.socket_type;
     }
 
     public void setSocketType( SocketType socket_type )
@@ -159,7 +159,7 @@ public class SocketEvent
 
     public int getSize()
     {
-        return size;
+        return this.size;
     }
 
     public void setSize( int size )
@@ -169,7 +169,7 @@ public class SocketEvent
 
     public String getMessageId()
     {
-        return msgId;
+        return this.msgId;
     }
 
     public void setMessageId( String msgId )
@@ -189,7 +189,7 @@ public class SocketEvent
      */
     public boolean conflictsWith( SocketEvent e )
     {
-        if ( ( type == EventType.SND || e.getType() == EventType.SND ) )
+        if ( ( this.getType() == EventType.SND || e.getType() == EventType.SND ) )
             return false;
 
         return ( this.dst.equals( e.getDst() )
@@ -210,17 +210,17 @@ public class SocketEvent
         return ( tmp.getDst().equals( this.dst )
                         && tmp.getMessageId() == this.msgId
                         && tmp.getSocket().equals( this.socket )
-                        && tmp.getThread().equals( this.thread )
-                        && tmp.getEventId() == this.eventId
+                        && tmp.getThread().equals( this.getThread() )
+                        && tmp.getEventId() == this.getEventId()
         );
     }
 
     @Override
     public String toString()
     {
-        String res = type + "_" + socket.hashCode() + ( ( msgId != null && !msgId.equals( "" ) ) ?
-                        ( "_" + msgId ) :
-                        "" ) + "_" + thread + "_" + eventId;
+        String res = this.getType() + "_" + socket.hashCode() + ( ( this.msgId != null && !this.msgId.equals( "" ) ) ?
+                        ( "_" + this.msgId ) :
+                        "" ) + "_" + this.getThread() + "_" + this.getEventId();
         return res;
     }
 
@@ -233,16 +233,16 @@ public class SocketEvent
                     throws JSONException
     {
         JSONObject json = super.toJSONObject();
-        json.put( "socket", socket );
-        json.put( "src", src );
-        json.put( "src_port", src_port );
-        json.put( "dst", dst );
-        json.put( "dst_port", dst_port );
-        json.put( "socket_type", socket_type );
+        json.put( "socket", this.socket );
+        json.put( "src", this.src );
+        json.put( "src_port", this.src_port );
+        json.put( "dst", this.dst );
+        json.put( "dst_port", this.dst_port );
+        json.put( "socket_type", this.socket_type );
         if ( this.msgId != null )
         {
-            json.put( "size", size );
-            json.put( "message", msgId );
+            json.put( "size", this.size );
+            json.put( "message", this.msgId );
         }
         return json;
     }

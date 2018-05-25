@@ -23,12 +23,12 @@ public class ThreadCreationEvent
     public ThreadCreationEvent( Event e )
     {
         super( e );
-        child = "";
+        this.child = "";
     }
 
     public String getChildThread()
     {
-        return child;
+        return this.child;
     }
 
     public void setChildThread( String child )
@@ -39,7 +39,7 @@ public class ThreadCreationEvent
     @Override
     public String toString()
     {
-        String res = type + "_" + thread + "_" + child;
+        String res = this.getType() + "_" + this.getThread() + "_" + this.child;
         return res;
     }
 
@@ -52,7 +52,7 @@ public class ThreadCreationEvent
                     throws JSONException
     {
         JSONObject json = super.toJSONObject();
-        json.put( "child", child );
+        json.put( "child", this.child );
 
         return json;
     }
@@ -67,8 +67,8 @@ public class ThreadCreationEvent
             return false;
 
         ThreadCreationEvent tmp = (ThreadCreationEvent) o;
-        return ( tmp.getThread().equals( this.thread )
-                        && tmp.getType() == this.type
+        return ( tmp.getThread().equals( this.getThread() )
+                        && tmp.getType() == this.getType()
                         && tmp.getChildThread().equals( this.child )
         );
     }
