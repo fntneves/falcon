@@ -134,7 +134,7 @@ class SocketAccept(SocketEvent):
 
     def to_json(self):
         return json.dumps({
-            "type": "ACCEPT",
+            "type": EventType.SOCKET_ACCEPT,
             "timestamp": self._timestamp,
             "thread": self.get_thread_id(),
             "socket": self._socket_id,
@@ -164,7 +164,7 @@ class SocketSend(SocketEvent):
 
     def to_json(self):
         return json.dumps({
-            "type": "SND",
+            "type": EventType.SOCKET_SEND,
             "timestamp": self._timestamp,
             "thread": self.get_thread_id(),
             "socket": self._socket_id,
@@ -195,7 +195,7 @@ class SocketReceive(SocketEvent):
 
     def to_json(self):
         return json.dumps({
-            "type": "SND",
+            "type": EventType.SOCKET_RECEIVE,
             "timestamp": self._timestamp,
             "thread": self.get_thread_id(),
             "socket": self._socket_id,
