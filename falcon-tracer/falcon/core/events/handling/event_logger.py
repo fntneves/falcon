@@ -5,7 +5,7 @@ from falcon.core.events.handling.base_handler import BaseHandler
 class FalconEventLogger(BaseHandler):
     def __init__(self, appender):
         self._appender = appender
-        super(BaseHandler, self).__init__()
+        super(FalconEventLogger, self).__init__()
 
     def handle(self, cpu, data, size):
         event = EventFactory.create(data)
