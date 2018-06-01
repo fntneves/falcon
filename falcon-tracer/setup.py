@@ -23,6 +23,7 @@ setup(
     packages=find_packages(exclude=EXCLUDE_FROM_PACKAGES),
     install_requires=[
         'ujson',
+        'confluent-kafka',
     ],
     test_suite='nose.collector',
     tests_require=['nose'],
