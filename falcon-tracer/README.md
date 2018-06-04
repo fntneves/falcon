@@ -5,6 +5,7 @@ This tracer instruments specific kernel functions (using *kprobes*) for gatherin
 
 ## Requirements
 - Kernel 4.8+
+- Python 2.7 (with pip support)
 - [BCC tools](https://github.com/iovisor/bcc/blob/master/INSTALL.md)
 
 ## Installation
