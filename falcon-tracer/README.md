@@ -23,7 +23,6 @@ To start tracing a new process and the subsequent process tree, we recommend to 
 sudo falcon-tracer command
 
 # Example
-sudo falcon-tracer ls -l
 sudo falcon-tracer wget http://google.pt
 ```
 
