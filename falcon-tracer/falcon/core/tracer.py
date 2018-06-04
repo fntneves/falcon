@@ -9,6 +9,8 @@ import sys
 import os
 from bpf import BpfProgram
 from falcon import util
+from falcon.core import settings
+from falcon.core.events.handling.writers.writer_factory import WriterFactory
 import pkg_resources
 
 # Configure logger
@@ -27,7 +29,7 @@ class Tracer:
             program.filter_pid(pid)
 
             logging.info('Creating and booting handlers and appenders...')
-            handler = events.handling.FalconEventLogger(events.handling.appenders.JsonWriter("falcon_tracer.json"))
+            handler = events.handling.FalconEventLogger(WriterFactory.createFromConfig())
             handler.boot()
 
             logging.info('Running eBPF listener...')

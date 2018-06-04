@@ -115,7 +115,8 @@ class SocketConnect(SocketEvent):
             "dst": self._socket_to,
             "dst_port": self._dport,
             "data": {
-                    "host": self._host,
+                "host": self._host,
+                "comm": self._comm,
             }
         })
 
@@ -144,7 +145,8 @@ class SocketAccept(SocketEvent):
             "dst": self._socket_to,
             "dst_port": self._dport,
             "data": {
-                    "host": self._host,
+                "host": self._host,
+                "comm": self._comm,
             }
         })
 
@@ -175,7 +177,8 @@ class SocketSend(SocketEvent):
             "dst_port": self._dport,
             "size": self._size,
             "data": {
-                    "host": self._host,
+                "host": self._host,
+                "comm": self._comm,
             }
         })
 
@@ -206,7 +209,8 @@ class SocketReceive(SocketEvent):
             "dst_port": self._dport,
             "size": self._size,
             "data": {
-                    "host": self._host,
+                "host": self._host,
+                "comm": self._comm,
             }
         })
 
