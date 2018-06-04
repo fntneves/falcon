@@ -21,7 +21,7 @@ class KafkaWriter:
         # Asynchronously produce a message, the delivery report callback will
         # will be triggered (from poll or flush), when the message has
         # been successfully delivered or failed permanently.
-        self._producer.produce('events', event.to_bytes(), partition=self.partition_for_key(
+        self._producer.produce(self._topic, event.to_bytes(), partition=self.partition_for_key(
             event.get_thread_id()), callback=KafkaWriter.delivery_report)
 
     def close(self):
