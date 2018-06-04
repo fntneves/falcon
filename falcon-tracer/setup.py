@@ -23,7 +23,9 @@ setup(
     packages=find_packages(exclude=EXCLUDE_FROM_PACKAGES),
     install_requires=[
         'ujson',
+        'kafka',
         'confluent-kafka',
+        'python-dotenv',
     ],
     test_suite='nose.collector',
     tests_require=['nose'],

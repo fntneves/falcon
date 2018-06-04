@@ -19,6 +19,7 @@ class ProcessCreate(Event):
             "child": self.get_child_thread_id(),
             "data": {
                 "host": self._host,
+                "comm": self._comm,
             }
         })
 
@@ -47,6 +48,7 @@ class ProcessJoin(Event):
             "child": self.get_child_thread_id(),
             "data": {
                 "host": self._host,
+                "comm": self._comm,
             }
         })
 
@@ -70,6 +72,7 @@ class ProcessStart(Event):
             "thread": self.get_thread_id(),
             "data": {
                 "host": self._host,
+                "comm": self._comm,
             }
         })
 
@@ -93,6 +96,7 @@ class ProcessEnd(Event):
             "thread": self.get_thread_id(),
             "data": {
                 "host": self._host,
+                "comm": self._comm,
             }
         })
 
