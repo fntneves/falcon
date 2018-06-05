@@ -47,6 +47,6 @@ class KafkaWriter:
     def delivery_report(err, msg):
         if err is not None:
             logging.error('Event delivery failed: {}'.format(err))
-        else:
-            logging.info('Event delivered to {} [{}]'.format(
+        elif logging.getLogger().getEffectiveLevel() == logging.DEBUG:
+            logging.debug('Event delivered to {} [{}]'.format(
                 msg.topic(), msg.partition()))
