@@ -250,7 +250,7 @@ int exit__inet_csk_accept(struct pt_regs *ctx)
 /**
  * Probe "sock_sendmsg" at the entry point.
  */
-int entry__sock_sendmsg(struct pt_regs *ctx, struct socket * sock, struct msghdr * msg) {
+int entry__sock_sendmsg(struct pt_regs *ctx, struct socket * sock) {
     u32 kpid = bpf_get_current_pid_tgid();
 
     if (skip_pid(kpid)) {

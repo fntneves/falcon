@@ -63,6 +63,7 @@ class BpfProgram():
         socket_probes['tcp_connect'] = ('entry__tcp_connect', 'exit__tcp_connect')
         socket_probes['inet_csk_accept'] = (None, 'exit__inet_csk_accept')
         socket_probes['sock_sendmsg'] = ('entry__sock_sendmsg', 'exit__sock_sendmsg')
+        socket_probes['kernel_sendpage'] = ('entry__sock_sendmsg', 'exit__sock_sendmsg')
         socket_probes['sock_recvmsg'] = ('entry__sock_recvmsg', 'exit__sock_recvmsg')
 
         syscall_probes = {}
