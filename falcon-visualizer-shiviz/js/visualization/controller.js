@@ -34,10 +34,7 @@ function Controller(global) {
     $(window).unbind("keydown.dialog").on("keydown.dialog", function(e) {
         if (e.which == 27) {
             $(".dialog").hide();
-            d3.select("circle.sel").each(function(d) {
-                $(this).remove();
-                d.setSelected(false);
-            });
+            self.removeSelectionHighlights(["circle.sel", "rect.sel"]);
         }
         self.bindScroll();
     });
@@ -66,15 +63,7 @@ function Controller(global) {
         // remove the scrolling behavior for hiding/showing dialog boxes once we click outside the box
         $(window).unbind("scroll");
 
-        d3.select("circle.sel").each(function(d) {
-            $(this).remove();
-            d.setSelected(false);
-        });
-
-        d3.select("polygon.sel").each(function(d) {
-            $(this).remove();
-            d.setSelected(false);
-        });
+        self.removeSelectionHighlights(["circle.sel", "rect.sel", "polygon.sel"]);
         self.bindScroll();
     });
 
@@ -370,6 +359,8 @@ Controller.prototype.unhideProc = function(clickedHost) {
 
     this.global.drawAll();
     this.bindScroll();
+
+    console.dir(this);
 };
 
 /**
@@ -402,13 +393,40 @@ Controller.prototype.toggleCollapseNode = function(node) {
     this.bindScroll();
 };
 
+Controller.prototype.hideSymbolic = function () {
+    this.global.getViews().forEach(function(view) {
+
+      const model = view.getModel();
+
+      for (var i in model.getHosts()) {
+
+          var host = model.getHosts()[i];
+
+          var currentNode = model.getHead(host).getNext();
+          var hide = true;
+          while (hide && !currentNode.isTail()) {
+              var text = currentNode.getFirstLogEvent().getText();
+              if (text != "START" && text != "END") {
+                  hide = false;
+              }
+              currentNode = currentNode.getNext();
+          }
+          if (hide) {
+              view.getTransformer().hideHost(host);
+          }
+      }
+    });
+
+    this.global.drawAll();
+    this.bindScroll();
+};
+
 /**
  * Highlights different hosts among the current active views
  * This method should only be called when there are > 1 execution
  * and graphs are displayed pairwise
  * @see {@link ShowDiffTransformation}
  */
-
 Controller.prototype.showDiff = function() {
     var views = this.global.getActiveViews();
     var viewL = views[0];
@@ -456,23 +474,35 @@ Controller.prototype.bindNodes = function(nodes) {
         else {
             controller.showDialog(e, 0, this);
         }
-    }).on("mouseover", function(e) {
-        d3.selectAll("g.focus .sel").transition().duration(100)
-            .attr("r", function(d) {
-                return d.getRadius() + 4;
-            });
-        d3.selectAll("g.focus").classed("focus", false).select("circle:not(.sel)").transition().duration(100)
-            .attr("r", function(d) {
-                return d.getRadius();
-            });
+    }).on("mouseover", function(e) { // TODO: Refactor this BIG block of code!
+        d3.selectAll("g.focus circle.sel").transition().duration(100)
+            .attr("r", d => d.getRadius() + 4);
+        d3.selectAll("g.focus rect.sel").transition().duration(100)
+            .attr("width", d => Global.TYPE_LOG_NODE_SIZE + 6)
+            .attr("height", d => Global.TYPE_LOG_NODE_SIZE + 6)
+            .attr("x", -3)
+            .attr("y", -3);
+        // Reset normal size of circles that are focused but no longer selected
+        d3.selectAll("g.focus").select("circle:not(.sel)").transition().duration(100)
+            .attr("r", d => d.getRadius());
+        // Set all focus attributes to false and reset normal size of log rectangles that are focused but no longer selected
+        d3.selectAll("g.focus").classed("focus", false).select(".log-rect:not(.sel)").transition().duration(100)
+            .attr("width", d => Global.TYPE_LOG_NODE_SIZE)
+            .attr("height", d => Global.TYPE_LOG_NODE_SIZE);
         d3.select(this).classed("focus", true).select("circle:not(.sel)").transition().duration(100)
-            .attr("r", function(d) {
-                return d.getRadius() + 2;
-            });
-        d3.selectAll("g.focus .sel").transition().duration(100)
-            .attr("r", function(d) {
-                return d.getRadius() + 6;
-            });
+            .attr("r", d => d.getRadius() + 2);
+
+        d3.select(this).classed("focus", true).select(".log-rect:not(.sel)").transition().duration(100)
+            .attr("width", d => Global.TYPE_LOG_NODE_SIZE + 2)
+            .attr("height", d => Global.TYPE_LOG_NODE_SIZE + 2);
+
+        d3.selectAll("g.focus circle.sel").transition().duration(100)
+            .attr("r", d => d.getRadius() + 6);
+        d3.selectAll("g.focus rect.sel").transition().duration(100)
+            .attr("width", d => Global.TYPE_LOG_NODE_SIZE + 8)
+            .attr("height", d => Global.TYPE_LOG_NODE_SIZE + 8)
+            .attr("x", -3)
+            .attr("y", -3);
 
         $(".event").text(e.getText());
         $(".fields").children().remove();
@@ -620,8 +650,13 @@ Controller.prototype.bindHiddenHosts = function(host, node) {
  */
 Controller.prototype.onScroll = function(e) {
     var x = window.pageXOffset;
-    $("#hostBar, .dialog.host:not(.hidden)").css("margin-left", -x);
+    // applying a margin-left of -x to the #hostbar moves viewLabelL out of place,
+    // so apply the margin only to the host's squares (i.e.: the svg element of the hostBar)
+    $("#hostBar svg, .dialog.host:not(.hidden)").css("margin-left", -x);
     $(".log").css("margin-left", x);
+    // ".logLabelL" is a child of ".log" and the margin-left of x moves ".logLabelL" out of place.
+    // To avoid that, we have to compensate by applying a margin-left of -x to ".log .logLabelL"
+    $(".log .logLabelL").css("margin-left", -x);
 
     if ($(".line.focus").length) {
         $(".highlight").css({
@@ -631,6 +666,20 @@ Controller.prototype.onScroll = function(e) {
 
     this.toggleGreyHostNodes();
 };
+
+/**
+ * Removes the selection highlights from the elements matching any of the provided selectors.
+ *
+ * @param {Array.<String>} selectors The selectors for the highlighted elements.
+ */
+Controller.prototype.removeSelectionHighlights = function(selectors) {
+    for (const s of selectors) {
+        d3.select(s).each(function(d) {
+            $(this).remove();
+            d.setSelected(false);
+        })
+    }
+}
 
 /**
  * Shows the node selection popup dialog
@@ -643,71 +692,74 @@ Controller.prototype.onScroll = function(e) {
 Controller.prototype.showDialog = function(e, type, elem) {
     const controller = this;
 
-    // Remove existing selection highlights
-    d3.select("circle.sel").each(function(d) {
-        $(this).remove();
-        d.setSelected(false);
-    });
+    this.removeSelectionHighlights(["circle.sel", "rect.sel", "polygon.sel"]);
 
-    d3.select("polygon.sel").each(function(d) {
-        $(this).remove();
-        d.setSelected(false);
-    });
+    // Used for highlighting selected nodes that are not unique and don't have type LOG
+    function highlightWithCircle(e) {
+        var selcirc = d3.select("#node" + e.getId()).insert("circle", "circle");
+        selcirc.style("fill", d => d.getFillColor());
+        selcirc.attr("class", "sel")
+            .attr("r", d => d.getRadius() + 6);
+    }
 
-    // Highlight the node with an appropriate outline
-    if (!type) {
+    // Used for highlighting selected nodes of type LOG that are not unique
+    function highlightWithSquare(e) {
+        var selrect = d3.select("#node" + e.getId()).insert("rect", "rect");
+        selrect.style("fill", d => d.getFillColor());
+        selrect.attr("class", "sel")
+            .attr("width", d => Global.TYPE_LOG_NODE_SIZE + 8)
+            .attr("height", d => Global.TYPE_LOG_NODE_SIZE + 8)
+            .attr("x", -3)
+            .attr("y", -3);
+    }
 
+    // Used for highlighting unique nodes
+    function highlightWithRhombus(e) {
+        var selrhombus = d3.select("#node" + e.getId()).insert("polygon", "polygon");
+        selrhombus.style("stroke", d => d.getFillColor())
+            .style("stroke-width", 2)
+            .style("fill", "white");
+
+        selrhombus.attr("class", "sel")
+            .attr("points", d => {
+                var points = d.getPoints();
+                var newPoints = [
+                    points[0], points[1] - 3, points[2] + 3, points[3],
+                    points[4], points[5] + 3, points[6] - 3, points[7]
+                ];
+
+                return newPoints.join();
+            });
+    }
+
+    function highlightSelected(e) {
         e.setSelected(true);
         var id = e.getId();
-        var views = this.global.getActiveViews();
+        var views = controller.global.getActiveViews();
 
+        // TODO: Reduce nesting in the following conditionals
         // If showDiff is true, check if the selected node should be outlined with a rhombus
-        if (this.global.getShowDiff()) {
-          var uniqueEventsL = views[0].getTransformer().getUniqueEvents();
-          var uniqueEventsR = views[1].getTransformer().getUniqueEvents();
+        if (controller.global.getShowDiff()) {
+            var uniqueEventsL = views[0].getTransformer().getUniqueEvents();
+            var uniqueEventsR = views[1].getTransformer().getUniqueEvents();
 
-          // If this node is not a unique event, highlight the node with a circular outline
-          if (uniqueEventsL.indexOf(id) == -1 && uniqueEventsR.indexOf(id) == -1) {
-            var selcirc = d3.select("#node" + e.getId()).insert("circle", "circle");
-            selcirc.style("fill", function(d) {
-                  return d.getFillColor();
-                });
-            selcirc
-                .attr("class", "sel")
-                .attr("r", function(d) {
-                  return d.getRadius() + 6;
-                });
-          // If this node is a unique event, highlight it with a rhombus outline
-          } else {
-            var selrhombus = d3.select("#node" + e.getId()).insert("polygon", "polygon");
-            selrhombus
-                .style("stroke", function(d) { return d.getFillColor(); })
-                .style("stroke-width", 2)
-                .style("fill", "white");
-            selrhombus
-                .attr("class", "sel")
-                .attr("points", function(d) {
-                    var points = d.getPoints();
-                    var newPoints = [points[0], points[1]-3, points[2]+3,
-                            points[3], points[4], points[5]+3, points[6]-3, points[7]];
-                    return newPoints.join();
-               });
-          }
-
-        // If showDiff is false, all node outlines are circular
+            if (uniqueEventsL.indexOf(id) == -1 && uniqueEventsR.indexOf(id) == -1) {
+                if (e.isLog())
+                    highlightWithSquare(e);
+                else
+                    highlightWithCircle(e);
+            } else { // this node is a unique event, highlight it with a rhombus outline
+                highlightWithRhombus(e);
+            }
+        } else if (e.isLog()) {
+            highlightWithSquare(e);
         } else {
-            var selcirc = d3.select("#node" + e.getId()).insert("circle", "circle");
-            selcirc
-                .style("fill", function(d) {
-                   return d.getFillColor();
-                });
-            selcirc
-                .attr("class", "sel")
-                .attr("r", function(d) {
-                  return d.getRadius() + 6;
-                });
+            highlightWithCircle(e);
         }
     }
+
+    if (!type) // e is a regular node
+        highlightSelected(e);
 
     const $rect = $(elem).is("rect") ? $(elem) : $(elem).find("rect");
     var $svg = $rect.parents("svg");
@@ -875,11 +927,11 @@ Controller.prototype.toggleGreyHostNodes = function () {
 
     // VisualNode => Boolean
     function isAboveHostbar(visualNode) {
-        const $circle = visualNode.getSVG().find("circle");
-        if ($circle.length > 0) {
-            const circleTop = $circle.offset().top;
+      const $regularNode = visualNode.getSVG().find("circle, rect");
+        if ($regularNode.length > 0) {
+            const regularNodeTop = $regularNode.offset().top;
             const hostBarBottom = getHostbarBottomOffset();
-            return circleTop < hostBarBottom;
+            return regularNodeTop < hostBarBottom;
         } else {
             return true;
         }
