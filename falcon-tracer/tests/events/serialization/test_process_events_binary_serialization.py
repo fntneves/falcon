@@ -47,7 +47,7 @@ class TestProcessEventsBinarySerialization(unittest.TestCase):
         pack = event.to_bytes()
         unpack = struct.unpack('! B Q I', pack[:13])
 
-        self.assertEquals(EventType.PROCESS_CREATE, unpack[0])
+        self.assertEquals(EventType.PROCESS_JOIN, unpack[0])
         self.assertEquals(timestamp, unpack[1])
         self.assertEquals(len(host), unpack[2])
 
@@ -71,7 +71,7 @@ class TestProcessEventsBinarySerialization(unittest.TestCase):
         pack = event.to_bytes()
         unpack = struct.unpack('! B Q I', pack[:13])
 
-        self.assertEquals(EventType.PROCESS_CREATE, unpack[0])
+        self.assertEquals(EventType.PROCESS_START, unpack[0])
         self.assertEquals(timestamp, unpack[1])
         self.assertEquals(len(host), unpack[2])
 
@@ -94,7 +94,7 @@ class TestProcessEventsBinarySerialization(unittest.TestCase):
         pack = event.to_bytes()
         unpack = struct.unpack('! B Q I', pack[:13])
 
-        self.assertEquals(EventType.PROCESS_CREATE, unpack[0])
+        self.assertEquals(EventType.PROCESS_END, unpack[0])
         self.assertEquals(timestamp, unpack[1])
         self.assertEquals(len(host), unpack[2])
 

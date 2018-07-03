@@ -54,7 +54,7 @@ class ProcessJoin(Event):
 
     def to_bytes(self):
         base_data = super(ProcessJoin, self).to_bytes()
-        data = (EventType.PROCESS_CREATE, base_data, self._child_pid)
+        data = (EventType.PROCESS_JOIN, base_data, self._child_pid)
 
         struct_format = "! B {}s I".format(len(base_data))
 
@@ -78,7 +78,7 @@ class ProcessStart(Event):
 
     def to_bytes(self):
         base_data = super(ProcessStart, self).to_bytes()
-        data = (EventType.PROCESS_CREATE, base_data)
+        data = (EventType.PROCESS_START, base_data)
 
         struct_format = "! B {}s".format(len(base_data))
 
@@ -102,7 +102,7 @@ class ProcessEnd(Event):
 
     def to_bytes(self):
         base_data = super(ProcessEnd, self).to_bytes()
-        data = (EventType.PROCESS_CREATE, base_data)
+        data = (EventType.PROCESS_END, base_data)
 
         struct_format = "! B {}s".format(len(base_data))
 
