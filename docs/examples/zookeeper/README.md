@@ -23,7 +23,7 @@ For this experiment, we need to setup two Zookeeper servers and a Zookeeper clie
 #   Log events for Falcon pipeline
 #
 log4j.appender.FALCONFILE=org.apache.log4j.FileAppender
-log4j.appender.FALCONFILE.File=zookeeker_falcon.log
+log4j.appender.FALCONFILE.File=zookeeper_falcon.log
 log4j.appender.FALCONFILE.layout=pt.haslab.falcon.FalconPatternLayout
 log4j.appender.FALCONFILE.layout.ConversionPattern={"timestamp":%e, "thread": "%T@%h", "type": "LOG", "message": "%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m", "data":{"level": "%p"}}%n
 ```
