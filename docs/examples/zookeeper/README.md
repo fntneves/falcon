@@ -25,7 +25,7 @@ For this experiment, we need to setup two Zookeeper servers and a Zookeeper clie
 log4j.appender.FALCONFILE=org.apache.log4j.FileAppender
 log4j.appender.FALCONFILE.File=zookeeper_falcon.log
 log4j.appender.FALCONFILE.layout=pt.haslab.falcon.FalconPatternLayout
-log4j.appender.FALCONFILE.layout.ConversionPattern={"timestamp":%e, "thread": "%T@%h", "type": "LOG", "message": "%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m", "data":{"level": "%p"}}%n
+log4j.appender.FALCONFILE.layout.ConversionPattern={"timestamp":%e, "thread": "%T@%h", "type": "LOG", "message": "%d{ISO8601} [myid:%X{myid}] - %-5p [%t:%C{1}@%L] - %m", "data":{"level": "%p"}}%n
 ```
 
 ### Client
