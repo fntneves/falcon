@@ -1,6 +1,12 @@
 import struct
 import ujson as json
 from falcon.core.events.base_event import Event, EventType
+import falcon.core.protocol.fbs.FalconEvent as FlatFalconEvent
+import falcon.core.protocol.fbs.ProcessCreate as FlatProcessCreate
+import falcon.core.protocol.fbs.ProcessJoin as FlatProcessJoin
+import falcon.core.protocol.fbs.ProcessStart as FlatProcessStart
+import falcon.core.protocol.fbs.ProcessEnd as FlatProcessEnd
+import flatbuffers
 
 
 class ProcessCreate(Event):
@@ -24,12 +30,29 @@ class ProcessCreate(Event):
         })
 
     def to_bytes(self):
-        base_data = super(ProcessCreate, self).to_bytes()
-        data = (EventType.PROCESS_CREATE, base_data, self._child_pid)
+        builder = flatbuffers.Builder(0)
+        id_field = builder.CreateString(self._id)
+        comm_field = builder.CreateString(self._comm)
+        host_field = builder.CreateString(self._host)
 
-        struct_format = "! B {}s I".format(len(base_data))
+        # Create ProcessJoin event
+        FlatProcessJoin.ProcessJoinStart(builder)
+        FlatProcessJoin.ProcessJoinAddChildPid(builder, self._child_pid)
+        event_data = FlatProcessJoin.ProcessJoinEnd(builder)
 
-        return struct.pack(struct_format, *data)
+        # Create FalconEvent
+        FlatFalconEvent.FalconEventStart(builder)
+        FlatFalconEvent.FalconEventAddId(builder, id_field)
+        FlatFalconEvent.FalconEventAddUserTime(builder, self._timestamp)
+        FlatFalconEvent.FalconEventAddType(builder, EventType.PROCESS_CREATE)
+        FlatFalconEvent.FalconEventAddPid(builder, self._pid)
+        FlatFalconEvent.FalconEventAddTid(builder, self._tid)
+        FlatFalconEvent.FalconEventAddComm(builder, comm_field)
+        FlatFalconEvent.FalconEventAddHost(builder, host_field)
+        FlatFalconEvent.FalconEventAddEvent(builder, event_data)
+        builder.Finish(FlatFalconEvent.FalconEventEnd(builder))
+
+        return builder.Output()
 
 
 class ProcessJoin(Event):
@@ -53,12 +76,29 @@ class ProcessJoin(Event):
         })
 
     def to_bytes(self):
-        base_data = super(ProcessJoin, self).to_bytes()
-        data = (EventType.PROCESS_JOIN, base_data, self._child_pid)
+        builder = flatbuffers.Builder(0)
+        id_field = builder.CreateString(self._id)
+        comm_field = builder.CreateString(self._comm)
+        host_field = builder.CreateString(self._host)
 
-        struct_format = "! B {}s I".format(len(base_data))
+        # Create ProcessJoin event
+        FlatProcessJoin.ProcessJoinStart(builder)
+        FlatProcessJoin.ProcessJoinAddChildPid(builder, self._child_pid)
+        event_data = FlatProcessJoin.ProcessJoinEnd(builder)
 
-        return struct.pack(struct_format, *data)
+        # Create FalconEvent
+        FlatFalconEvent.FalconEventStart(builder)
+        FlatFalconEvent.FalconEventAddId(builder, id_field)
+        FlatFalconEvent.FalconEventAddUserTime(builder, self._timestamp)
+        FlatFalconEvent.FalconEventAddType(builder, EventType.PROCESS_JOIN)
+        FlatFalconEvent.FalconEventAddPid(builder, self._pid)
+        FlatFalconEvent.FalconEventAddTid(builder, self._tid)
+        FlatFalconEvent.FalconEventAddComm(builder, comm_field)
+        FlatFalconEvent.FalconEventAddHost(builder, host_field)
+        FlatFalconEvent.FalconEventAddEvent(builder, event_data)
+        builder.Finish(FlatFalconEvent.FalconEventEnd(builder))
+
+        return builder.Output()
 
 
 class ProcessStart(Event):
@@ -77,12 +117,28 @@ class ProcessStart(Event):
         })
 
     def to_bytes(self):
-        base_data = super(ProcessStart, self).to_bytes()
-        data = (EventType.PROCESS_START, base_data)
+        builder = flatbuffers.Builder(0)
+        id_field = builder.CreateString(self._id)
+        comm_field = builder.CreateString(self._comm)
+        host_field = builder.CreateString(self._host)
 
-        struct_format = "! B {}s".format(len(base_data))
+        # Create ProcessStart event
+        FlatProcessStart.ProcessStartStart(builder)
+        event_data = FlatProcessStart.ProcessStartEnd(builder)
 
-        return struct.pack(struct_format, *data)
+        # Create FalconEvent
+        FlatFalconEvent.FalconEventStart(builder)
+        FlatFalconEvent.FalconEventAddId(builder, id_field)
+        FlatFalconEvent.FalconEventAddUserTime(builder, self._timestamp)
+        FlatFalconEvent.FalconEventAddType(builder, EventType.PROCESS_START)
+        FlatFalconEvent.FalconEventAddPid(builder, self._pid)
+        FlatFalconEvent.FalconEventAddTid(builder, self._tid)
+        FlatFalconEvent.FalconEventAddComm(builder, comm_field)
+        FlatFalconEvent.FalconEventAddHost(builder, host_field)
+        FlatFalconEvent.FalconEventAddEvent(builder, event_data)
+        builder.Finish(FlatFalconEvent.FalconEventEnd(builder))
+
+        return builder.Output()
 
 
 class ProcessEnd(Event):
@@ -101,9 +157,25 @@ class ProcessEnd(Event):
         })
 
     def to_bytes(self):
-        base_data = super(ProcessEnd, self).to_bytes()
-        data = (EventType.PROCESS_END, base_data)
+        builder = flatbuffers.Builder(0)
+        id_field = builder.CreateString(self._id)
+        comm_field = builder.CreateString(self._comm)
+        host_field = builder.CreateString(self._host)
 
-        struct_format = "! B {}s".format(len(base_data))
+        # Create ProcessEnd event
+        FlatProcessEnd.ProcessEndStart(builder)
+        event_data = FlatProcessEnd.ProcessEndEnd(builder)
 
-        return struct.pack(struct_format, *data)
+        # Create FalconEvent
+        FlatFalconEvent.FalconEventStart(builder)
+        FlatFalconEvent.FalconEventAddId(builder, id_field)
+        FlatFalconEvent.FalconEventAddUserTime(builder, self._timestamp)
+        FlatFalconEvent.FalconEventAddType(builder, EventType.PROCESS_END)
+        FlatFalconEvent.FalconEventAddPid(builder, self._pid)
+        FlatFalconEvent.FalconEventAddTid(builder, self._tid)
+        FlatFalconEvent.FalconEventAddComm(builder, comm_field)
+        FlatFalconEvent.FalconEventAddHost(builder, host_field)
+        FlatFalconEvent.FalconEventAddEvent(builder, event_data)
+        builder.Finish(FlatFalconEvent.FalconEventEnd(builder))
+
+        return builder.Output()

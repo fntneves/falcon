@@ -62,7 +62,10 @@ class EventData(ctypes.Structure):
 
 class Event(object):
     hostname = socket.getfqdn()
+    event_counter = 0
+
     def __init__(self, pid, tgid, comm, timestamp=None, host=None):
+        self._id = Event._get_next_event_id()
         self._timestamp = timestamp
         self._host = host
 
@@ -89,3 +92,8 @@ class Event(object):
 
     def _generate_thread_id(self, pid, host):
         return '{}@{}'.format(pid, host)
+
+    @staticmethod
+    def _get_next_event_id():
+        Event.event_counter += 1
+        return Event.hostname + str(Event.event_counter)

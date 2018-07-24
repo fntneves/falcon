@@ -25,6 +25,7 @@ setup(
         'ujson',
         'kafka',
         'confluent-kafka',
+        'flatbuffers',
         'python-dotenv',
     ],
     test_suite='nose.collector',

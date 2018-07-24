@@ -1,4 +1,5 @@
 import logging
+import uuid
 from falcon.core.events.event_factory import EventFactory, EventType
 from falcon.core.events.handling.base_handler import BaseHandler
 
