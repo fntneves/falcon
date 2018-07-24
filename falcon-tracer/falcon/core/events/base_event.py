@@ -55,6 +55,7 @@ class EventData(ctypes.Structure):
         ("type", ctypes.c_uint),
         ("pid", ctypes.c_uint),
         ("tgid", ctypes.c_uint),
+        ("ktime", ctypes.c_ulonglong),
         ("comm", ctypes.c_char * TASK_COMM_LEN),
         ("socket", SocketData),
         ("extra", ExtraData)
@@ -78,6 +79,7 @@ class Event(object):
         self._tid = pid
         self._pid = tgid
         self._comm = comm
+        self._ktime = None
 
     def get_thread_id(self):
         return self._generate_thread_id(self._tid, self._host)
