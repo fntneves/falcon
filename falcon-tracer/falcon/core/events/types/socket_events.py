@@ -3,6 +3,14 @@ import ujson as json
 import socket
 import struct
 import logging
+import falcon.core.protocol.fbs.FalconEvent as FlatFalconEvent
+import falcon.core.protocol.fbs.SocketEvent as FlatSocketEvent
+import falcon.core.protocol.fbs.SocketAccept as FlatSocketAccept
+import falcon.core.protocol.fbs.SocketConnect as FlatSocketConnect
+import falcon.core.protocol.fbs.SocketSend as FlatSocketSend
+import falcon.core.protocol.fbs.SocketReceive as FlatSocketReceive
+import flatbuffers
+
 
 
 class SocketEvent(Event):
@@ -66,23 +74,6 @@ class SocketEvent(Event):
         self._socket_id = SocketEvent._generate_socket_id(
             sock_daddr, sock_from, sock_daddr, sock_to, self._sport, self._dport)
 
-    def to_bytes(self):
-        base_data = super(SocketEvent, self).to_bytes()
-        data = (
-            base_data,
-            self._family,
-            self._saddr[0],
-            self._saddr[1],
-            self._daddr[0],
-            self._daddr[1],
-            self._sport,
-            self._dport
-        )
-
-        struct_format = "! {}s H QQ QQ H H".format(len(base_data))
-
-        return struct.pack(struct_format, *data)
-
     @staticmethod
     def _generate_socket_id(addr1, addr1_str, addr2, addr2_str, port1, port2):
         socket_id = None
@@ -121,12 +112,43 @@ class SocketConnect(SocketEvent):
         })
 
     def to_bytes(self):
-        base_data = super(SocketConnect, self).to_bytes()
-        data = (EventType.SOCKET_CONNECT, base_data)
+        builder = flatbuffers.Builder(0)
+        id_field = builder.CreateString(self._id)
+        comm_field = builder.CreateString(self._comm)
+        host_field = builder.CreateString(self._host)
+        socket_from_field = builder.CreateString(self._socket_from)
+        socket_to_field = builder.CreateString(self._socket_to)
+        socket_id_field = builder.CreateString(self._socket_id)
 
-        struct_format = "! B {}s".format(len(base_data))
+        # Create SocketConnect event
+        FlatSocketConnect.SocketConnectStart(builder)
+        event_data = FlatSocketConnect.SocketConnectEnd(builder)
 
-        return struct.pack(struct_format, *data)
+        # Create SocketEvent event
+        FlatSocketEvent.SocketEventStart(builder)
+        FlatSocketEvent.SocketEventAddSourcePort(builder, self._sport)
+        FlatSocketEvent.SocketEventAddDestinationPort(builder, self._dport)
+        FlatSocketEvent.SocketEventAddSocketFamily(builder, self._family)
+        FlatSocketEvent.SocketEventAddSocketType(builder, self._type)
+        FlatSocketEvent.SocketEventAddSocketFrom(builder, socket_from_field)
+        FlatSocketEvent.SocketEventAddSocketTo(builder, socket_to_field)
+        FlatSocketEvent.SocketEventAddSocketId(builder, socket_id_field)
+        FlatSocketEvent.SocketEventAddEvent(builder, event_data)
+        socket_event_data = FlatSocketEvent.SocketEventEnd(builder)
+
+        # Create FalconEvent
+        FlatFalconEvent.FalconEventStart(builder)
+        FlatFalconEvent.FalconEventAddId(builder, id_field)
+        FlatFalconEvent.FalconEventAddUserTime(builder, self._timestamp)
+        FlatFalconEvent.FalconEventAddType(builder, EventType.SOCKET_CONNECT)
+        FlatFalconEvent.FalconEventAddPid(builder, self._pid)
+        FlatFalconEvent.FalconEventAddTid(builder, self._tid)
+        FlatFalconEvent.FalconEventAddComm(builder, comm_field)
+        FlatFalconEvent.FalconEventAddHost(builder, host_field)
+        FlatFalconEvent.FalconEventAddEvent(builder, socket_event_data)
+        builder.Finish(FlatFalconEvent.FalconEventEnd(builder))
+
+        return builder.Output()
 
 
 class SocketAccept(SocketEvent):
@@ -151,12 +173,43 @@ class SocketAccept(SocketEvent):
         })
 
     def to_bytes(self):
-        base_data = super(SocketAccept, self).to_bytes()
-        data = (EventType.SOCKET_ACCEPT, base_data)
+        builder = flatbuffers.Builder(0)
+        id_field = builder.CreateString(self._id)
+        comm_field = builder.CreateString(self._comm)
+        host_field = builder.CreateString(self._host)
+        socket_from_field = builder.CreateString(self._socket_from)
+        socket_to_field = builder.CreateString(self._socket_to)
+        socket_id_field = builder.CreateString(self._socket_id)
 
-        struct_format = "! B {}s".format(len(base_data))
+        # Create SocketAccept event
+        FlatSocketAccept.SocketAcceptStart(builder)
+        event_data = FlatSocketAccept.SocketAcceptEnd(builder)
 
-        return struct.pack(struct_format, *data)
+        # Create SocketEvent event
+        FlatSocketEvent.SocketEventStart(builder)
+        FlatSocketEvent.SocketEventAddSourcePort(builder, self._sport)
+        FlatSocketEvent.SocketEventAddDestinationPort(builder, self._dport)
+        FlatSocketEvent.SocketEventAddSocketFamily(builder, self._family)
+        FlatSocketEvent.SocketEventAddSocketType(builder, self._type)
+        FlatSocketEvent.SocketEventAddSocketFrom(builder, socket_from_field)
+        FlatSocketEvent.SocketEventAddSocketTo(builder, socket_to_field)
+        FlatSocketEvent.SocketEventAddSocketId(builder, socket_id_field)
+        FlatSocketEvent.SocketEventAddEvent(builder, event_data)
+        socket_event_data = FlatSocketEvent.SocketEventEnd(builder)
+
+        # Create FalconEvent
+        FlatFalconEvent.FalconEventStart(builder)
+        FlatFalconEvent.FalconEventAddId(builder, id_field)
+        FlatFalconEvent.FalconEventAddUserTime(builder, self._timestamp)
+        FlatFalconEvent.FalconEventAddType(builder, EventType.SOCKET_ACCEPT)
+        FlatFalconEvent.FalconEventAddPid(builder, self._pid)
+        FlatFalconEvent.FalconEventAddTid(builder, self._tid)
+        FlatFalconEvent.FalconEventAddComm(builder, comm_field)
+        FlatFalconEvent.FalconEventAddHost(builder, host_field)
+        FlatFalconEvent.FalconEventAddEvent(builder, socket_event_data)
+        builder.Finish(FlatFalconEvent.FalconEventEnd(builder))
+
+        return builder.Output()
 
 
 class SocketSend(SocketEvent):
@@ -183,12 +236,44 @@ class SocketSend(SocketEvent):
         })
 
     def to_bytes(self):
-        base_data = super(SocketSend, self).to_bytes()
-        data = (EventType.SOCKET_SEND, base_data, self._size)
+        builder = flatbuffers.Builder(0)
+        id_field = builder.CreateString(self._id)
+        comm_field = builder.CreateString(self._comm)
+        host_field = builder.CreateString(self._host)
+        socket_from_field = builder.CreateString(self._socket_from)
+        socket_to_field = builder.CreateString(self._socket_to)
+        socket_id_field = builder.CreateString(self._socket_id)
 
-        struct_format = "! B {}s I".format(len(base_data))
+        # Create SocketSend event
+        FlatSocketSend.SocketSendStart(builder)
+        FlatSocketSend.SocketSendAddSize(builder, self._size)
+        event_data = FlatSocketSend.SocketSendEnd(builder)
 
-        return struct.pack(struct_format, *data)
+        # Create SocketEvent event
+        FlatSocketEvent.SocketEventStart(builder)
+        FlatSocketEvent.SocketEventAddSourcePort(builder, self._sport)
+        FlatSocketEvent.SocketEventAddDestinationPort(builder, self._dport)
+        FlatSocketEvent.SocketEventAddSocketFamily(builder, self._family)
+        FlatSocketEvent.SocketEventAddSocketType(builder, self._type)
+        FlatSocketEvent.SocketEventAddSocketFrom(builder, socket_from_field)
+        FlatSocketEvent.SocketEventAddSocketTo(builder, socket_to_field)
+        FlatSocketEvent.SocketEventAddSocketId(builder, socket_id_field)
+        FlatSocketEvent.SocketEventAddEvent(builder, event_data)
+        socket_event_data = FlatSocketEvent.SocketEventEnd(builder)
+
+        # Create FalconEvent
+        FlatFalconEvent.FalconEventStart(builder)
+        FlatFalconEvent.FalconEventAddId(builder, id_field)
+        FlatFalconEvent.FalconEventAddUserTime(builder, self._timestamp)
+        FlatFalconEvent.FalconEventAddType(builder, EventType.SOCKET_SEND)
+        FlatFalconEvent.FalconEventAddPid(builder, self._pid)
+        FlatFalconEvent.FalconEventAddTid(builder, self._tid)
+        FlatFalconEvent.FalconEventAddComm(builder, comm_field)
+        FlatFalconEvent.FalconEventAddHost(builder, host_field)
+        FlatFalconEvent.FalconEventAddEvent(builder, socket_event_data)
+        builder.Finish(FlatFalconEvent.FalconEventEnd(builder))
+
+        return builder.Output()
 
 
 class SocketReceive(SocketEvent):
@@ -215,9 +300,41 @@ class SocketReceive(SocketEvent):
         })
 
     def to_bytes(self):
-        base_data = super(SocketReceive, self).to_bytes()
-        data = (EventType.SOCKET_RECEIVE, base_data, self._size)
+        builder = flatbuffers.Builder(0)
+        id_field = builder.CreateString(self._id)
+        comm_field = builder.CreateString(self._comm)
+        host_field = builder.CreateString(self._host)
+        socket_from_field = builder.CreateString(self._socket_from)
+        socket_to_field = builder.CreateString(self._socket_to)
+        socket_id_field = builder.CreateString(self._socket_id)
 
-        struct_format = "! B {}s I".format(len(base_data))
+        # Create SocketReceive event
+        FlatSocketReceive.SocketReceiveStart(builder)
+        FlatSocketReceive.SocketReceiveAddSize(builder, self._size)
+        event_data = FlatSocketReceive.SocketReceiveEnd(builder)
 
-        return struct.pack(struct_format, *data)
+        # Create SocketEvent event
+        FlatSocketEvent.SocketEventStart(builder)
+        FlatSocketEvent.SocketEventAddSourcePort(builder, self._sport)
+        FlatSocketEvent.SocketEventAddDestinationPort(builder, self._dport)
+        FlatSocketEvent.SocketEventAddSocketFamily(builder, self._family)
+        FlatSocketEvent.SocketEventAddSocketType(builder, self._type)
+        FlatSocketEvent.SocketEventAddSocketFrom(builder, socket_from_field)
+        FlatSocketEvent.SocketEventAddSocketTo(builder, socket_to_field)
+        FlatSocketEvent.SocketEventAddSocketId(builder, socket_id_field)
+        FlatSocketEvent.SocketEventAddEvent(builder, event_data)
+        socket_event_data = FlatSocketEvent.SocketEventEnd(builder)
+
+        # Create FalconEvent
+        FlatFalconEvent.FalconEventStart(builder)
+        FlatFalconEvent.FalconEventAddId(builder, id_field)
+        FlatFalconEvent.FalconEventAddUserTime(builder, self._timestamp)
+        FlatFalconEvent.FalconEventAddType(builder, EventType.SOCKET_RECEIVE)
+        FlatFalconEvent.FalconEventAddPid(builder, self._pid)
+        FlatFalconEvent.FalconEventAddTid(builder, self._tid)
+        FlatFalconEvent.FalconEventAddComm(builder, comm_field)
+        FlatFalconEvent.FalconEventAddHost(builder, host_field)
+        FlatFalconEvent.FalconEventAddEvent(builder, socket_event_data)
+        builder.Finish(FlatFalconEvent.FalconEventEnd(builder))
+
+        return builder.Output()
