@@ -25,6 +25,10 @@ class KafkaWriter:
         # been successfully delivered or failed permanently.
         topic = self.topic_for_event(event)
 
+        if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
+            logging.debug('Delivering event type [{}] to {} [{}]'.format(
+                event._type, topic['name'], topic['partition']))
+
         self._producer.produce(topic['name'], buffer(event.to_bytes()), partition=topic['partition'], callback=KafkaWriter.delivery_report)
 
     def close(self):
