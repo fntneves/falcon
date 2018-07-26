@@ -11,6 +11,7 @@ import flatbuffers
 
 class ProcessCreate(Event):
     def __init__(self, pid, tgid, comm, child_pid, timestamp=None, host=None):
+        self._type = EventType.PROCESS_CREATE
         self._child_pid = child_pid
         super(ProcessCreate, self).__init__(pid, tgid, comm, timestamp, host)
 
@@ -19,7 +20,7 @@ class ProcessCreate(Event):
 
     def to_json(self):
         return json.dumps({
-            "type": EventType.PROCESS_CREATE,
+            "type": self._type,
             "timestamp": self._timestamp,
             "thread": self.get_thread_id(),
             "child": self.get_child_thread_id(),
@@ -45,7 +46,7 @@ class ProcessCreate(Event):
         FlatFalconEvent.FalconEventAddId(builder, id_field)
         FlatFalconEvent.FalconEventAddUserTime(builder, self._timestamp)
         FlatFalconEvent.FalconEventAddKernelTime(builder, self._ktime)
-        FlatFalconEvent.FalconEventAddType(builder, EventType.PROCESS_CREATE)
+        FlatFalconEvent.FalconEventAddType(builder, self._type)
         FlatFalconEvent.FalconEventAddPid(builder, self._pid)
         FlatFalconEvent.FalconEventAddTid(builder, self._tid)
         FlatFalconEvent.FalconEventAddComm(builder, comm_field)
@@ -58,6 +59,7 @@ class ProcessCreate(Event):
 
 class ProcessJoin(Event):
     def __init__(self, pid, tgid, comm, child_pid, timestamp=None, host=None):
+        self._type = EventType.PROCESS_JOIN
         self._child_pid = child_pid
         super(ProcessJoin, self).__init__(pid, tgid, comm, timestamp, host)
 
@@ -66,7 +68,7 @@ class ProcessJoin(Event):
 
     def to_json(self):
         return json.dumps({
-            "type": EventType.PROCESS_JOIN,
+            "type": self._type,
             "timestamp": self._timestamp,
             "thread": self.get_thread_id(),
             "child": self.get_child_thread_id(),
@@ -92,7 +94,7 @@ class ProcessJoin(Event):
         FlatFalconEvent.FalconEventAddId(builder, id_field)
         FlatFalconEvent.FalconEventAddUserTime(builder, self._timestamp)
         FlatFalconEvent.FalconEventAddKernelTime(builder, self._ktime)
-        FlatFalconEvent.FalconEventAddType(builder, EventType.PROCESS_JOIN)
+        FlatFalconEvent.FalconEventAddType(builder, self._type)
         FlatFalconEvent.FalconEventAddPid(builder, self._pid)
         FlatFalconEvent.FalconEventAddTid(builder, self._tid)
         FlatFalconEvent.FalconEventAddComm(builder, comm_field)
@@ -105,11 +107,12 @@ class ProcessJoin(Event):
 
 class ProcessStart(Event):
     def __init__(self, pid, tgid, comm, timestamp=None, host=None):
+        self._type = EventType.PROCESS_START
         super(ProcessStart, self).__init__(pid, tgid, comm, timestamp, host)
 
     def to_json(self):
         return json.dumps({
-            "type": EventType.PROCESS_START,
+            "type": self._type,
             "timestamp": self._timestamp,
             "thread": self.get_thread_id(),
             "data": {
@@ -133,7 +136,7 @@ class ProcessStart(Event):
         FlatFalconEvent.FalconEventAddId(builder, id_field)
         FlatFalconEvent.FalconEventAddUserTime(builder, self._timestamp)
         FlatFalconEvent.FalconEventAddKernelTime(builder, self._ktime)
-        FlatFalconEvent.FalconEventAddType(builder, EventType.PROCESS_START)
+        FlatFalconEvent.FalconEventAddType(builder, self._type)
         FlatFalconEvent.FalconEventAddPid(builder, self._pid)
         FlatFalconEvent.FalconEventAddTid(builder, self._tid)
         FlatFalconEvent.FalconEventAddComm(builder, comm_field)
@@ -146,11 +149,12 @@ class ProcessStart(Event):
 
 class ProcessEnd(Event):
     def __init__(self, pid, tgid, comm, timestamp=None, host=None):
+        self._type = EventType.PROCESS_END
         super(ProcessEnd, self).__init__(pid, tgid, comm, timestamp, host)
 
     def to_json(self):
         return json.dumps({
-            "type": EventType.PROCESS_END,
+            "type": self._type,
             "timestamp": self._timestamp,
             "thread": self.get_thread_id(),
             "data": {
@@ -174,7 +178,7 @@ class ProcessEnd(Event):
         FlatFalconEvent.FalconEventAddId(builder, id_field)
         FlatFalconEvent.FalconEventAddUserTime(builder, self._timestamp)
         FlatFalconEvent.FalconEventAddKernelTime(builder, self._ktime)
-        FlatFalconEvent.FalconEventAddType(builder, EventType.PROCESS_END)
+        FlatFalconEvent.FalconEventAddType(builder, self._type)
         FlatFalconEvent.FalconEventAddPid(builder, self._pid)
         FlatFalconEvent.FalconEventAddTid(builder, self._tid)
         FlatFalconEvent.FalconEventAddComm(builder, comm_field)
