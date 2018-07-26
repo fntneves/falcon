@@ -16,7 +16,7 @@ class WriterFactory:
 
         if driver == 'kafka':
             logging.info('Creating Kafka writer...')
-            return KafkaWriter(os.getenv('KAFKA_SERVERS'), os.getenv('KAFKA_TOPIC'))
+            return KafkaWriter(os.getenv('KAFKA_SERVERS'))
 
         raise ValueError('Invalid [{}] writer driver.'.format(driver))
 
