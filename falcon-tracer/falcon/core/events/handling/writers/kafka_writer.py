@@ -1,6 +1,7 @@
 import os
 import logging
 import hashlib
+import json
 from kafka import SimpleClient as KafkaClient
 from confluent_kafka import Producer
 from falcon.core.events.base_event import EventType
@@ -58,10 +59,13 @@ class KafkaWriter:
             topic_partitions_count = len(
                 self._client.get_partition_ids_for_topic(topic))
 
+            if topic_partitions_count == 0:
+                raise IOError('Kafka topic ['+topic+'] does not have any partition.')
+
             self._partitions_count[topic] = topic_partitions_count
 
-        if self._partitions_count == 0:
-            raise IOError('Kafka topic does not have any partition.')
+        if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
+            logging.debug('Booted topics and partitions: ' + json.dumps(self._partitions_count))
 
     @staticmethod
     def delivery_report(err, msg):
