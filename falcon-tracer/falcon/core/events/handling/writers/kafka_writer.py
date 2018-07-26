@@ -26,7 +26,7 @@ class KafkaWriter:
         topic = self.topic_for_event(event)
 
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
-            logging.debug('Delivering event type [{}] to {} [{}]'.format(
+            logging.debug('Delivering event type [{}] to {} [partition:{}]'.format(
                 event._type, topic['name'], topic['partition']))
 
         self._producer.produce(topic['name'], buffer(event.to_bytes()), partition=topic['partition'], callback=KafkaWriter.delivery_report)
@@ -76,5 +76,5 @@ class KafkaWriter:
         if err is not None:
             logging.error('Event delivery failed: {}'.format(err))
         elif logging.getLogger().getEffectiveLevel() == logging.DEBUG:
-            logging.debug('Event delivered to {} [{}]'.format(
+            logging.debug('Event delivered to {} [partition:{}]'.format(
                 msg.topic(), msg.partition()))
