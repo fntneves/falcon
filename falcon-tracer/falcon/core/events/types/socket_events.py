@@ -20,7 +20,7 @@ class SocketEvent(Event):
         self._saddr = saddr
         self._daddr = daddr
         self._family = family
-        self._type = socket.SOCK_STREAM
+        self._socket_type = socket.SOCK_STREAM
         self._socket_from = None
         self._socket_to = None
         self._socket_id = None
@@ -92,15 +92,16 @@ class SocketEvent(Event):
 
 class SocketConnect(SocketEvent):
     def __init__(self, pid, tgid, comm, sport, dport, saddr, daddr, family, timestamp=None, host=None):
+        self._type = EventType.SOCKET_CONNECT
         super(SocketConnect, self).__init__(pid, tgid, comm, sport, dport, saddr, daddr, family, timestamp, host)
 
     def to_json(self):
         return json.dumps({
-            "type": EventType.SOCKET_CONNECT,
+            "type": self._type,
             "timestamp": self._timestamp,
             "thread": self.get_thread_id(),
             "socket": self._socket_id,
-            "socket_type": "TCP" if self._type == socket.SOCK_STREAM else "UDP",
+            "socket_type": "TCP" if self._socket_type == socket.SOCK_STREAM else "UDP",
             "src": self._socket_from,
             "src_port": self._sport,
             "dst": self._socket_to,
@@ -129,7 +130,7 @@ class SocketConnect(SocketEvent):
         FlatSocketEvent.SocketEventAddSourcePort(builder, self._sport)
         FlatSocketEvent.SocketEventAddDestinationPort(builder, self._dport)
         FlatSocketEvent.SocketEventAddSocketFamily(builder, self._family)
-        FlatSocketEvent.SocketEventAddSocketType(builder, self._type)
+        FlatSocketEvent.SocketEventAddSocketType(builder, self._socket_type)
         FlatSocketEvent.SocketEventAddSocketFrom(builder, socket_from_field)
         FlatSocketEvent.SocketEventAddSocketTo(builder, socket_to_field)
         FlatSocketEvent.SocketEventAddSocketId(builder, socket_id_field)
@@ -141,7 +142,7 @@ class SocketConnect(SocketEvent):
         FlatFalconEvent.FalconEventAddId(builder, id_field)
         FlatFalconEvent.FalconEventAddUserTime(builder, self._timestamp)
         FlatFalconEvent.FalconEventAddKernelTime(builder, self._ktime)
-        FlatFalconEvent.FalconEventAddType(builder, EventType.SOCKET_CONNECT)
+        FlatFalconEvent.FalconEventAddType(builder, self._type)
         FlatFalconEvent.FalconEventAddPid(builder, self._pid)
         FlatFalconEvent.FalconEventAddTid(builder, self._tid)
         FlatFalconEvent.FalconEventAddComm(builder, comm_field)
@@ -154,15 +155,16 @@ class SocketConnect(SocketEvent):
 
 class SocketAccept(SocketEvent):
     def __init__(self, pid, tgid, comm, sport, dport, saddr, daddr, family, timestamp=None, host=None):
+        self._type = EventType.SOCKET_ACCEPT
         super(SocketAccept, self).__init__(pid, tgid, comm, sport, dport, saddr, daddr, family, timestamp, host)
 
     def to_json(self):
         return json.dumps({
-            "type": EventType.SOCKET_ACCEPT,
+            "type": self._type,
             "timestamp": self._timestamp,
             "thread": self.get_thread_id(),
             "socket": self._socket_id,
-            "socket_type": "TCP" if self._type == socket.SOCK_STREAM else "UDP",
+            "socket_type": "TCP" if self._socket_type == socket.SOCK_STREAM else "UDP",
             "src": self._socket_from,
             "src_port": self._sport,
             "dst": self._socket_to,
@@ -191,7 +193,7 @@ class SocketAccept(SocketEvent):
         FlatSocketEvent.SocketEventAddSourcePort(builder, self._sport)
         FlatSocketEvent.SocketEventAddDestinationPort(builder, self._dport)
         FlatSocketEvent.SocketEventAddSocketFamily(builder, self._family)
-        FlatSocketEvent.SocketEventAddSocketType(builder, self._type)
+        FlatSocketEvent.SocketEventAddSocketType(builder, self._socket_type)
         FlatSocketEvent.SocketEventAddSocketFrom(builder, socket_from_field)
         FlatSocketEvent.SocketEventAddSocketTo(builder, socket_to_field)
         FlatSocketEvent.SocketEventAddSocketId(builder, socket_id_field)
@@ -203,7 +205,7 @@ class SocketAccept(SocketEvent):
         FlatFalconEvent.FalconEventAddId(builder, id_field)
         FlatFalconEvent.FalconEventAddUserTime(builder, self._timestamp)
         FlatFalconEvent.FalconEventAddKernelTime(builder, self._ktime)
-        FlatFalconEvent.FalconEventAddType(builder, EventType.SOCKET_ACCEPT)
+        FlatFalconEvent.FalconEventAddType(builder, self._type)
         FlatFalconEvent.FalconEventAddPid(builder, self._pid)
         FlatFalconEvent.FalconEventAddTid(builder, self._tid)
         FlatFalconEvent.FalconEventAddComm(builder, comm_field)
@@ -216,16 +218,17 @@ class SocketAccept(SocketEvent):
 
 class SocketSend(SocketEvent):
     def __init__(self, pid, tgid, comm, sport, dport, saddr, daddr, family, size, timestamp=None, host=None):
+        self._type = EventType.SOCKET_SEND
         self._size = size
         super(SocketSend, self).__init__(pid, tgid, comm, sport, dport, saddr, daddr, family, timestamp, host)
 
     def to_json(self):
         return json.dumps({
-            "type": EventType.SOCKET_SEND,
+            "type": self._type,
             "timestamp": self._timestamp,
             "thread": self.get_thread_id(),
             "socket": self._socket_id,
-            "socket_type": "TCP" if self._type == socket.SOCK_STREAM else "UDP",
+            "socket_type": "TCP" if self._socket_type == socket.SOCK_STREAM else "UDP",
             "src": self._socket_from,
             "src_port": self._sport,
             "dst": self._socket_to,
@@ -256,7 +259,7 @@ class SocketSend(SocketEvent):
         FlatSocketEvent.SocketEventAddSourcePort(builder, self._sport)
         FlatSocketEvent.SocketEventAddDestinationPort(builder, self._dport)
         FlatSocketEvent.SocketEventAddSocketFamily(builder, self._family)
-        FlatSocketEvent.SocketEventAddSocketType(builder, self._type)
+        FlatSocketEvent.SocketEventAddSocketType(builder, self._socket_type)
         FlatSocketEvent.SocketEventAddSocketFrom(builder, socket_from_field)
         FlatSocketEvent.SocketEventAddSocketTo(builder, socket_to_field)
         FlatSocketEvent.SocketEventAddSocketId(builder, socket_id_field)
@@ -268,7 +271,7 @@ class SocketSend(SocketEvent):
         FlatFalconEvent.FalconEventAddId(builder, id_field)
         FlatFalconEvent.FalconEventAddUserTime(builder, self._timestamp)
         FlatFalconEvent.FalconEventAddKernelTime(builder, self._ktime)
-        FlatFalconEvent.FalconEventAddType(builder, EventType.SOCKET_SEND)
+        FlatFalconEvent.FalconEventAddType(builder, self._type)
         FlatFalconEvent.FalconEventAddPid(builder, self._pid)
         FlatFalconEvent.FalconEventAddTid(builder, self._tid)
         FlatFalconEvent.FalconEventAddComm(builder, comm_field)
@@ -281,16 +284,17 @@ class SocketSend(SocketEvent):
 
 class SocketReceive(SocketEvent):
     def __init__(self, pid, tgid, comm, sport, dport, saddr, daddr, family, size, timestamp=None, host=None):
+        self._type = EventType.SOCKET_RECEIVE
         self._size = size
         super(SocketReceive, self).__init__(pid, tgid, comm, sport, dport, saddr, daddr, family, timestamp, host)
 
     def to_json(self):
         return json.dumps({
-            "type": EventType.SOCKET_RECEIVE,
+            "type": self._type,
             "timestamp": self._timestamp,
             "thread": self.get_thread_id(),
             "socket": self._socket_id,
-            "socket_type": "TCP" if self._type == socket.SOCK_STREAM else "UDP",
+            "socket_type": "TCP" if self._socket_type == socket.SOCK_STREAM else "UDP",
             "src": self._socket_from,
             "src_port": self._sport,
             "dst": self._socket_to,
@@ -321,7 +325,7 @@ class SocketReceive(SocketEvent):
         FlatSocketEvent.SocketEventAddSourcePort(builder, self._sport)
         FlatSocketEvent.SocketEventAddDestinationPort(builder, self._dport)
         FlatSocketEvent.SocketEventAddSocketFamily(builder, self._family)
-        FlatSocketEvent.SocketEventAddSocketType(builder, self._type)
+        FlatSocketEvent.SocketEventAddSocketType(builder, self._socket_type)
         FlatSocketEvent.SocketEventAddSocketFrom(builder, socket_from_field)
         FlatSocketEvent.SocketEventAddSocketTo(builder, socket_to_field)
         FlatSocketEvent.SocketEventAddSocketId(builder, socket_id_field)
@@ -333,7 +337,7 @@ class SocketReceive(SocketEvent):
         FlatFalconEvent.FalconEventAddId(builder, id_field)
         FlatFalconEvent.FalconEventAddUserTime(builder, self._timestamp)
         FlatFalconEvent.FalconEventAddKernelTime(builder, self._ktime)
-        FlatFalconEvent.FalconEventAddType(builder, EventType.SOCKET_RECEIVE)
+        FlatFalconEvent.FalconEventAddType(builder, self._type)
         FlatFalconEvent.FalconEventAddPid(builder, self._pid)
         FlatFalconEvent.FalconEventAddTid(builder, self._tid)
         FlatFalconEvent.FalconEventAddComm(builder, comm_field)

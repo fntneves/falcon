@@ -3,16 +3,17 @@ import logging
 import hashlib
 from kafka import SimpleClient as KafkaClient
 from confluent_kafka import Producer
+from falcon.core.events.base_event import EventType
 
 class KafkaWriter:
-    def __init__(self, servers, topic):
+    def __init__(self, servers):
         self._servers = servers
-        self._topic = topic
+        self._topics = ['socket_events', 'process_events']
         self._client = None
-        self._partitions_count = 0
+        self._partitions_count = {}
 
     def open(self):
-        self._boot_topic()
+        self._boot_topics()
         self._producer = Producer({'bootstrap.servers': self._servers})
 
     def write(self, event):
@@ -21,24 +22,43 @@ class KafkaWriter:
         # Asynchronously produce a message, the delivery report callback will
         # will be triggered (from poll or flush), when the message has
         # been successfully delivered or failed permanently.
-        self._producer.produce(self._topic, event.to_bytes(), partition=self.partition_for_key(
-            event.get_thread_id()), callback=KafkaWriter.delivery_report)
+        topic = self.topic_for_event(event)
+
+        self._producer.produce(topic['name'], event.to_bytes(), partition=topic['partition'], callback=KafkaWriter.delivery_report)
 
     def close(self):
         self._producer.flush()
         self._client.close()
 
-    def partition_for_key(self, thread_id):
-        return int(hashlib.sha512(thread_id).hexdigest(), 16) % self._partitions_count
+    def topic_for_event(self, event):
+        topic = None
+        key = None
 
-    def _boot_topic(self):
+        if EventType.is_process(event._type):
+            topic = 'process_events'
+            key = event._host
+        elif EventType.is_socket(event._type):
+            topic = 'socket_events'
+            key = event._socket_id
+        else:
+            raise ValueError('Event type ['+event._type+'] is invalid.')
+
+        return {
+            'name': topic,
+            'partition': int(hashlib.sha512(key).hexdigest(), 16) % self._partitions_count[topic]
+        }
+
+    def _boot_topics(self):
         self._client = KafkaClient(self._servers)
 
-        if not self._client.has_metadata_for_topic(self._topic):
-            raise IOError('Kafka topic was not found.')
+        for topic in self._topics:
+            if not self._client.has_metadata_for_topic(topic):
+                raise IOError('Kafka topic ['+topic+'] was not found.')
 
-        self._partitions_count = len(
-            self._client.get_partition_ids_for_topic(self._topic))
+            topic_partitions_count = len(
+                self._client.get_partition_ids_for_topic(topic))
+
+            self._partitions_count[topic] = topic_partitions_count
 
         if self._partitions_count == 0:
             raise IOError('Kafka topic does not have any partition.')
