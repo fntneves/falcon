@@ -13,6 +13,7 @@ import pt.haslab.taz.events.SyncEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.SortedSet;
 
 import static junit.framework.TestCase.assertTrue;
 
@@ -69,7 +70,7 @@ public class TazTest
         //------
 
         int countTotal = 0;
-        for ( List<Event> list : processor.eventsPerThread.values() )
+        for ( SortedSet<Event> list : processor.eventsPerThread.values() )
         {
             countTotal += list.size();
         }
