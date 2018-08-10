@@ -74,9 +74,6 @@ public enum TraceProcessor
     /* Map: thread -> list of thread's join events */
     public Map<String, List<ThreadCreationEvent>> joinEvents;
 
-    /* Map: string (event.toString) -> Event object */
-    public HashMap<String, Event> eventNameToObject;
-
     /* Map: mutex variable -> list of pairs of locks/unlocks */
     public Map<String, List<CausalPair<SyncEvent, SyncEvent>>> lockEvents;
 
@@ -91,6 +88,9 @@ public enum TraceProcessor
 
     /* Map: condition variable -> list of thread's notify events */
     public Map<String, List<SyncEvent>> notifyEvents;
+
+    /* list with socket events ordered by timestamp */
+    public SortedSet<Event> sortedByTimestamp;
 
     //local variables (only used during parsing, but not necessary afterwards)
     /* Map: socket channel -> pair of event lists ([snd],[rcv]) */
@@ -109,7 +109,7 @@ public enum TraceProcessor
         notifyEvents = new HashMap<String, List<SyncEvent>>();
         connAcptEvents = new HashMap<String, CausalPair<SocketEvent, SocketEvent>>();
         closeShutEvents = new HashMap<String, CausalPair<SocketEvent, SocketEvent>>();
-        eventNameToObject = new HashMap<String, Event>();
+        sortedByTimestamp = new TreeSet<Event>( new TimestampComparator() );
         pendingEventsSndRcv = new HashMap<String, CausalPair<Deque<SocketEvent>, Deque<SocketEvent>>>();
         handlerEvents = new HashMap<SocketEvent, List<Event>>();
         hasHandlers = new HashSet();
@@ -259,6 +259,7 @@ public enum TraceProcessor
                 String msg = event.getString( "message" );
                 LogEvent logEvent = new LogEvent( e, msg );
                 eventsPerThread.get( thread ).add( logEvent );
+                sortedByTimestamp.add( logEvent );
                 break;
 
             case CONNECT:
@@ -378,6 +379,7 @@ public enum TraceProcessor
                 }
 
                 eventsPerThread.get( thread ).add( socketEvent );
+                sortedByTimestamp.add( socketEvent );
                 break;
 
             case START:
@@ -437,6 +439,7 @@ public enum TraceProcessor
                     writeEvents.get( variable ).add( rwEvent );
                 }
                 eventsPerThread.get( thread ).add( rwEvent );
+                sortedByTimestamp.add( rwEvent );
                 break;
 
             case HNDLBEG:
@@ -1080,5 +1083,16 @@ public enum TraceProcessor
             }
         }
         logger.debug( debugMsg.toString() );
+
+        if ( !sortedByTimestamp.isEmpty() )
+        {
+            debugMsg = new StringBuilder();
+            debugMsg.append( "TIMESTAMP EVENTS\n" );
+            for ( Event e : sortedByTimestamp )
+            {
+                debugMsg.append( e.toString() + "\n" );
+            }
+            logger.debug( debugMsg.toString() );
+        }
     }
 }
