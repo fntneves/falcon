@@ -239,9 +239,9 @@ public class SocketEvent
         json.put( "dst", this.dst );
         json.put( "dst_port", this.dst_port );
         json.put( "socket_type", this.socket_type );
+        json.put( "size", this.size );
         if ( this.msgId != null )
         {
-            json.put( "size", this.size );
             json.put( "message", this.msgId );
         }
         return json;
