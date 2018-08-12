@@ -27,15 +27,16 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
 import java.util.TreeSet;
 
 /**
  * The class is responsible for parsing an event trace and organize the events into different data structures
  * according to their type.
- *
  * Created by nunomachado on 05/03/18.
  */
 public enum TraceProcessor
@@ -64,17 +65,14 @@ public enum TraceProcessor
     /* Map: socket id -> pair of events (close,shutdown) */
     public Map<String, CausalPair<SocketEvent, SocketEvent>> closeShutEvents;
 
-    /* Map: thread -> list of all events in that thread's execution */
-    public Map<String, List<Event>> eventsPerThread;
+    /* Map: thread -> list of all events in that thread's execution ordered by timestamp */
+    public Map<String, SortedSet<Event>> eventsPerThread;
 
     /* Map: thread -> list of thread's fork events */
     public Map<String, List<ThreadCreationEvent>> forkEvents;
 
     /* Map: thread -> list of thread's join events */
     public Map<String, List<ThreadCreationEvent>> joinEvents;
-
-    /* Map: string (event.toString) -> Event object */
-    public HashMap<String, Event> eventNameToObject;
 
     /* Map: mutex variable -> list of pairs of locks/unlocks */
     public Map<String, List<CausalPair<SyncEvent, SyncEvent>>> lockEvents;
@@ -92,7 +90,7 @@ public enum TraceProcessor
     public Map<String, List<SyncEvent>> notifyEvents;
 
     /* list with socket events ordered by timestamp */
-    public TreeSet<Event> sortedByTimestamp;
+    public SortedSet<Event> sortedByTimestamp;
 
     //local variables (only used during parsing, but not necessary afterwards)
     /* Map: socket channel -> pair of event lists ([snd],[rcv]) */
@@ -102,7 +100,7 @@ public enum TraceProcessor
     {
         msgEvents = new HashMap<String, MessageCausalPair>();
         lockEvents = new HashMap<String, List<CausalPair<SyncEvent, SyncEvent>>>();
-        eventsPerThread = new HashMap<String, List<Event>>();
+        eventsPerThread = new HashMap<String, SortedSet<Event>>();
         readEvents = new HashMap<String, List<RWEvent>>();
         writeEvents = new HashMap<String, List<RWEvent>>();
         forkEvents = new HashMap<String, List<ThreadCreationEvent>>();
@@ -111,7 +109,6 @@ public enum TraceProcessor
         notifyEvents = new HashMap<String, List<SyncEvent>>();
         connAcptEvents = new HashMap<String, CausalPair<SocketEvent, SocketEvent>>();
         closeShutEvents = new HashMap<String, CausalPair<SocketEvent, SocketEvent>>();
-        eventNameToObject = new HashMap<String, Event>();
         sortedByTimestamp = new TreeSet<Event>( new TimestampComparator() );
         pendingEventsSndRcv = new HashMap<String, CausalPair<Deque<SocketEvent>, Deque<SocketEvent>>>();
         handlerEvents = new HashMap<SocketEvent, List<Event>>();
@@ -122,8 +119,8 @@ public enum TraceProcessor
      * This method parses the events of an execution trace passed as input and organizes them into
      * different data structures according to their type.
      *
-     * @param pathToFile  an absolute path giving the location of the event trace.
-     * @return            void
+     * @param pathToFile an absolute path giving the location of the event trace.
+     * @return void
      * @throws JSONException
      * @throws IOException
      */
@@ -164,7 +161,7 @@ public enum TraceProcessor
                     }
                     catch ( JSONException objError )
                     {
-                        if( objError.getMessage().contains( "event type" ))
+                        if ( objError.getMessage().contains( "event type" ) )
                         {
                             logger.error( objError.getMessage() );
                         }
@@ -205,8 +202,8 @@ public enum TraceProcessor
      * Event). Next, the method inserts the object Event into the respective data structures according to its
      * type.
      *
-     * @param event  a JSON object representing an execution event to be parsed.
-     * @return       void
+     * @param event a JSON object representing an execution event to be parsed.
+     * @return void
      * @throws JSONException
      */
     private void parseJSONEvent( JSONObject event )
@@ -217,7 +214,7 @@ public enum TraceProcessor
         // Check whether the type of the event is encoded as an integer value or a string.
         String typeField = event.getString( "type" );
         EventType type = null;
-        if( Character.isDigit( typeField.charAt( 0 ) ) )
+        if ( Character.isDigit( typeField.charAt( 0 ) ) )
         {
             type = EventType.getEventType( Integer.valueOf( typeField ) );
         }
@@ -252,7 +249,7 @@ public enum TraceProcessor
         // Create a new thread event timeline.
         if ( !eventsPerThread.containsKey( thread ) )
         {
-            eventsPerThread.put( thread, new LinkedList<Event>() );
+            eventsPerThread.put( thread, new TreeSet<Event>( new TimestampComparator() ) );
         }
 
         // Populate the data structures according to the event type.
@@ -262,6 +259,7 @@ public enum TraceProcessor
                 String msg = event.getString( "message" );
                 LogEvent logEvent = new LogEvent( e, msg );
                 eventsPerThread.get( thread ).add( logEvent );
+                sortedByTimestamp.add( logEvent );
                 break;
 
             case CONNECT:
@@ -352,7 +350,7 @@ public enum TraceProcessor
                     // Update existing causal pair or create a new one if necessary.
                     if ( !closeShutEvents.containsKey( socketChannelId ) )
                     {
-                        closeShutEvents.put( socketChannelId, new CausalPair<SocketEvent, SocketEvent>( null, null )  );
+                        closeShutEvents.put( socketChannelId, new CausalPair<SocketEvent, SocketEvent>( null, null ) );
                     }
 
                     CausalPair<SocketEvent, SocketEvent> closeShutPair = closeShutEvents.get( socketChannelId );
@@ -380,11 +378,8 @@ public enum TraceProcessor
                     }
                 }
 
-                // Place the event in the list of events sorted by timestamp.
-                if ( socketEvent.getTimestamp() != null && !socketEvent.getTimestamp().equals( "" ) )
-                    sortedByTimestamp.add( socketEvent );
-
                 eventsPerThread.get( thread ).add( socketEvent );
+                sortedByTimestamp.add( socketEvent );
                 break;
 
             case START:
@@ -444,6 +439,7 @@ public enum TraceProcessor
                     writeEvents.get( variable ).add( rwEvent );
                 }
                 eventsPerThread.get( thread ).add( rwEvent );
+                sortedByTimestamp.add( rwEvent );
                 break;
 
             case HNDLBEG:
@@ -541,26 +537,28 @@ public enum TraceProcessor
                 continue;
 
             // Use a fast and a slow iterator to handle nested message handlers while iterating through the thread events.
-            int slowIt = 0;
-            int fastIt = 0;
-            List<Event> threadEvents = eventsPerThread.get( thread );
+            SortedSet<Event> threadEvents = eventsPerThread.get( thread );
+            Iterator<Event> slowIt = threadEvents.iterator();
+            Iterator<Event> fastIt = threadEvents.iterator();
 
-            for ( slowIt = 0; slowIt < threadEvents.size(); slowIt++ )
+            while( slowIt.hasNext() )
             {
-                Event e = threadEvents.get( slowIt );
+                Event e = slowIt.next();
+                fastIt.next(); // advance fastIt to follow slowIt
 
                 // A message handler occurs when there is a HANDLERBEGIN event after a RCV event.
-                if ( e.getType() == EventType.RCV && threadEvents.get( slowIt + 1 ).getType() == EventType.HNDLBEG )
+                Event nextEvent = slowIt.next();
+                if ( e.getType() == EventType.RCV && nextEvent !=null && nextEvent.getType() == EventType.HNDLBEG )
                 {
                     List<Event> handlerList = new ArrayList<Event>();
-                    fastIt = slowIt + 1;
-                    Event nextEvent = threadEvents.get( fastIt );
+                    nextEvent = fastIt.next();
                     int nestedCounter = 0;
 
                     // Add events to the message handler until reaching the HANDLEREND delimiter.
-                    while ( nextEvent.getType() != EventType.HNDLEND
+                    while ( nextEvent != null
+                                    && nextEvent.getType() != EventType.HNDLEND
                                     && nestedCounter >= 0
-                                    && fastIt < threadEvents.size() )
+                                    && fastIt.hasNext() )
                     {
                         handlerList.add( nextEvent );
 
@@ -574,10 +572,7 @@ public enum TraceProcessor
                             nestedCounter--; //last HANDLEREND will set nestedCounter to -1 and end the loop
                         }
 
-                        fastIt++;
-
-                        if ( fastIt < threadEvents.size() )
-                            nextEvent = threadEvents.get( fastIt );
+                        nextEvent = fastIt.next();
                     }
                     handlerList.add( nextEvent ); //add HANDLEREND event
                     handlerEvents.put( (SocketEvent) e, handlerList );
@@ -588,7 +583,8 @@ public enum TraceProcessor
 
     /**
      * Returns the total number of events in the trace.
-     * @return  the total number of events in the trace.
+     *
+     * @return the total number of events in the trace.
      */
     public int getNumberOfEvents()
     {
@@ -598,8 +594,8 @@ public enum TraceProcessor
     /**
      * Returns the SND event that originated a particular message (identified by its id).
      *
-     * @param messageId   the identifier of the message that represents a particular SND/RCV causal pair.
-     * @return            the SocketEvent corresponding to the SND event that originated a given RCV event.
+     * @param messageId the identifier of the message that represents a particular SND/RCV causal pair.
+     * @return the SocketEvent corresponding to the SND event that originated a given RCV event.
      */
     public SocketEvent sndFromMessageId( String messageId )
     {
@@ -613,8 +609,8 @@ public enum TraceProcessor
     /**
      * Returns the UNLOCK event that matches with a given LOCK event.
      *
-     * @param lockEvent    an object representing a particular LOCK event.
-     * @return             the UNLOCK event that is causally-related to the LOCK event passed as input.
+     * @param lockEvent an object representing a particular LOCK event.
+     * @return the UNLOCK event that is causally-related to the LOCK event passed as input.
      */
     public SyncEvent getCorrespondingUnlock( SyncEvent lockEvent )
     {
@@ -633,8 +629,8 @@ public enum TraceProcessor
     /**
      * Returns the JOIN event that happens after a given END event.
      *
-     * @param endEvent   an object representing a particular END event.
-     * @return           the JOIN event that is causally-related to the END event passed as input.
+     * @param endEvent an object representing a particular END event.
+     * @return the JOIN event that is causally-related to the END event passed as input.
      */
     public ThreadCreationEvent getCorrespondingJoin( ThreadCreationEvent endEvent )
     {
@@ -657,8 +653,8 @@ public enum TraceProcessor
      * (respectively RCV events) waiting to be matched with RCV events (respectively SND events) on the same channel.
      * If no such queue exists, the method creates and returns a new empty one.
      *
-     * @param socketChannelId  the identifier of a socket channel between two processes that exchange messages.
-     * @return                 the pair of queues with pending SND or RCV events.
+     * @param socketChannelId the identifier of a socket channel between two processes that exchange messages.
+     * @return the pair of queues with pending SND or RCV events.
      */
     private CausalPair<Deque<SocketEvent>, Deque<SocketEvent>> getOrCreatePartialEventsPairs( String socketChannelId )
     {
@@ -683,8 +679,8 @@ public enum TraceProcessor
      * events until matching the full amount of bytes sent. If there are no pending RCV events, the method adds the
      * incoming SND to the queue of pending SND events.
      *
-     * @param snd  a SND event parsed from the event trace.
-     * @return     void
+     * @param snd a SND event parsed from the event trace.
+     * @return void
      */
     private void handleSndSocketEvent( SocketEvent snd )
     {
@@ -787,8 +783,8 @@ public enum TraceProcessor
      * events until matching the full amount of bytes received. If there are no pending SND events, the method adds the
      * incoming RCV to the queue of pending RCV events.
      *
-     * @param rcv  a RCV event parsed from the event trace.
-     * @return     void
+     * @param rcv a RCV event parsed from the event trace.
+     * @return void
      */
     private void handleRcvSocketEvent( SocketEvent rcv )
     {
@@ -890,9 +886,9 @@ public enum TraceProcessor
      * i) msgId = SND's event id if SND's bytes >= RCV's bytes
      * ii) msgId = RCV's event id if RCV's bytes > SND's bytes
      *
-     * @param snd  a given SND event.
-     * @param rcv  the RCV event that is causally-related to the SND event.
-     * @return     a unique identifier representing the message pair (SND,RCV).
+     * @param snd a given SND event.
+     * @param rcv the RCV event that is causally-related to the SND event.
+     * @return a unique identifier representing the message pair (SND,RCV).
      */
     public String computeMessageId( SocketEvent snd, SocketEvent rcv )
     {
@@ -967,6 +963,23 @@ public enum TraceProcessor
         for ( MessageCausalPair se : msgEvents.values() )
         {
             debugMsg.append( se.toString() + "\n" );
+        }
+        logger.debug( debugMsg.toString() );
+
+        debugMsg = new StringBuilder();
+        debugMsg.append( "PENDING SEND/RECEIVE EVENTS\n" );
+        for ( Map.Entry<String, CausalPair<Deque<SocketEvent>, Deque<SocketEvent>>> entry : pendingEventsSndRcv.entrySet() )
+        {
+            if( entry.getValue().getFirst().isEmpty() &&  entry.getValue().getSecond().isEmpty() )
+                continue;
+
+            debugMsg.append( "-- Socket " + entry.getKey() + "\n" );
+
+            for ( SocketEvent event : entry.getValue().getFirst() )
+                debugMsg.append( event.toString() + "(" + event.getSize() + ")\n" );
+
+            for ( SocketEvent event : entry.getValue().getSecond() )
+                debugMsg.append( event.toString() + "(" + event.getSize() + ")\n" );
         }
         logger.debug( debugMsg.toString() );
 

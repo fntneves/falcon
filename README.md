@@ -9,7 +9,7 @@ The architecture of Falcon is composed of three main components that operate tog
 - **falcon-solver** combines the events into a global execution trace that preserves causality. This is achieved by *i)* building a symbolic constraint model that encodes the *happens-before* relationships between events, *ii)* using an SMT solver to solve the constraints and assign a logical clock to each event such that all causal dependencies are satisfied.
 - **falcon-visualizer** draws a space-time diagram that enables a visual analysis of the whole execution.
 
-For additional details about Falcon, please check our [DSN'18 paper (to appear)](https://github.com/fntneves/falcon).
+For additional details about Falcon, please check our [DSN'18 paper](https://ieeexplore.ieee.org/abstract/document/8416513/).
 
 
 ## Installation

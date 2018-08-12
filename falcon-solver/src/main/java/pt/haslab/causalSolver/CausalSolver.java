@@ -22,14 +22,14 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 
 /**
@@ -162,41 +162,42 @@ public class CausalSolver
         solver.flush();
     }
 
+    /**
+     * Generates soft constraints that attempt to order the events of the different threads according to the
+     * original timestamp order.
+     * @throws IOException
+     */
     private static void genTimestampConstraints()
                     throws IOException
     {
         logger.info( "Add timestamp constraints" );
-        HashMap<String, List<SocketEvent>> channelEvents = new HashMap<String, List<SocketEvent>>();
-
-        //filter events per socket channel
-        for ( Event tse : trace.sortedByTimestamp )
-        {
-            if ( tse instanceof SocketEvent )
-            {
-                SocketEvent se = (SocketEvent) tse;
-                String socketId = se.getSocket();
-                if ( !channelEvents.containsKey( se.getSocket() ) )
-                {
-                    List<SocketEvent> tmp = new ArrayList<SocketEvent>();
-                    channelEvents.put( socketId, tmp );
-                }
-                channelEvents.get( socketId ).add( se );
-            }
-        }
-
         String tagTS = "TS_";
         int counterTS = 0;
         solver.writeComment( "TIMESTAMP CONSTRAINTS" );
 
-        for ( Map.Entry<String, List<SocketEvent>> entry : channelEvents.entrySet() )
+
+        Iterator<Event> timestampIt = trace.sortedByTimestamp.iterator();
+        if( !timestampIt.hasNext() )
+            return;
+
+        Event event_i = timestampIt.next();
+        Event event_j;
+
+        /*
+         Iterate through all events and add constraints only for contiguous events that belong to different threads.
+        */
+        while( timestampIt.hasNext() )
         {
-            List<SocketEvent> events = entry.getValue();
-            String tsConstraint = "";
-            for ( Event se : trace.sortedByTimestamp )
+            event_j = timestampIt.next();
+
+            if( !event_j.getThread().equals( event_i.getThread() ) )
             {
-                tsConstraint += ( se.toString() + " " );
+                String tsConstraint = event_i.toString() + " " + event_j.toString();
+                solver.writeConstraint( solver.postNamedSoftAssert( solver.cLt( tsConstraint ), tagTS + counterTS++ ) );
+
+                // update event pointers
+                event_i = event_j;
             }
-            solver.writeConstraint( solver.postNamedSoftAssert( solver.cLt( tsConstraint ), tagTS + counterTS++ ) );
         }
     }
 
@@ -207,17 +208,17 @@ public class CausalSolver
         String tagPO = "PO_";
         int counterPO = 0;
         int max = 0;
-        for ( List<Event> l : trace.eventsPerThread.values() )
+        for ( SortedSet<Event> l : trace.eventsPerThread.values() )
         {
             max += l.size();
         }
 
         //generate program order variables and constraints
-        for ( List<Event> events : trace.eventsPerThread.values() )
+        for ( SortedSet<Event> events : trace.eventsPerThread.values() )
         {
             if ( !events.isEmpty() )
             {
-                solver.writeComment( "PROGRAM ORDER CONSTRAINTS - THREAD " + events.get( 0 ).getThread() );
+                solver.writeComment( "PROGRAM ORDER CONSTRAINTS - THREAD " + events.first().getThread() );
                 String threadOrder = "";
                 for ( Event e : events )
                 {
@@ -358,13 +359,11 @@ public class CausalSolver
                 String childThread = joinEvent.getChildThread();
                 if ( trace.eventsPerThread.containsKey( childThread ) )
                 {
-                    int endEventPos = trace.eventsPerThread.get( childThread ).size();
-                    Event endEvent = trace.eventsPerThread.get( joinEvent.getChildThread() ).get(
-                                    endEventPos - 1 );
+                    Event endEvent = trace.eventsPerThread.get( joinEvent.getChildThread() ).last();
                     String joinEndConstraint = solver.cLt( endEvent.toString(), joinEvent.toString() );
                     solver.writeConstraint( solver.postNamedAssert( joinEndConstraint, tagJOIN_END + counterJOIN_END++ ) );
                     //set dependency
-                    allEvents.get( joinEvent.toString() ).setDependency( endEvent );
+                    joinEvent.setDependency( endEvent );
                 }
             }
         }

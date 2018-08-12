@@ -15,7 +15,11 @@ public class TimestampComparator
         Long ts1 = Long.valueOf( o1.getTimestamp() );
         Long ts2 = Long.valueOf( o2.getTimestamp() );
 
-        return ts1.compareTo( ts2 );
+        int tsCompare = ts1.compareTo( ts2 );
+        if( tsCompare != 0 )
+            return tsCompare;
+        else
+            return o1.compareTo( o2 );
     }
 
     public boolean equals( Object obj )
