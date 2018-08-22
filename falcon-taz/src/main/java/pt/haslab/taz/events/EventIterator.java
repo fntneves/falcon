@@ -17,60 +17,61 @@ import java.util.PriorityQueue;
 public class EventIterator
                 implements Iterator<Event>
 {
-    private PriorityQueue<CausalPair<ListIterator<Event>, Event>> eventHeap;
+    private PriorityQueue<CausalPair<Iterator<Event>, Event>> eventHeap;
 
     //keeps track of the last Iterator next'd for the remove method
-    private ListIterator<Event> lastIt;
+    private Iterator<Event> lastIt;
 
-    public final Comparator<CausalPair<ListIterator<Event>, Event>> heapOrder =
-                    new Comparator<CausalPair<ListIterator<Event>, Event>>()
+    private final Comparator<CausalPair<Iterator<Event>, Event>> heapOrder =
+                    new Comparator<CausalPair<Iterator<Event>, Event>>()
                     {
                         //doesnt support null arguments
-                        public int compare( CausalPair<ListIterator<Event>, Event> o1,
-                                            CausalPair<ListIterator<Event>, Event> o2 )
+                        public int compare( CausalPair<Iterator<Event>, Event> o1,
+                                            CausalPair<Iterator<Event>, Event> o2 )
                         {
                             return (int) ( o1.getSecond().getEventId() - o2.getSecond().getEventId() );
                         }
                     };
 
-    public EventIterator( Collection<List<Event>> eventLists )
+    public EventIterator(Collection<? extends Iterable<Event>> eventIterables)
     {
         //Holds the first value of a list and an iterator of the rest of the list
-        eventHeap = new PriorityQueue<CausalPair<ListIterator<Event>, Event>>( eventLists.size(), heapOrder );
+        eventHeap = new PriorityQueue<>(eventIterables.size(), heapOrder);
 
-        for ( List<Event> eventList : eventLists )
+        for ( Iterable<Event> eventIterable : eventIterables )
         {
-            if ( !eventList.isEmpty() )
+            if (eventIterable != null)
             {
-                ListIterator<Event> it = eventList.listIterator();
-                Event firstElem = it.next();
-                eventHeap.add( new CausalPair<ListIterator<Event>, Event>( it, firstElem ) );
+                Iterator<Event> it = eventIterable.iterator();
+                if (it.hasNext())
+                {
+                    Event firstElem = it.next();
+                    eventHeap.add(new CausalPair<Iterator<Event>, Event>(it, firstElem));
+                }
             }
         }
     }
 
-    public boolean hasNext()
-    {
-        return !eventHeap.isEmpty();
+    public boolean hasNext() {
+        return !eventHeap.isEmpty() || ( lastIt != null && lastIt.hasNext());
     }
 
-    public Event next()
-    {
-        if ( !this.hasNext() )
-        {
+    public Event next() {
+        if ( !this.hasNext() ) {
             throw new NoSuchElementException( "There are no more elements" );
         }
-        CausalPair<ListIterator<Event>, Event> heapTop = eventHeap.poll();
 
-        ListIterator<Event> it = heapTop.getFirst();
+        if ( lastIt != null && lastIt.hasNext() ) {
+            Event toInsert = lastIt.next();
+            eventHeap.add(new CausalPair<Iterator<Event>, Event>(lastIt, toInsert));
+        }
+
+        CausalPair<Iterator<Event>, Event> heapTop = eventHeap.poll();
+
+        Iterator<Event> it = heapTop.getFirst();
         Event next = heapTop.getSecond();
         lastIt = it;
 
-        if ( it.hasNext() )
-        {
-            Event toInsert = it.next();
-            eventHeap.add( new CausalPair<ListIterator<Event>, Event>( it, toInsert ) );
-        }
         return next;
     }
 
@@ -80,14 +81,9 @@ public class EventIterator
         {
             throw new IllegalStateException();
         }
-        //puts the cursor before the to be next element
-        lastIt.previous();
-        //puts the cursor before the last returned element
-        lastIt.previous();
         //removes the last returned element
         lastIt.remove();
-        //puts the cursor in its original position
-        lastIt.next();
         lastIt = null;
     }
+
 }
