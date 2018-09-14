@@ -22,6 +22,7 @@ class SysGraph(BaseHandler):
         logging.info('Booting SysGraph handler...')
 
     def handle(self, cpu, data, size):
+        print data.pid, os.getpid()
         if not EventType.is_socket(data.type) or data.pid == os.getpid():
             return
 
