@@ -6,11 +6,41 @@ class Neo4jGraph(object):
         self._driver = Graph(uri, user=user, password=password)
 
     def add_connection(self, event):
-        print "adding connection"
-        pass
+        self._driver.run(
+            "MERGE (h:Host {name: $host}) "
+            "MERGE (loc_p:Process {pid: $pid, host: h.name, comm: $comm}) "
+            "MERGE (socket:Socket {socket_id: $socket_id}) "
+            "ON CREATE SET socket.from = $from_addr, socket.to = $to_addr, socket.created_at = $created_at, bytes = 0"
+            "ON MATCH SET socket.created_at = $created_at "
+            "MERGE (h)-[:HAS_PID]-(loc_p) "
+            "MERGE (loc_p)-[r:CONNECTED_TO]-(socket) ",
+            host=event._host,
+            pid=event._pid,
+            comm=event._comm,
+            socket_id=event._socket_id,
+            from_addr=event._socket_from,
+            to_addr=event._socket_to,
+            created_at=event.timestamp,
+        )
 
     def update_connection(self, event):
-        print "updating connection"
+        self._driver.run(
+            "MERGE (h:Host {name: $host}) "
+            "MERGE (loc_p:Process {pid: $pid, host: h.name, comm: $comm}) "
+            "MERGE (socket:Socket {socket_id: $socket_id}) "
+            "ON CREATE SET socket.from = $from_addr, socket.to = $to_addr, socket.created_at = $created_at, bytes = bytes + $size"
+            "ON MATCH SET socket.created_at = $created_at "
+            "MERGE (h)-[:HAS_PID]-(loc_p) "
+            "MERGE (loc_p)-[r:CONNECTED_TO]-(socket) ",
+            host=event._host,
+            pid=event._pid,
+            comm=event._comm,
+            socket_id=event._socket_id,
+            from_addr=event._socket_from,
+            to_addr=event._socket_to,
+            created_at=event.timestamp,
+            size=event._size,
+        )
         pass
 
     def remove_connection(self, event):

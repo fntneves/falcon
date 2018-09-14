@@ -32,5 +32,8 @@ class SysGraph(BaseHandler):
         elif data.type == EventType.SOCKET_SEND:
             self._graph.update_connection(event)
 
+        for handler in self._sub_handlers:
+            handler.handle(event)
+
     def shutdown(self):
         logging.info('Shutting down SysGraph handler...')

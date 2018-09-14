@@ -7,8 +7,8 @@ class JavaProcessHandler():
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._sock.connect((host, int(port)))
 
-    def handle(self, cpu, event):
-        pid_binary = struct.pack('!i', event.pid)
+    def handle(self, event):
+        pid_binary = struct.pack('!i', event._pid)
         self._sock.send(pid_binary)
 
     def __del__(self):
