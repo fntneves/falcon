@@ -18,5 +18,6 @@ class Neo4jGraph(object):
         pass
 
     def __del__(self):
-        self._driver.close()
+        if (self._driver is not None)
+            self._driver.close()
 
