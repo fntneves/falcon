@@ -9,6 +9,7 @@ class FalconEventLogger(BaseHandler):
         super(FalconEventLogger, self).__init__()
 
     def boot(self):
+        logging.info('Booting FalconEventLogger handler...')
         self._writer.open()
 
     def handle(self, cpu, data, size):
@@ -24,4 +25,5 @@ class FalconEventLogger(BaseHandler):
             self._writer.write(event)
 
     def shutdown(self):
+        logging.info('Shutting down FalconEventLogger handler...')
         self._writer.close()
