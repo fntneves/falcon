@@ -98,8 +98,6 @@ int static comm_equals(const char str1[TASK_COMM_LEN], const char str2[TASK_COMM
         return 0;
     if (str1[15] != str2[15])
         return 0;
-    if (str1[16] != str2[16])
-        return 0;
 
     return 1;
 }

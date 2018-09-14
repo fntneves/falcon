@@ -31,7 +31,7 @@ class Tracer:
             program.filter_comm(comm)
 
             logging.info('Creating and booting handlers and appenders...')
-            handler = events.handling.FalconEventLogger(WriterFactory.createFromConfig())
+            handler = events.handling.SysGraph()
             handler.boot()
 
             logging.info('Running eBPF listener...')

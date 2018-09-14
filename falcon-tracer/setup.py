@@ -27,6 +27,8 @@ setup(
         'confluent-kafka',
         'flatbuffers',
         'python-dotenv',
+        'py2neo',
+        'ipython<6',
     ],
     test_suite='nose.collector',
     tests_require=['nose'],
