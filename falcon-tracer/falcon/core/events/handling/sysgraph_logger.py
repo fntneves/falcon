@@ -27,11 +27,16 @@ class SysGraph(BaseHandler):
 
         event = EventFactory.create(data)
 
+        # Ignore self events
+        if event._pid == os.getpid():
+            return
+
         if data.type == EventType.SOCKET_ACCEPT:
             self._graph.add_connection(event)
         elif data.type == EventType.SOCKET_SEND:
             self._graph.update_connection(event)
         else:
+            # Ignore other events
             return
 
         for handler in self._sub_handlers:
