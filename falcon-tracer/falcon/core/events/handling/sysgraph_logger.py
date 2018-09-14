@@ -20,8 +20,6 @@ class SysGraph(BaseHandler):
 
     def boot(self):
         logging.info('Booting SysGraph handler...')
-        for handler in self._sub_handlers:
-            handler.boot()
 
     def handle(self, cpu, data, size):
         if not EventType.is_socket(data.type):
@@ -30,11 +28,9 @@ class SysGraph(BaseHandler):
         event = EventFactory.create(data)
 
         if data.type == EventType.SOCKET_ACCEPT:
-            self._graph.add_connection()
+            self._graph.add_connection(event)
         elif data.type == EventType.SOCKET_SEND:
-            self._graph.update_connection()
+            self._graph.update_connection(event)
 
     def shutdown(self):
         logging.info('Shutting down SysGraph handler...')
-        for handler in self._sub_handlers:
-            handler.shutdown()
