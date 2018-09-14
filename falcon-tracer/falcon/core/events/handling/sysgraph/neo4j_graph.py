@@ -29,7 +29,7 @@ class Neo4jGraph(object):
             "MERGE (h:Host {name: $host}) "
             "MERGE (loc_p:Process {pid: $pid, host: h.name, comm: $comm}) "
             "MERGE (socket:Socket {socket_id: $socket_id}) "
-            "ON CREATE SET socket.from = $from_addr, socket.to = $to_addr, socket.created_at = $created_at, socket.bytes = bytes + $size "
+            "ON CREATE SET socket.from = $from_addr, socket.to = $to_addr, socket.created_at = $created_at, socket.bytes = socket.bytes + $size "
             "ON MATCH SET socket.created_at = $created_at "
             "MERGE (h)-[:HAS_PID]-(loc_p) "
             "MERGE (loc_p)-[r:CONNECTED_TO]-(socket) ",
