@@ -22,8 +22,7 @@ class SysGraph(BaseHandler):
         logging.info('Booting SysGraph handler...')
 
     def handle(self, cpu, data, size):
-        print data.pid, os.getpid()
-        if not EventType.is_socket(data.type) or data.tgid == os.getpid():
+        if not EventType.is_socket(data.type):
             return
 
         event = EventFactory.create(data)
@@ -32,6 +31,8 @@ class SysGraph(BaseHandler):
             self._graph.add_connection(event)
         elif data.type == EventType.SOCKET_SEND:
             self._graph.update_connection(event)
+        else:
+            return
 
         for handler in self._sub_handlers:
             handler.handle(event)
