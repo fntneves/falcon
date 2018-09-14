@@ -23,7 +23,7 @@ class SysGraph(BaseHandler):
 
     def handle(self, cpu, data, size):
         print data.pid, os.getpid()
-        if not EventType.is_socket(data.type) or data.pid == os.getpid():
+        if not EventType.is_socket(data.type) or data.tgid == os.getpid():
             return
 
         event = EventFactory.create(data)
