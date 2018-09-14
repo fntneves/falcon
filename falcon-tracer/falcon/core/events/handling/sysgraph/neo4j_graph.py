@@ -17,7 +17,3 @@ class Neo4jGraph(object):
         print "removing connection"
         pass
 
-    def __del__(self):
-        if (self._driver is not None):
-            self._driver.close()
-
