@@ -8,7 +8,7 @@ class JavaProcessHandler():
         self._sock.connect((host, int(port))
 
     def __del__(self):
-        if (self._sock is not None)
+        if (self._sock is not None):
             self._sock.close()
 
     def handle(self, cpu, event):
