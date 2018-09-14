@@ -20,7 +20,7 @@ class Neo4jGraph(object):
             socket_id=event._socket_id,
             from_addr=event._socket_from,
             to_addr=event._socket_to,
-            created_at=event.timestamp,
+            created_at=event._timestamp,
         )
 
     def update_connection(self, event):
@@ -38,7 +38,7 @@ class Neo4jGraph(object):
             socket_id=event._socket_id,
             from_addr=event._socket_from,
             to_addr=event._socket_to,
-            created_at=event.timestamp,
+            created_at=event._timestamp,
             size=event._size,
         )
         pass
