@@ -8,6 +8,7 @@
 #include <linux/types.h>
 
 #define PID_FILTER //PID_FILTER//
+#define COMM_FILTER //COMM_FILTER//
 
 enum event_type {
     SOCKET_SEND = 8,
@@ -17,6 +18,12 @@ enum event_type {
 
     PROCESS_CREATE = 1,
     PROCESS_JOIN = 4,
+};
+
+struct pid_info_t
+{
+    u32 kpid;
+    char comm[TASK_COMM_LEN];
 };
 
 struct socket_info_t {
@@ -57,12 +64,73 @@ BPF_HASH(trace_pids, u32, char);
 BPF_PERF_OUTPUT(events);
 
 // Helper functions.
-int static skip_pid(u32 pid) {
-    if (PID_FILTER == 0 || trace_pids.lookup(&pid) != NULL || pid == PID_FILTER) {
+int static comm_equals(const char str1[TASK_COMM_LEN], const char str2[TASK_COMM_LEN])
+{
+    if (str1[0] != str2[0])
+        return 0;
+    if (str1[1] != str2[1])
+        return 0;
+    if (str1[2] != str2[2])
+        return 0;
+    if (str1[3] != str2[3])
+        return 0;
+    if (str1[4] != str2[4])
+        return 0;
+    if (str1[5] != str2[5])
+        return 0;
+    if (str1[6] != str2[6])
+        return 0;
+    if (str1[7] != str2[7])
+        return 0;
+    if (str1[8] != str2[8])
+        return 0;
+    if (str1[9] != str2[9])
+        return 0;
+    if (str1[10] != str2[10])
+        return 0;
+    if (str1[11] != str2[11])
+        return 0;
+    if (str1[12] != str2[12])
+        return 0;
+    if (str1[13] != str2[13])
+        return 0;
+    if (str1[14] != str2[14])
+        return 0;
+    if (str1[15] != str2[15])
+        return 0;
+    if (str1[16] != str2[16])
+        return 0;
+
+    return 1;
+}
+
+int static skip_pid(struct pid_info_t process_info)
+{
+    if (PID_FILTER == 0 || trace_pids.lookup(&process_info.kpid) != NULL || process_info.kpid == PID_FILTER)
+    {
         return 0;
     }
 
     return 1;
+}
+
+int static skip_comm(struct pid_info_t process_info)
+{
+    char comm[TASK_COMM_LEN];
+
+    if (COMM_FILTER != NULL)
+    {
+        strcpy(comm, COMM_FILTER);
+
+        return comm_equals(comm, process_info.comm) == 0;
+    }
+
+    return 0;
+}
+
+int static skip(struct pid_info_t process_info)
+{
+    return skip_pid(process_info) || skip_comm(process_info);
 }
 
 void static emit_socket_connect(struct pt_regs *ctx, u64 timestamp, struct socket_info_t *skp)
@@ -123,24 +191,24 @@ void static emit_socket_receive(struct pt_regs *ctx, u64 timestamp, struct socke
     events.perf_submit(ctx, &event, sizeof(event));
 }
 
-void static emit_process_create(struct pt_regs *ctx, u64 timestamp, pid_t parent_pid, pid_t child_pid)
+void static emit_process_create(struct pt_regs *ctx, u64 timestamp, struct pid_info_t parent, struct pid_info_t child)
 {
     char zero = ' ';
-    trace_pids.insert(&child_pid, &zero);
+    trace_pids.insert(&child.kpid, &zero);
 
     struct event_info_t event = {
         .type = PROCESS_CREATE,
-        .pid = parent_pid,
+        .pid = parent.kpid,
         .tgid = bpf_get_current_pid_tgid() >> 32
     };
     event.ktime = timestamp;
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
-    event.child_pid = child_pid;
+    event.child_pid = child.kpid;
 
     events.perf_submit(ctx, &event, sizeof(event));
 }
 
-void static emit_process_join(struct pt_regs *ctx, u64 timestamp, pid_t child_pid)
+void static emit_process_join(struct pt_regs *ctx, u64 timestamp, struct pid_info_t child)
 {
     struct event_info_t event = {
         .type = PROCESS_JOIN,
@@ -149,9 +217,9 @@ void static emit_process_join(struct pt_regs *ctx, u64 timestamp, pid_t child_pi
     };
     event.ktime = timestamp;
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
-    event.child_pid = child_pid;
+    event.child_pid = child.kpid;
 
-    trace_pids.delete(&child_pid);
+    trace_pids.delete(&child.kpid);
 
     events.perf_submit(ctx, &event, sizeof(event));
 }
@@ -190,13 +258,22 @@ struct socket_info_t static socket_info(struct sock * skp) {
     return sk;
 }
 
+struct pid_info_t static pid_info() {
+    struct pid_info_t process_info = {};
+    process_info.kpid = bpf_get_current_pid_tgid();
+    bpf_get_current_comm(&process_info.comm, sizeof(process_info.comm));
+
+    return process_info;
+}
+
 /**
  * Probe "tcp_connect" at the entry point.
  */
 int entry__tcp_connect(struct pt_regs *ctx, struct sock * sk) {
     u32 kpid = bpf_get_current_pid_tgid();
+    struct pid_info_t proc_info = pid_info();
 
-    if (skip_pid(kpid)) {
+    if (skip(proc_info)) {
         return 1;
     }
 
@@ -238,8 +315,9 @@ int exit__tcp_connect(struct pt_regs *ctx) {
 int exit__inet_csk_accept(struct pt_regs *ctx)
 {
     u32 kpid = bpf_get_current_pid_tgid();
+    struct pid_info_t proc_info = pid_info();
 
-    if (skip_pid(kpid)) {
+    if (skip(proc_info)) {
         return 1;
     }
 
@@ -259,8 +337,9 @@ int exit__inet_csk_accept(struct pt_regs *ctx)
  */
 int entry__sock_sendmsg(struct pt_regs *ctx, struct socket * sock) {
     u32 kpid = bpf_get_current_pid_tgid();
+    struct pid_info_t proc_info = pid_info();
 
-    if (skip_pid(kpid)) {
+    if (skip(proc_info)) {
         return 1;
     }
 
@@ -304,8 +383,9 @@ int exit__sock_sendmsg(struct pt_regs *ctx) {
 int entry__sock_recvmsg(struct pt_regs *ctx, struct socket *sock, struct msghdr *msg)
 {
     u32 kpid = bpf_get_current_pid_tgid();
+    struct pid_info_t proc_info = pid_info();
 
-    if (skip_pid(kpid)) {
+    if (skip(proc_info)) {
         return 1;
     }
 
@@ -361,12 +441,20 @@ struct sched_process_fork
 
 int on_fork(struct sched_process_fork * args)
 {
-    if (skip_pid(args->parent_pid))
+    struct pid_info_t parent_proc_info = {};
+    parent_proc_info.kpid = args->parent_pid;
+    bpf_probe_read(&parent_proc_info.comm, TASK_COMM_LEN, &args->parent_comm);
+
+    struct pid_info_t child_proc_info = {};
+    child_proc_info.kpid = args->child_pid;
+    bpf_probe_read(&child_proc_info.comm, TASK_COMM_LEN, &args->child_comm);
+
+    if (skip(parent_proc_info))
     {
         return 1;
     }
 
-    emit_process_create((struct pt_regs *)args, bpf_ktime_get_ns(), args->parent_pid, args->child_pid);
+    emit_process_create((struct pt_regs *)args, bpf_ktime_get_ns(), parent_proc_info, child_proc_info);
 
     return 0;
 }
@@ -377,15 +465,20 @@ int on_fork(struct sched_process_fork * args)
 int exit__sys_wait(struct pt_regs *ctx)
 {
     u32 kpid = bpf_get_current_pid_tgid();
+    struct pid_info_t proc_info = pid_info();
 
-    if (skip_pid(kpid)) {
+    if (skip(proc_info)) {
         return 1;
     }
 
     pid_t exited_pid = PT_REGS_RC(ctx);
 
-    if (exited_pid > 0) {
-        emit_process_join(ctx, bpf_ktime_get_ns(), exited_pid);
+    if (exited_pid > 0)
+    {
+        struct pid_info_t exited_proc_info = {};
+        exited_proc_info.kpid = exited_pid;
+        exited_proc_info.comm[0] = '\0';
+        emit_process_join(ctx, bpf_ktime_get_ns(), exited_proc_info);
     }
 
     return 0;

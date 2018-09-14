@@ -17,7 +17,7 @@ import pkg_resources
 logging.config.fileConfig(pkg_resources.resource_filename('falcon', '../conf/logging.ini'))
 
 class Tracer:
-    def run(self, pid=0, signal_child=False):
+    def run(self, pid=None, comm=None, signal_child=False):
         program_filepath = pkg_resources.resource_filename('falcon', 'core/resources/ebpf/probes.c')
 
         def shutdown_tracer(signum, frame):
@@ -26,7 +26,9 @@ class Tracer:
 
         with open(program_filepath, 'r') as program_file:
             program = BpfProgram(text=program_file.read())
-            program.filter_pid(pid)
+
+            program.filter_pid(pid or 0)
+            program.filter_comm(comm)
 
             logging.info('Creating and booting handlers and appenders...')
             handler = events.handling.FalconEventLogger(WriterFactory.createFromConfig())
@@ -64,18 +66,27 @@ def run_program(program):
 def main():
     """Main entry point for the script."""
     parser = argparse.ArgumentParser(prog='falcon-tracer', description='This program is the tracer of the Falcon pipeline tool.')
-
-    parser.add_argument('--pid', type=int, nargs='?', default=-1,
+    process_filter = parser.add_mutually_exclusive_group()
+    process_filter.add_argument('--pid', type=int, nargs='?',
                         help="filter events of the given PID.")
+    process_filter.add_argument('--comm', type=str, nargs='?',
+                        help="filter events of the given comm processes.")
     args, cmd = parser.parse_known_args()
-    signal_child = False
-    if args.pid == -1:
-        prog_pid = run_program(cmd)
-        signal_child = True
+
+    tracer_options = {
+        'signal_child': False,
+    }
+
+    if args.pid is not None:
+        tracer_options['pid'] = args.pid
+    elif args.comm is not None:
+        tracer_options['comm'] = args.comm
     else:
-        prog_pid = args.pid
-    sys.exit(Tracer().run(
-        pid=prog_pid, signal_child=signal_child))
+        prog_pid = run_program(cmd)
+        tracer_options['signal_child'] = True
+        tracer_options['pid'] = prog_pid
+
+    sys.exit(Tracer().run(**tracer_options))
 
 if __name__ == '__main__':
     main()
