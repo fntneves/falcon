@@ -372,6 +372,29 @@ int on_fork(struct sched_process_fork * args)
 }
 
 /**
+ * Handle execs.
+ */
+struct sched_process_exec
+{
+    u64 __unused__;
+    u32 __unused_filename__;
+    pid_t pid;
+    pid_t old_pid;
+};
+
+int on_exec(struct sched_process_exec *args)
+{
+    if (skip_pid(args->old_pid))
+    {
+        return 1;
+    }
+
+    emit_process_create((struct pt_regs *)args, bpf_ktime_get_ns(), args->old_pid, args->pid);
+
+    return 0;
+}
+
+/**
  * Probe "sys_wait" at the exit point.
  */
 int exit__sys_wait(struct pt_regs *ctx)
