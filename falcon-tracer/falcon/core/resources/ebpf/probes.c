@@ -384,7 +384,7 @@ struct sched_process_exec
 
 int on_exec(struct sched_process_exec *args)
 {
-    if (skip_pid(args->old_pid))
+    if (skip_pid(args->old_pid) || old_pid == pid)
     {
         return 1;
     }
