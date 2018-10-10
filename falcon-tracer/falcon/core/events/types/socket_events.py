@@ -4,6 +4,7 @@ import socket
 import struct
 import logging
 import falcon.core.protocol.fbs.FalconEvent as FlatFalconEvent
+import falcon.core.protocol.fbs.EventData as FlatEventData
 import falcon.core.protocol.fbs.SocketEvent as FlatSocketEvent
 import falcon.core.protocol.fbs.SocketAccept as FlatSocketAccept
 import falcon.core.protocol.fbs.SocketConnect as FlatSocketConnect
@@ -147,6 +148,7 @@ class SocketConnect(SocketEvent):
         FlatFalconEvent.FalconEventAddTid(builder, self._tid)
         FlatFalconEvent.FalconEventAddComm(builder, comm_field)
         FlatFalconEvent.FalconEventAddHost(builder, host_field)
+        FlatFalconEvent.FalconEventAddEventType(builder, FlatEventData.EventData().SocketEvent)
         FlatFalconEvent.FalconEventAddEvent(builder, socket_event_data)
         builder.Finish(FlatFalconEvent.FalconEventEnd(builder))
 
@@ -210,6 +212,7 @@ class SocketAccept(SocketEvent):
         FlatFalconEvent.FalconEventAddTid(builder, self._tid)
         FlatFalconEvent.FalconEventAddComm(builder, comm_field)
         FlatFalconEvent.FalconEventAddHost(builder, host_field)
+        FlatFalconEvent.FalconEventAddEventType(builder, FlatEventData.EventData().SocketEvent)
         FlatFalconEvent.FalconEventAddEvent(builder, socket_event_data)
         builder.Finish(FlatFalconEvent.FalconEventEnd(builder))
 
@@ -276,6 +279,7 @@ class SocketSend(SocketEvent):
         FlatFalconEvent.FalconEventAddTid(builder, self._tid)
         FlatFalconEvent.FalconEventAddComm(builder, comm_field)
         FlatFalconEvent.FalconEventAddHost(builder, host_field)
+        FlatFalconEvent.FalconEventAddEventType(builder, FlatEventData.EventData().SocketEvent)
         FlatFalconEvent.FalconEventAddEvent(builder, socket_event_data)
         builder.Finish(FlatFalconEvent.FalconEventEnd(builder))
 
@@ -342,6 +346,7 @@ class SocketReceive(SocketEvent):
         FlatFalconEvent.FalconEventAddTid(builder, self._tid)
         FlatFalconEvent.FalconEventAddComm(builder, comm_field)
         FlatFalconEvent.FalconEventAddHost(builder, host_field)
+        FlatFalconEvent.FalconEventAddEventType(builder, FlatEventData.EventData().SocketEvent)
         FlatFalconEvent.FalconEventAddEvent(builder, socket_event_data)
         builder.Finish(FlatFalconEvent.FalconEventEnd(builder))
 
