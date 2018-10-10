@@ -22,9 +22,11 @@ class BpfProgram():
         self._attach_socket_probes()
         self._attach_process_probes()
         self._bpf.attach_tracepoint(tp="sched:sched_process_fork", fn_name="on_fork")
+        self._bpf.attach_tracepoint(tp="sched:sched_process_exec", fn_name="on_exec")
 
     def detach_probes(self):
         self._bpf.detach_tracepoint(tp="sched:sched_process_fork")
+        self._bpf.detach_tracepoint(tp="sched:sched_process_exec")
         self._bpf.cleanup()
 
     def filter_pid(self, pid):
