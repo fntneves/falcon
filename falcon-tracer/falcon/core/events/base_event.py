@@ -80,6 +80,7 @@ class Event(object):
         self._pid = tgid
         self._comm = comm
         self._ktime = None
+        self._data = {}
 
     def get_thread_id(self):
         return self._generate_thread_id(self._tid, self._host)
@@ -88,9 +89,7 @@ class Event(object):
         return NotImplemented
 
     def to_bytes(self):
-        data = (self._timestamp, len(self._host), self._host, self._tid, self._pid, self._comm)
-
-        return struct.pack('! Q I{}s I I 16s'.format(len(self._host)), *data)
+        return NotImplemented
 
     def _generate_thread_id(self, pid, host):
         return '{}@{}'.format(pid, host)

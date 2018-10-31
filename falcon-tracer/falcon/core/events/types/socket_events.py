@@ -150,6 +150,7 @@ class SocketConnect(SocketEvent):
         FlatFalconEvent.FalconEventAddHost(builder, host_field)
         FlatFalconEvent.FalconEventAddEventType(builder, FlatEventData.EventData().SocketEvent)
         FlatFalconEvent.FalconEventAddEvent(builder, socket_event_data)
+        FlatFalconEvent.FalconEventAddExtraData(builder, json.dumps(self._data))
         builder.Finish(FlatFalconEvent.FalconEventEnd(builder))
 
         return builder.Output()
@@ -214,6 +215,7 @@ class SocketAccept(SocketEvent):
         FlatFalconEvent.FalconEventAddHost(builder, host_field)
         FlatFalconEvent.FalconEventAddEventType(builder, FlatEventData.EventData().SocketEvent)
         FlatFalconEvent.FalconEventAddEvent(builder, socket_event_data)
+        FlatFalconEvent.FalconEventAddExtraData(builder, json.dumps(self._data))
         builder.Finish(FlatFalconEvent.FalconEventEnd(builder))
 
         return builder.Output()
@@ -281,6 +283,7 @@ class SocketSend(SocketEvent):
         FlatFalconEvent.FalconEventAddHost(builder, host_field)
         FlatFalconEvent.FalconEventAddEventType(builder, FlatEventData.EventData().SocketEvent)
         FlatFalconEvent.FalconEventAddEvent(builder, socket_event_data)
+        FlatFalconEvent.FalconEventAddExtraData(builder, json.dumps(self._data))
         builder.Finish(FlatFalconEvent.FalconEventEnd(builder))
 
         return builder.Output()
@@ -348,6 +351,7 @@ class SocketReceive(SocketEvent):
         FlatFalconEvent.FalconEventAddHost(builder, host_field)
         FlatFalconEvent.FalconEventAddEventType(builder, FlatEventData.EventData().SocketEvent)
         FlatFalconEvent.FalconEventAddEvent(builder, socket_event_data)
+        FlatFalconEvent.FalconEventAddExtraData(builder, json.dumps(self._data))
         builder.Finish(FlatFalconEvent.FalconEventEnd(builder))
 
         return builder.Output()
