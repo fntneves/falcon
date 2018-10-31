@@ -60,6 +60,7 @@ table FalconEvent {
     comm:string;
     host:string;
     event:EventData;
+    extra_data:string;
 }
 
 root_type FalconEvent;

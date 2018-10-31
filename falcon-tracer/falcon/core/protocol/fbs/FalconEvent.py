@@ -23,7 +23,7 @@ class FalconEvent(object):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
-        return None
+        return bytes()
 
     # FalconEvent
     def UserTime(self):
@@ -65,14 +65,14 @@ class FalconEvent(object):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
-        return None
+        return bytes()
 
     # FalconEvent
     def Host(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(18))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
-        return None
+        return bytes()
 
     # FalconEvent
     def EventType(self):
@@ -91,7 +91,14 @@ class FalconEvent(object):
             return obj
         return None
 
-def FalconEventStart(builder): builder.StartObject(10)
+    # FalconEvent
+    def ExtraData(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(24))
+        if o != 0:
+            return self._tab.String(o + self._tab.Pos)
+        return bytes()
+
+def FalconEventStart(builder): builder.StartObject(11)
 def FalconEventAddId(builder, id): builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(id), 0)
 def FalconEventAddUserTime(builder, userTime): builder.PrependInt64Slot(1, userTime, 0)
 def FalconEventAddKernelTime(builder, kernelTime): builder.PrependInt64Slot(2, kernelTime, 0)
@@ -102,4 +109,5 @@ def FalconEventAddComm(builder, comm): builder.PrependUOffsetTRelativeSlot(6, fl
 def FalconEventAddHost(builder, host): builder.PrependUOffsetTRelativeSlot(7, flatbuffers.number_types.UOffsetTFlags.py_type(host), 0)
 def FalconEventAddEventType(builder, eventType): builder.PrependUint8Slot(8, eventType, 0)
 def FalconEventAddEvent(builder, event): builder.PrependUOffsetTRelativeSlot(9, flatbuffers.number_types.UOffsetTFlags.py_type(event), 0)
+def FalconEventAddExtraData(builder, extraData): builder.PrependUOffsetTRelativeSlot(10, flatbuffers.number_types.UOffsetTFlags.py_type(extraData), 0)
 def FalconEventEnd(builder): return builder.EndObject()
