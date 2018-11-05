@@ -9,7 +9,7 @@ class Neo4jGraph(object):
     def add_connection(self, event, **kwargs):
         self._driver.run(
             "MERGE (h:Host {name: $host}) "
-            "MERGE (loc_p:Process {pid: $pid, host: h.name, comm: $comm}) "
+            "MERGE (loc_p:Process {pid: $pid, host: h.name, comm: $comm, cpu_affinity: $cpu_affinity}) "
             "MERGE (socket:Socket {socket_id: $socket_id}) "
             "ON CREATE SET socket.from = $from_addr, socket.to = $to_addr, socket.created_at = $created_at, socket.bytes = 0 "
             "ON MATCH SET socket.created_at = $created_at, socket.bytes = socket.bytes + $size "
@@ -22,6 +22,7 @@ class Neo4jGraph(object):
             from_addr=event._socket_from,
             to_addr=event._socket_to,
             created_at=event._timestamp,
+            cpu_affinity=",".join((str(x) for x in event._cpu_affinity)),
             **kwargs
         )
 
