@@ -93,9 +93,9 @@ class SysGraph(BaseHandler):
         if event._pid == os.getpid():
             return
 
-        if data.type == EventType.SOCKET_ACCEPT:
+        if data.type == EventType.SOCKET_ACCEPT or data.type == EventType.SOCKET_CONNECT:
             self._graph.add_connection(event)
-        elif data.type == EventType.SOCKET_SEND:
+        elif data.type == EventType.SOCKET_SEND or data.type == EventType.SOCKET_RECEIVE:
             self._graph.update_connection(event)
         else:
             # Ignore other events
