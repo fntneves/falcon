@@ -13,8 +13,7 @@ class Neo4jGraph(object):
         self._driver.run(
             "MERGE (h:Host {name: $host}) " +
             "MERGE (loc_p:Process {pid: $pid, host: h.name, comm: $comm}) " +
-            "ON CREATE SET loc_p.cpu_affinity = $cpu_affinity " +
-            "ON MATCH SET loc_p.cpu_affinity = $cpu_affinity " +
+            "SET loc_p.cpu_affinity = $cpu_affinity " +
             "MERGE (socket:Socket {socket_id: $socket_id}) " +
             "ON CREATE SET socket.from = $from_addr, socket.to = $to_addr, socket.created_at = $created_at, socket.bytes = 0 " +
             "ON MATCH SET socket.created_at = $created_at, socket.bytes = socket.bytes + $size " +

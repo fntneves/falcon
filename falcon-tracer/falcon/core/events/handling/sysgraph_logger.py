@@ -14,8 +14,6 @@ from falcon.core.events.handling.sysgraph import Neo4jGraph, JavaProcessHandler
 from falcon.core.events.handling.base_handler import BaseHandler
 
 class HTTPServerHandler(BaseHTTPRequestHandler):
-    response = None
-
     def __init__(self, request, client_address, server):
         BaseHTTPRequestHandler.__init__(self, request, client_address, server)
 
@@ -87,7 +85,11 @@ class SysGraph(BaseHandler):
             return
 
         event = EventFactory.create(data)
-        event._cpu_affinity = numa.get_affinity(event._pid)
+        cpu_affinity = numa.get_affinity(event._pid)
+
+        # Refactor: Move numa info to a dedicated class.
+        if len(cpu_affinity) > 4:
+            event._cpu_affinity = cpu_affinity
 
         # Ignore self events
         if event._pid == os.getpid():
