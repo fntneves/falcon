@@ -28,6 +28,7 @@ setup(
         'flatbuffers',
         'python-dotenv',
         'py2neo',
+        'numa',
         'ipython<6',
     ],
     test_suite='nose.collector',

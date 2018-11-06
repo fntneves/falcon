@@ -8,6 +8,9 @@ class JavaProcessHandler():
         self._sock.connect((host, int(port)))
 
     def handle(self, event):
+        if (event._comm != 'java'):
+            return
+
         pid_binary = struct.pack('!i', event._pid)
         self._sock.send(pid_binary)
 
