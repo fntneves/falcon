@@ -11,14 +11,14 @@ class Neo4jGraph(object):
         kwargs['size'] = 0 if 'size' not in kwargs else kwargs['size']
 
         self._driver.run(
-            "MERGE (h:Host {name: $host}) "
-            "MERGE (loc_p:Process {pid: $pid, host: h.name, comm: $comm}) "
-            "ON CREATE SET loc_p.cpu_affinity = $cpu_affinity "
-            "ON MATCH SET loc_p.cpu_affinity = $cpu_affinity "
-            "MERGE (socket:Socket {socket_id: $socket_id}) "
-            "ON CREATE SET socket.from = $from_addr, socket.to = $to_addr, socket.created_at = $created_at, socket.bytes = 0 "
-            "ON MATCH SET socket.created_at = $created_at, socket.bytes = socket.bytes + $size "
-            "MERGE (h)-[:HAS_PID]-(loc_p) "
+            "MERGE (h:Host {name: $host}) " +
+            "MERGE (loc_p:Process {pid: $pid, host: h.name, comm: $comm}) " +
+            "ON CREATE SET loc_p.cpu_affinity = $cpu_affinity " +
+            "ON MATCH SET loc_p.cpu_affinity = $cpu_affinity " +
+            "MERGE (socket:Socket {socket_id: $socket_id}) " +
+            "ON CREATE SET socket.from = $from_addr, socket.to = $to_addr, socket.created_at = $created_at, socket.bytes = 0 " +
+            "ON MATCH SET socket.created_at = $created_at, socket.bytes = socket.bytes + $size " +
+            "MERGE (h)-[:HAS_PID]-(loc_p) " +
             "MERGE (loc_p)-[r:CONNECTED_TO]-(socket) ",
             host=event._host,
             pid=event._pid,
