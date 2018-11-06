@@ -8,7 +8,7 @@ class Neo4jGraph(object):
 
     def add_connection(self, event, **kwargs):
 
-        size = 0 if 'size' not in kwargs else kwargs['size']
+        kwargs['size'] = 0 if 'size' not in kwargs else kwargs['size']
 
         self._driver.run(
             "MERGE (h:Host {name: $host}) "
@@ -26,7 +26,6 @@ class Neo4jGraph(object):
             to_addr=event._socket_to,
             created_at=event._timestamp,
             cpu_affinity=",".join((str(x) for x in event._cpu_affinity)),
-            size=size,
             **kwargs
         )
 
