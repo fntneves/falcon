@@ -90,6 +90,8 @@ class SysGraph(BaseHandler):
         # Refactor: Move numa info to a dedicated class.
         if len(cpu_affinity) > 4:
             event._cpu_affinity = cpu_affinity
+        else:
+            event._cpu_affinity=[]
 
         # Ignore self events
         if event._pid == os.getpid():
