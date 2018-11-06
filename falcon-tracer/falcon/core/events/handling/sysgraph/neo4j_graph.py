@@ -7,6 +7,9 @@ class Neo4jGraph(object):
         self._driver.run("CREATE CONSTRAINT ON (s:Socket) ASSERT s.socket_id IS UNIQUE")
 
     def add_connection(self, event, **kwargs):
+
+        size = 0 if 'size' not in kwargs else kwargs['size']
+
         self._driver.run(
             "MERGE (h:Host {name: $host}) "
             "MERGE (loc_p:Process {pid: $pid, host: h.name, comm: $comm, cpu_affinity: $cpu_affinity}) "
@@ -23,6 +26,7 @@ class Neo4jGraph(object):
             to_addr=event._socket_to,
             created_at=event._timestamp,
             cpu_affinity=",".join((str(x) for x in event._cpu_affinity)),
+            size=size,
             **kwargs
         )
 
