@@ -36,6 +36,7 @@ class ProcessCreate(Event):
         id_field = builder.CreateString(self._id)
         comm_field = builder.CreateString(self._comm)
         host_field = builder.CreateString(self._host)
+        extra_data_field = builder.CreateString(json.dumps(self._data))
 
         # Create ProcessCreate event
         FlatProcessCreate.ProcessCreateStart(builder)
@@ -54,7 +55,7 @@ class ProcessCreate(Event):
         FlatFalconEvent.FalconEventAddHost(builder, host_field)
         FlatFalconEvent.FalconEventAddEventType(builder, FlatEventData.EventData().ProcessCreate)
         FlatFalconEvent.FalconEventAddEvent(builder, event_data)
-        FlatFalconEvent.FalconEventAddExtraData(builder, json.dumps(self._data))
+        FlatFalconEvent.FalconEventAddExtraData(builder, extra_data_field)
         builder.Finish(FlatFalconEvent.FalconEventEnd(builder))
 
         return builder.Output()
@@ -86,6 +87,7 @@ class ProcessJoin(Event):
         id_field = builder.CreateString(self._id)
         comm_field = builder.CreateString(self._comm)
         host_field = builder.CreateString(self._host)
+        extra_data_field = builder.CreateString(json.dumps(self._data))
 
         # Create ProcessJoin event
         FlatProcessJoin.ProcessJoinStart(builder)
@@ -104,7 +106,7 @@ class ProcessJoin(Event):
         FlatFalconEvent.FalconEventAddHost(builder, host_field)
         FlatFalconEvent.FalconEventAddEventType(builder, FlatEventData.EventData().ProcessJoin)
         FlatFalconEvent.FalconEventAddEvent(builder, event_data)
-        FlatFalconEvent.FalconEventAddExtraData(builder, json.dumps(self._data))
+        FlatFalconEvent.FalconEventAddExtraData(builder, extra_data_field)
         builder.Finish(FlatFalconEvent.FalconEventEnd(builder))
 
         return builder.Output()
@@ -131,6 +133,7 @@ class ProcessStart(Event):
         id_field = builder.CreateString(self._id)
         comm_field = builder.CreateString(self._comm)
         host_field = builder.CreateString(self._host)
+        extra_data_field = builder.CreateString(json.dumps(self._data))
 
         # Create ProcessStart event
         FlatProcessStart.ProcessStartStart(builder)
@@ -148,7 +151,7 @@ class ProcessStart(Event):
         FlatFalconEvent.FalconEventAddHost(builder, host_field)
         FlatFalconEvent.FalconEventAddEventType(builder, FlatEventData.EventData().ProcessStart)
         FlatFalconEvent.FalconEventAddEvent(builder, event_data)
-        FlatFalconEvent.FalconEventAddExtraData(builder, json.dumps(self._data))
+        FlatFalconEvent.FalconEventAddExtraData(builder, extra_data_field)
         builder.Finish(FlatFalconEvent.FalconEventEnd(builder))
 
         return builder.Output()
@@ -175,6 +178,7 @@ class ProcessEnd(Event):
         id_field = builder.CreateString(self._id)
         comm_field = builder.CreateString(self._comm)
         host_field = builder.CreateString(self._host)
+        extra_data_field = builder.CreateString(json.dumps(self._data))
 
         # Create ProcessEnd event
         FlatProcessEnd.ProcessEndStart(builder)
@@ -192,7 +196,7 @@ class ProcessEnd(Event):
         FlatFalconEvent.FalconEventAddHost(builder, host_field)
         FlatFalconEvent.FalconEventAddEventType(builder, FlatEventData.EventData().ProcessEnd)
         FlatFalconEvent.FalconEventAddEvent(builder, event_data)
-        FlatFalconEvent.FalconEventAddExtraData(builder, json.dumps(self._data))
+        FlatFalconEvent.FalconEventAddExtraData(builder, extra_data_field)
         builder.Finish(FlatFalconEvent.FalconEventEnd(builder))
 
         return builder.Output()
