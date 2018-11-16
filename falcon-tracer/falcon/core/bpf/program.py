@@ -1,4 +1,5 @@
 from bcc import BPF
+import logging
 
 syscall_regex = "^[Ss]y[Ss]_"
 
@@ -30,7 +31,7 @@ class BpfProgram():
     def filter_pid(self, pid):
         assert isinstance(pid, int)
 
-        print 'Filtering events from PID: ' + str(pid)
+        logging.info('Filtering events from PID [' + str(pid) + ']')
 
         self._contents = self._contents.replace(
             '//PID_FILTER//', str(pid))
