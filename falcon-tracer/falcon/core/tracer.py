@@ -6,40 +6,59 @@ import events
 import signal
 import time
 import sys
+import errno
 import os
 from bpf import BpfProgram
 from falcon import util
 from falcon.core import settings
 from falcon.core.events.handling.writers.writer_factory import WriterFactory
 import pkg_resources
+from falcon import util
 
 # Configure logger
 logging.config.fileConfig(pkg_resources.resource_filename('falcon', '../conf/logging.ini'))
 
 class Tracer:
-    def run(self, pid=0, signal_child=False):
-        program_filepath = pkg_resources.resource_filename('falcon', 'core/resources/ebpf/probes.c')
+    def __init__(self, pid=0, should_signal=False):
+        self.pid = pid
+        self.on_ready_callback = None
+        if should_signal:
+            self.on_ready_callback = lambda : os.kill(pid, signal.SIGCONT)
 
-        def shutdown_tracer(signum, frame):
-            os.kill(multiprocessing.current_process().pid, signal.SIGINT)
-        signal.signal(signal.SIGCHLD, shutdown_tracer)
+    def run(self):
+        program_filepath = pkg_resources.resource_filename('falcon', 'core/resources/ebpf/probes.c')
 
         with open(program_filepath, 'r') as program_file:
             program = BpfProgram(text=program_file.read())
-            program.filter_pid(pid)
+            program.filter_pid(self.pid)
 
             logging.info('Creating and booting handlers and appenders...')
             handler = events.handling.FalconEventLogger(WriterFactory.createFromConfig())
             handler.boot()
 
             logging.info('Running eBPF listener...')
-            bpf_listener_worker = events.bpf.BpfEventListener(program, handler, pid)
-            bpf_listener_worker.run(signal_child)
+            bpf_listener_worker = events.bpf.BpfEventListener(program, handler, self.pid, self.on_ready_callback)
+            bpf_listener_worker.run()
 
             logging.info('Shutting handler down...')
             handler.shutdown()
 
         return 0
+
+def run_tracer(target_pid):
+    pid = os.fork()
+    if pid == 0:
+        try:
+            # Ask for sudo permissions for correctly running tracer
+            program = ['sudo' ,'falcon-tracer', '--pid', str(target_pid), '--signal']
+            logging.debug("Starting tracer with cmd [" + " ".join(program) + "].")
+
+            os.execvp(program[0], program)
+        except Exception as e:
+            logging.error("Could not execute tracer: {}".format(e))
+            os._exit(1)
+    else:
+        return pid
 
 def run_program(program):
     pid = os.fork()
@@ -52,6 +71,9 @@ def run_program(program):
 
         while paused[0]:
             signal.pause()
+
+        logging.info("Started program ["  + " ".join(program) + "]")
+
         try:
             os.execvp(program[0], program)
         except Exception as e:
@@ -60,22 +82,64 @@ def run_program(program):
     else:
         return pid
 
-
 def main():
     """Main entry point for the script."""
+    pid_file = '/tmp/tracer.pid'
+
+    if (util.check_pid(util.read_pid(pid_file))):
+        raise RuntimeError("Tracer is already running. Please stop it before starting a new instance.")
+
     parser = argparse.ArgumentParser(prog='falcon-tracer', description='This program is the tracer of the Falcon pipeline tool.')
 
-    parser.add_argument('--pid', type=int, nargs='?', default=-1,
+    parser.add_argument('--pid', type=int, nargs='?', default=None,
                         help="filter events of the given PID.")
+    parser.add_argument('--signal', action='store_true',
+                        help="send SIGCONT signal to the given PID.")
     args, cmd = parser.parse_known_args()
-    signal_child = False
-    if args.pid == -1:
-        prog_pid = run_program(cmd)
-        signal_child = True
+
+    if args.pid is None:
+        exit = False
+        program_exited = False
+        tracer_exited = False
+        def ignore(signum, frame):
+            pass
+
+        # Ignore CTRL+C interruptions to wait for all children
+        signal.signal(signal.SIGINT, ignore)
+
+        # Execute command received as argument
+        target_pid = run_program(cmd)
+        logging.info("Launched program ["  + " ".join(cmd) + "]. PID is [" + str(target_pid) + "]")
+
+        # Execute tracer with argument pid
+        tracer_wrapper_pid = run_tracer(target_pid)
+
+        # Wait for child processes to terminate
+        while exit is False:
+            try:
+                if program_exited is False:
+                    os.waitpid(target_pid, 0)
+                    program_exited = True
+                    logging.info("The target program [" + str(target_pid) + "] exited.")
+
+                if tracer_exited is False:
+                    tracer_pid = util.read_pid(pid_file)
+                    logging.debug("Interrupting tracer [" + str(tracer_pid) + "] program.")
+                    os.system("sudo kill -SIGINT " + str(tracer_pid))
+                    os.waitpid(tracer_wrapper_pid, 0)
+                    tracer_exited = True
+                    logging.info("The tracer program [" + str(tracer_pid) + "] exited.")
+
+                if program_exited and tracer_exited:
+                    exit = True
+            except OSError, e:
+                if e.errno != errno.EINTR:
+                    raise
     else:
-        prog_pid = args.pid
-    sys.exit(Tracer().run(
-        pid=prog_pid, signal_child=signal_child))
+        target_pid = args.pid
+        util.write_pid(pid_file)
+        Tracer(target_pid, args.signal).run()
+        util.clean_pid(pid_file)
 
 if __name__ == '__main__':
     main()

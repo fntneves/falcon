@@ -10,27 +10,28 @@ from falcon import util
 from falcon.core.events.base_event import EventData
 
 class BpfEventListener():
-    def __init__(self, bpf, handler, traced_pid):
+    def __init__(self, bpf, handler, traced_pid, on_ready_callback=None):
         self._bpf = bpf
         self._handler = handler
         self._traced_pid = traced_pid
+        self._on_ready_callback = on_ready_callback
 
-    def run(self, signal_child):
+    def run(self, on_ready_callback=None):
         self._bpf.prepare()
         self._bpf.open_event_buffer('events', self.handle)
-
         self._bpf.attach_probes()
-        if signal_child:
-            os.kill(self._traced_pid, signal.SIGCONT)
 
         exit = [False]
-
         def start_shutdown(signum, frame):
             logging.info('BPF event listener {} was interrupted...'.format(
                 str(multiprocessing.current_process().pid)))
             exit[0] = True
 
         signal.signal(signal.SIGINT, start_shutdown)
+
+        # Execute the given OnReady callback
+        if self._on_ready_callback is not None:
+            self._on_ready_callback()
 
         # Poll the kprobe events queue
         while not exit[0]:
