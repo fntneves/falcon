@@ -8,7 +8,6 @@ import time
 import sys
 import errno
 import os
-from bpf import BpfProgram
 from falcon import util
 from falcon.core import settings
 from falcon.core.events.handling.writers.writer_factory import WriterFactory
@@ -26,6 +25,8 @@ class Tracer:
             self.on_ready_callback = lambda : os.kill(pid, signal.SIGCONT)
 
     def run(self):
+        from bpf import BpfProgram
+
         program_filepath = pkg_resources.resource_filename('falcon', 'core/resources/ebpf/probes.c')
 
         with open(program_filepath, 'r') as program_file:
