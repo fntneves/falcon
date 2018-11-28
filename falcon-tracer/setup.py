@@ -22,7 +22,6 @@ setup(
     license=license,
     packages=find_packages(exclude=EXCLUDE_FROM_PACKAGES),
     install_requires=[
-        'bcc',
         'ujson',
         'kafka',
         'confluent-kafka',
