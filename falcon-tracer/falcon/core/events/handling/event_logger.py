@@ -1,7 +1,7 @@
 import logging
 import uuid
 from falcon.core.events.event_factory import EventFactory, EventType
-from falcon.core.events.types import SocketEvent, SocketSend, SocketReceive, SocketConnect
+from falcon.core.events.types import SocketSend, SocketReceive, SocketConnect
 from falcon.core.events.handling.base_handler import BaseHandler
 
 class FalconEventLogger(BaseHandler):
@@ -16,13 +16,11 @@ class FalconEventLogger(BaseHandler):
     def handle(self, cpu, data, size):
         event = EventFactory.create(data)
 
-        # Ignore Kafka-related events
-        if isinstance(event, SocketEvent):
-            if (isinstance(event, SocketReceive) and event._sport == 9092) or (isinstance(event, SocketSend) and event._dport == 9092):
-                return
+        if (isinstance(event, SocketReceive) and event._sport == 9092) or (isinstance(event, SocketSend) and event._dport == 9092):
+            return
 
-            if (isinstance(event, SocketConnect) and event._dport == 9092):
-                return
+        if (isinstance(event, SocketConnect) and event._dport == 9092):
+            return
 
         if data.type == EventType.PROCESS_CREATE:
             self._writer.write(event)
