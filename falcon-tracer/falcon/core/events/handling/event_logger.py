@@ -16,10 +16,10 @@ class FalconEventLogger(BaseHandler):
     def handle(self, cpu, data, size):
         event = EventFactory.create(data)
 
-        if (isinstance(event, SocketReceive) and event._sport == 9092) or (isinstance(event, SocketSend) and event._dport == 9092):
+        if (isinstance(event, SocketReceive) and event._sport in [9092, 53]) or (isinstance(event, SocketSend) and event._dport in [9092, 53]):
             return
 
-        if (isinstance(event, SocketConnect) and event._dport == 9092):
+        if (isinstance(event, SocketConnect) and event._dport in [9092, 53]):
             return
 
         if data.type == EventType.PROCESS_CREATE:
