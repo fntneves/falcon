@@ -1,5 +1,19 @@
 package pt.haslab.taz;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -18,21 +32,6 @@ import pt.haslab.taz.events.SyncEvent;
 import pt.haslab.taz.events.ThreadCreationEvent;
 import pt.haslab.taz.events.TimestampComparator;
 import pt.haslab.taz.utils.Utils;
-
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 /**
  * The class is responsible for parsing an event trace and organize the events into different data structures
@@ -333,14 +332,14 @@ public enum TraceProcessor
                     CausalPair<SocketEvent, SocketEvent> connAccPair = connAcptEvents.get( socketChannelId );
 
                     // The CONNECT is the first element of the causal pair.
-                    if ( connAccPair.getSecond() == null )
+                    if ( type == EventType.CONNECT )
                     {
-                        connAccPair.setSecond( socketEvent );
+                        connAccPair.setFirst( socketEvent );
                     }
                     // The ACCEPT is the second element of the causal pair.
                     else
                     {
-                        connAccPair.setFirst( socketEvent );
+                        connAccPair.setSecond( socketEvent );
                     }
                 }
 

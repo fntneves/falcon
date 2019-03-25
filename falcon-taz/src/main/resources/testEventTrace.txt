@@ -39,4 +39,9 @@
 {"timestamp":34,"thread":"T2@N2","type":"WAIT","variable":"condB","counter":0,"loc":"test.taz.run.33"},
 {"timestamp":35,"thread":"T2@N2","type":"LOCK","variable":"lockB","counter":1,"loc":"test.taz.run.33"},
 {"timestamp":36,"thread":"T2@N2","type":"UNLOCK","variable":"lockB","counter":1,"loc":"test.taz.run.36"},
-{"timestamp":37,"thread":"T2@N2","type":"END"}]
+{"timestamp":37,"thread":"T2@N2","type":"END"},
+{"timestamp":9,"thread":"T3@N3","type":"START"},
+{"timestamp":9,"thread":"T4@N4","type":"START"},
+{"timestamp":10,"thread":"T3@N3","type":"ACCEPT","src":"127.0.0.1","src_port":1004,"dst":"127.0.0.1","dst_port":1003,"socket":"127.0.0.1:1004-127.0.0.1:1003","socket_type":"TCP","data":{}},
+{"timestamp":11,"thread":"T4@N4","type":"CONNECT","src":"127.0.0.1","src_port":1004,"dst":"127.0.0.1","dst_port":1003,"socket":"127.0.0.1:1004-127.0.0.1:1003","socket_type":"TCP","data":{}}
+]
