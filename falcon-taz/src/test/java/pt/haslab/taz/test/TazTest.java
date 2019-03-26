@@ -1,21 +1,21 @@
 package pt.haslab.taz.test;
 
+import static junit.framework.TestCase.assertTrue;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.SortedSet;
 import org.json.JSONException;
 import org.junit.Test;
 import pt.haslab.taz.TraceProcessor;
 import pt.haslab.taz.causality.CausalPair;
 import pt.haslab.taz.causality.MessageCausalPair;
 import pt.haslab.taz.events.Event;
+import pt.haslab.taz.events.EventType;
 import pt.haslab.taz.events.RWEvent;
 import pt.haslab.taz.events.SocketEvent;
 import pt.haslab.taz.events.SyncEvent;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.SortedSet;
-
-import static junit.framework.TestCase.assertTrue;
 
 /**
  * Created by nunomachado on 08/03/18.
@@ -51,7 +51,7 @@ public class TazTest
         }
 
         //expected results ---
-        int expectedTotal = 41;
+        int expectedTotal = 45;
         int expectedT1_N1 = 8;
         int expectedT2_N1 = 13;
         int expectedT1_N2 = 13;
@@ -65,7 +65,7 @@ public class TazTest
         int expectedW = 2;
         int expectedWait = 1;
         int expectedNotify = 1;
-        int expectedConnAcpt = 1;
+        int expectedConnAcpt = 2;
         int expectedCloseShut = 1;
         //------
 
@@ -112,6 +112,12 @@ public class TazTest
         assertTrue( "#CONNECT/ACCEPT pairs = " + processor.connAcptEvents.values().size() + " (expected "
                                     + expectedConnAcpt + ")",
                     processor.connAcptEvents.values().size() == expectedConnAcpt );
+
+        for( CausalPair<SocketEvent, SocketEvent> p : processor.connAcptEvents.values() )
+        {
+            assertTrue( p.getFirst().getType() == EventType.CONNECT
+                    && p.getSecond().getType() == EventType.ACCEPT );
+        }
 
         assertTrue( "#CLOSE/SHUTDOWN pairs = " + processor.closeShutEvents.values().size() + " (expected "
                                     + expectedCloseShut + ")",
