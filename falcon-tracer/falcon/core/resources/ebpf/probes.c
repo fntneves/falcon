@@ -1,6 +1,7 @@
 #include <uapi/linux/ptrace.h>
 #include <net/sock.h>
 #include <linux/if.h>
+#include <linux/pid.h>
 #include <linux/net.h>
 #include <linux/netdevice.h>
 #include <linux/sched.h>
@@ -136,6 +137,8 @@ void static emit_process_create(struct pt_regs *ctx, u64 timestamp, pid_t parent
     event.ktime = timestamp;
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
     event.child_pid = child_pid;
+
+    /* struct pid *pid_struct = */ find_get_pid(child_pid);
 
     events.perf_submit(ctx, &event, sizeof(event));
 }

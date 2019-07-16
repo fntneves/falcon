@@ -70,6 +70,7 @@ class BpfProgram():
         syscall_probes = {}
         # Prefix with 're' to indicate it is a regex.
         syscall_probes['re_' + syscall_regex + 'wait'] = (None, 'exit__sys_wait')
+        syscall_probes['re_' + syscall_regex + 'wait'] = ('exit__sys_fork')
 
         self._probes = {'socket': socket_probes, 'process': syscall_probes}
 
