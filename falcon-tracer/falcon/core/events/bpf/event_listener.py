@@ -33,6 +33,8 @@ class BpfEventListener():
         if self._on_ready_callback is not None:
             self._on_ready_callback()
 
+        # self._bpf.bpf_instance().trace_print()
+
         # Poll the kprobe events queue
         while not exit[0]:
             self._bpf.bpf_instance().kprobe_poll()

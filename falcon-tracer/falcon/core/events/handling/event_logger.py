@@ -22,14 +22,10 @@ class FalconEventLogger(BaseHandler):
         if (isinstance(event, SocketConnect) and event._dport in [9092, 53]):
             return
 
-        # if data.type == EventType.PROCESS_CREATE:
-        #     self._writer.write(event)
-        #     self._writer.write(EventFactory.create(data, event_type=EventType.PROCESS_START))
-        if data.type == EventType.PROCESS_JOIN:
-            self._writer.write(EventFactory.create(data, event_type=EventType.PROCESS_END))
-            self._writer.write(event)
-        else:
-            self._writer.write(event)
+        from pprint import pprint
+        pprint(event.__dict__)
+
+        self._writer.write(event)
 
     def shutdown(self):
         logging.info('Shutting down FalconEventLogger handler...')

@@ -44,7 +44,7 @@ class EventFactory:
         elif event_type == EventType.PROCESS_START:
             event = ProcessStart(data.pid, data.tgid, data.comm)
         elif event_type == EventType.PROCESS_END:
-            event = ProcessEnd(data.extra.child_pid, data.pid, data.comm)
+            event = ProcessEnd(data.pid, data.tgid, data.comm)
 
         event._ktime = data.ktime
 
