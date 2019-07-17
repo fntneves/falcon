@@ -82,6 +82,12 @@ class Event(object):
         self._ktime = None
         self._data = {}
 
+    def is_process(self):
+        return not self.is_thread()
+
+    def is_thread(self):
+        return not self.tid != self.pid
+
     def get_thread_id(self):
         return self._generate_thread_id(self._tid, self._host)
 
