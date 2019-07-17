@@ -42,7 +42,7 @@ class EventFactory:
         elif event_type == EventType.PROCESS_JOIN:
             event = ProcessJoin(data.pid, data.tgid, data.comm, data.extra.child_pid)
         elif event_type == EventType.PROCESS_START:
-            event = ProcessStart(data.extra.child_pid, data.pid, data.comm)
+            event = ProcessStart(data.pid, data.tgid, data.comm)
         elif event_type == EventType.PROCESS_END:
             event = ProcessEnd(data.extra.child_pid, data.pid, data.comm)
 

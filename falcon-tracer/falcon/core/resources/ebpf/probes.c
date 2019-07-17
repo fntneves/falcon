@@ -16,6 +16,7 @@ enum event_type {
     SOCKET_ACCEPT = 12,
 
     PROCESS_CREATE = 1,
+    PROCESS_START = 2,
     PROCESS_JOIN = 4,
 };
 
@@ -52,6 +53,11 @@ struct event_info_t {
 BPF_HASH(entry_timestamps, u32, u64);
 BPF_HASH(sock_handlers, u32, struct sock *);
 BPF_HASH(trace_pids, u32, char);
+
+// The next structure holds information about processes that are being created
+// so we can provide full and accuracte information about their parents.
+// child_pid -> ktime of fork()
+BPF_HASH(forked_pids, u32, u64);
 
 // This structure stores the socket events.
 BPF_PERF_OUTPUT(events);
@@ -123,19 +129,32 @@ void static emit_socket_receive(struct pt_regs *ctx, u64 timestamp, struct socke
     events.perf_submit(ctx, &event, sizeof(event));
 }
 
-void static emit_process_create(struct pt_regs *ctx, u64 timestamp, pid_t parent_pid, pid_t child_pid)
+void static emit_process_create(struct pt_regs *ctx, u64 timestamp, pid_t child_pid)
 {
-    char zero = ' ';
-    trace_pids.insert(&child_pid, &zero);
-
     struct event_info_t event = {
         .type = PROCESS_CREATE,
-        .pid = parent_pid,
+        .pid = bpf_get_current_pid_tgid(),
         .tgid = bpf_get_current_pid_tgid() >> 32
     };
     event.ktime = timestamp;
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
     event.child_pid = child_pid;
+
+    events.perf_submit(ctx, &event, sizeof(event));
+}
+
+void static emit_process_start(struct pt_regs *ctx, u64 timestamp)
+{
+    char zero = ' ';
+    trace_pids.insert(&child_pid, &zero);
+
+    struct event_info_t event = {
+        .type = PROCESS_START,
+        .pid = bpf_get_current_pid_tgid(),
+        .tgid = bpf_get_current_pid_tgid() >> 32
+    };
+    event.ktime = timestamp;
+    bpf_get_current_comm(&event.comm, sizeof(event.comm));
 
     events.perf_submit(ctx, &event, sizeof(event));
 }
@@ -366,8 +385,36 @@ int on_fork(struct sched_process_fork * args)
         return 1;
     }
 
-    emit_process_create((struct pt_regs *)args, bpf_ktime_get_ns(), args->parent_pid, args->child_pid);
+    u32 child_kpid = args->child_pid;
+    u64 fork_time = bpf_ktime_get_ns();
+    forked_pids.insert(&child_kpid, &fork_time);
 
+    emit_process_create((struct pt_regs *)args, fork_time, child_kpid);
+
+    return 0;
+}
+
+/**
+ * Probe "_do_fork" at the exit point.
+ */
+int exit__do_fork(struct pt_regs *ctx)
+{
+    u32 kpid = bpf_get_current_pid_tgid();
+    int returned_pid = PT_REGS_RC(ctx);
+
+    // We intercept just new children processes.
+    if (skip_pid(kpid) || returned_pid != 0)
+    {
+        return 1;
+    }
+
+    u64 *fork_ktime = forked_pids.lookup(&kpid);
+
+    if (fork_time != NULL) {
+        emit_process_start((struct pt_regs *)args, fork_time);
+
+        forked_pids.remove(&kpid);
+    }
     return 0;
 }
 
