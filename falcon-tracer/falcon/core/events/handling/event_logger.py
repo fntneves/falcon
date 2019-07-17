@@ -22,9 +22,6 @@ class FalconEventLogger(BaseHandler):
         if (isinstance(event, SocketConnect) and event._dport in [9092, 53]):
             return
 
-        from pprint import pprint
-        pprint(event.__dict__)
-
         self._writer.write(event)
 
     def shutdown(self):
