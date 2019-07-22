@@ -27,6 +27,7 @@ setup(
         'confluent-kafka',
         'flatbuffers',
         'python-dotenv',
+        'sortedcontainers'
     ],
     test_suite='nose.collector',
     tests_require=['nose'],
