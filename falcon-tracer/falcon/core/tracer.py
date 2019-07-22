@@ -33,7 +33,8 @@ class Tracer:
             program = BpfProgram(text=program_file.read())
             program.filter_pid(self.pid)
 
-            logging.info('Creating and booting handlers and appenders...')
+            logging.info('Creating and booting event dispatcher and handlers...')
+
             handler = events.handling.FalconEventLogger(WriterFactory.createFromConfig())
             handler.boot()
 

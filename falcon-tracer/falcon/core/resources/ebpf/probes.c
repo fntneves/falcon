@@ -155,7 +155,7 @@ void static emit_process_start(struct pt_regs *ctx, u64 timestamp, u32 pid, u32 
         .pid = pid,
         .tgid = tgid
     };
-    event.ktime = timestamp;
+    event.ktime = timestamp + 1;
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
 
     events.perf_submit(ctx, &event, sizeof(event));
@@ -181,7 +181,7 @@ void static emit_process_join(struct pt_regs *ctx, u64 timestamp, pid_t child_pi
         .pid = bpf_get_current_pid_tgid(),
         .tgid = bpf_get_current_pid_tgid() >> 32
     };
-    event.ktime = timestamp;
+    event.ktime = timestamp + 1;
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
     event.child_pid = child_pid;
 
