@@ -7,6 +7,7 @@ import falcon.core.protocol.fbs.ProcessCreate as FlatProcessCreate
 import falcon.core.protocol.fbs.ProcessJoin as FlatProcessJoin
 import falcon.core.protocol.fbs.ProcessStart as FlatProcessStart
 import falcon.core.protocol.fbs.ProcessEnd as FlatProcessEnd
+import falcon.core.protocol.fbs.FSync as FlatFSync
 import flatbuffers
 
 
