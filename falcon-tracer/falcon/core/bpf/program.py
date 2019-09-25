@@ -1,7 +1,7 @@
 from bcc import BPF
 import logging
 
-syscall_regex = "^[Ss]y[Ss]_"
+syscall_regex = "^[s]y[s]_"
 
 
 class BpfProgram():
@@ -22,12 +22,10 @@ class BpfProgram():
     def attach_probes(self):
         self._attach_socket_probes()
         self._attach_process_probes()
-        self._bpf.attach_tracepoint(tp="syscalls:sys_exit_fsync", fn_name="on_fsync")
         self._bpf.attach_tracepoint(tp="sched:sched_process_fork", fn_name="on_fork")
         self._bpf.attach_tracepoint(tp="sched:sched_process_exit", fn_name="on_exit")
 
     def detach_probes(self):
-        self._bpf.detach_tracepoint(tp="syscalls:sys_exit_fsync")
         self._bpf.detach_tracepoint(tp="sched:sched_process_fork")
         self._bpf.detach_tracepoint(tp="sched:sched_process_exit")
         self._bpf.cleanup()
@@ -75,6 +73,7 @@ class BpfProgram():
         # Prefix with 're' to indicate it is a regex.
         syscall_probes['wake_up_new_task'] = ('entry__wake_up_new_task', None)
         syscall_probes['do_wait'] = (None, 'exit__do_wait')
+        syscall_probes['re_' + syscall_regex + 'fsync'] = (None, 'exit__sys_fsync')
 
         self._probes = {'socket': socket_probes, 'process': syscall_probes}
 

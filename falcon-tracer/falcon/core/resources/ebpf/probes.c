@@ -499,25 +499,18 @@ int exit__do_wait(struct pt_regs *ctx)
 /**
  * Handle fsyncs.
  */
-struct sys_exit_fsync
-{
-    u64 __unused__;
-    int __syscall_nr;
-    long ret;
-};
-
-int on_fsync(struct sys_exit_fsync *args)
+int exit__sys_fsync(struct pt_regs *ctx)
 {
     u32 kpid = bpf_get_current_pid_tgid();
+    int return_value = PT_REGS_RC(ctx);
 
-    if (skip_pid(kpid) || args->ret < 0)
+    if (skip_pid(kpid) || return_value < 0)
     {
         return 1;
     }
 
     u64 fsync_time = bpf_ktime_get_ns();
-
-    emit_fsync((struct pt_regs *)args, fsync_time);
+    emit_fsync(ctx, fsync_time);
 
     return 0;
 }
