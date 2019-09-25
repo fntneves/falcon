@@ -17,6 +17,8 @@ class EventType():
     PROCESS_END = 3
     PROCESS_JOIN = 4
 
+    FSYNC = 13
+
     @staticmethod
     def is_socket(type):
         return type == EventType.SOCKET_SEND or \
@@ -29,7 +31,8 @@ class EventType():
         return type == EventType.PROCESS_CREATE or \
             type == EventType.PROCESS_START or \
             type == EventType.PROCESS_END or \
-            type == EventType.PROCESS_JOIN
+            type == EventType.PROCESS_JOIN or \
+            type == EventType.FSYNC
 
 
 class ExtraData(ctypes.Union):

@@ -45,6 +45,8 @@ class EventFactory:
             event = ProcessStart(data.pid, data.tgid, data.comm)
         elif event_type == EventType.PROCESS_END:
             event = ProcessEnd(data.pid, data.tgid, data.comm)
+        elif event_type == EventType.FSYNC:
+            event = FSync(data.pid, data.tgid, data.comm)
 
         event._ktime = data.ktime
 

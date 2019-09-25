@@ -6,6 +6,7 @@ union EventData {
     ProcessCreate,
     ProcessJoin,
     SocketEvent,
+    FSync,
 }
 
 union SocketEventData {
@@ -35,6 +36,8 @@ table SocketSend {
 table SocketReceive {
     size:uint;
 }
+
+table FSync {}
 
 /**
  * Main events

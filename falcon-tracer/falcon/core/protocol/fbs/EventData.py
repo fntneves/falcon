@@ -9,4 +9,5 @@ class EventData(object):
     ProcessCreate = 3
     ProcessJoin = 4
     SocketEvent = 5
+    FSync = 6
 

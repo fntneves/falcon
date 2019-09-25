@@ -19,6 +19,8 @@ enum event_type {
     PROCESS_START = 2,
     PROCESS_END = 3,
     PROCESS_JOIN = 4,
+
+    FSYNC = 13,
 };
 
 struct socket_info_t {
@@ -186,6 +188,19 @@ void static emit_process_join(struct pt_regs *ctx, u64 timestamp, pid_t child_pi
     event.child_pid = child_pid;
 
     trace_pids.delete(&child_pid);
+
+    events.perf_submit(ctx, &event, sizeof(event));
+}
+
+void static emit_fsync(struct pt_regs *ctx, u64 timestamp)
+{
+    struct event_info_t event = {
+        .type = FSYNC,
+        .pid = bpf_get_current_pid_tgid(),
+        .tgid = bpf_get_current_pid_tgid() >> 32
+    };
+    event.ktime = timestamp;
+    bpf_get_current_comm(&event.comm, sizeof(event.comm));
 
     events.perf_submit(ctx, &event, sizeof(event));
 }
@@ -477,6 +492,32 @@ int exit__do_wait(struct pt_regs *ctx)
         emit_process_join(ctx, *exit_ktime, exited_pid);
         exited_pids.delete(&exited_pid);
     }
+
+    return 0;
+}
+
+/**
+ * Handle fsyncs.
+ */
+struct sys_exit_fsync
+{
+    u64 __unused__;
+    int __syscall_nr;
+    long ret;
+};
+
+int on_fsync(struct sys_exit_fsync *args)
+{
+    u32 kpid = bpf_get_current_pid_tgid();
+
+    if (skip_pid(kpid) || args->ret < 0)
+    {
+        return 1;
+    }
+
+    u64 fsync_time = bpf_ktime_get_ns();
+
+    emit_fsync((struct pt_regs *)args, fsync_time);
 
     return 0;
 }

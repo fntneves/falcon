@@ -22,10 +22,12 @@ class BpfProgram():
     def attach_probes(self):
         self._attach_socket_probes()
         self._attach_process_probes()
+        self._bpf.attach_tracepoint(tp="syscalls:sys_exit_fsync", fn_name="on_fsync")
         self._bpf.attach_tracepoint(tp="sched:sched_process_fork", fn_name="on_fork")
         self._bpf.attach_tracepoint(tp="sched:sched_process_exit", fn_name="on_exit")
 
     def detach_probes(self):
+        self._bpf.detach_tracepoint(tp="syscalls:sys_exit_fsync")
         self._bpf.detach_tracepoint(tp="sched:sched_process_fork")
         self._bpf.detach_tracepoint(tp="sched:sched_process_exit")
         self._bpf.cleanup()

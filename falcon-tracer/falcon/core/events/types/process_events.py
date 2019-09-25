@@ -200,3 +200,47 @@ class ProcessEnd(Event):
         builder.Finish(FlatFalconEvent.FalconEventEnd(builder))
 
         return builder.Output()
+
+class FSync(Event):
+    def __init__(self, pid, tgid, comm, timestamp=None, host=None):
+        self._type = EventType.FSYNC
+        super(FSync, self).__init__(pid, tgid, comm, timestamp, host)
+
+    def to_json(self):
+        return json.dumps({
+            "type": self._type,
+            "timestamp": self._timestamp,
+            "thread": self.get_thread_id(),
+            "data": {
+                "host": self._host,
+                "comm": self._comm,
+            }
+        })
+
+    def to_bytes(self):
+        builder = flatbuffers.Builder(0)
+        id_field = builder.CreateString(self._id)
+        comm_field = builder.CreateString(self._comm)
+        host_field = builder.CreateString(self._host)
+        extra_data_field = builder.CreateString(json.dumps(self._data))
+
+        # Create FSync event
+        FlatFSync.FSyncStart(builder)
+        event_data = FlatFSync.FSyncEnd(builder)
+
+        # Create FalconEvent
+        FlatFalconEvent.FalconEventStart(builder)
+        FlatFalconEvent.FalconEventAddId(builder, id_field)
+        FlatFalconEvent.FalconEventAddUserTime(builder, self._timestamp)
+        FlatFalconEvent.FalconEventAddKernelTime(builder, self._ktime)
+        FlatFalconEvent.FalconEventAddType(builder, self._type)
+        FlatFalconEvent.FalconEventAddPid(builder, self._pid)
+        FlatFalconEvent.FalconEventAddTid(builder, self._tid)
+        FlatFalconEvent.FalconEventAddComm(builder, comm_field)
+        FlatFalconEvent.FalconEventAddHost(builder, host_field)
+        FlatFalconEvent.FalconEventAddEventType(builder, FlatEventData.EventData().FSync)
+        FlatFalconEvent.FalconEventAddEvent(builder, event_data)
+        FlatFalconEvent.FalconEventAddExtraData(builder, extra_data_field)
+        builder.Finish(FlatFalconEvent.FalconEventEnd(builder))
+
+        return builder.Output()
