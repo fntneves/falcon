@@ -118,8 +118,17 @@ export default class TraceDrawer {
       }
 
       // Draw connector.
+      let dependencies = [];
       if (event.hasDependency()) {
-        const dependencyShape = SVG.get(TraceDrawer[generateEventId](event.dependency));
+        if (['SND', 'RCV'].includes(event.type)) {
+          dependencies = event.dependencies;
+        } else {
+          dependencies.push(event.dependency);
+        }
+      }
+
+      dependencies.forEach((dependency) => {
+        const dependencyShape = SVG.get(TraceDrawer[generateEventId](dependency));
         const dependencyShapeBox = dependencyShape.bbox();
         const connectorShape = this.drawing.line(
           dependencyShapeBox.cx, dependencyShapeBox.cy,
@@ -127,7 +136,7 @@ export default class TraceDrawer {
         ).stroke({ width: 1 });
         connectorShape.attr({ x2: eventShapeBox.cx, y2: eventShapeBox.cy });
         connectorShape.back();
-      }
+      });
 
       // Update Timeline.
       const timelineShape = SVG.get(TraceDrawer[generateTimelineId](event.getThreadIdentifier()));

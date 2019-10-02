@@ -8,6 +8,7 @@ export default class SocketEvent extends Event {
     this.src_port = fields.src_port;
     this.dst = fields.dst;
     this.dst_port = fields.dst_port;
+    this.dependencies = fields.dependencies;
   }
 }
 
