@@ -3,13 +3,16 @@ package pt.haslab.taz.events;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by nunomachado on 05/03/18.
  * Represents events that are occur during message exchanges between two nodes.
  * SocketEvent is associated with the event types SND, RCV, CLOSE, SHUTDOWN, CONNECT, and ACCEPT.
  */
 public class SocketEvent
-                extends Event
+        extends Event
 {
 
     public enum SocketType
@@ -43,6 +46,9 @@ public class SocketEvent
     /* message unique identifier */
     String msgId;
 
+    /* name of the event that causally precedes this event (useful when drawing space-time diagrams) */
+    private List<String> dependencies;
+
     public SocketEvent( String timestamp, EventType type, String thread, int eventNumber, String loc,
                         String socketId,
                         String src,
@@ -62,6 +68,7 @@ public class SocketEvent
         this.msgId = messageId;
         this.size = size;
         this.setSocketType( socket_type );
+        this.dependencies = new ArrayList<String>();
     }
 
     public SocketEvent( Event e )
@@ -75,6 +82,7 @@ public class SocketEvent
         this.msgId = null;
         this.size = 0;
         this.socket_type = null;
+        this.dependencies = new ArrayList<String>();
     }
 
     public String getSocket()
@@ -177,6 +185,15 @@ public class SocketEvent
         this.msgId = msgId;
     }
 
+    public void addDependency(Event event) {
+        this.setDependency(String.valueOf(event.getEventId()));
+        this.dependencies.add(String.valueOf( event.getEventId() ));
+    }
+
+    public List<String> getDependencies(String eventId) {
+        return this.dependencies;
+    }
+
     /**
      * Indicates whether this SocketEvent conflicts with another SocketEvent.
      * Two socket events conflict if:
@@ -193,8 +210,8 @@ public class SocketEvent
             return false;
 
         return ( this.dst.equals( e.getDst() )
-                        && this.getDstPort() == e.getDstPort()
-                        && !this.equals( e ) );
+                && this.getDstPort() == e.getDstPort()
+                && !this.equals( e ) );
     }
 
     @Override
@@ -208,10 +225,10 @@ public class SocketEvent
 
         SocketEvent tmp = (SocketEvent) o;
         return ( tmp.getDst().equals( this.dst )
-                        && tmp.getMessageId() == this.msgId
-                        && tmp.getSocket().equals( this.socket )
-                        && tmp.getThread().equals( this.getThread() )
-                        && tmp.getEventId() == this.getEventId()
+                && tmp.getMessageId() == this.msgId
+                && tmp.getSocket().equals( this.socket )
+                && tmp.getThread().equals( this.getThread() )
+                && tmp.getEventId() == this.getEventId()
         );
     }
 
@@ -219,8 +236,8 @@ public class SocketEvent
     public String toString()
     {
         String res = this.getType() + "_" + socket.hashCode() + ( ( this.msgId != null && !this.msgId.equals( "" ) ) ?
-                        ( "_" + this.msgId ) :
-                        "" ) + "_" + this.getThread() + "_" + this.getEventId();
+                ( "_" + this.msgId ) :
+                "" ) + "_" + this.getThread() + "_" + this.getEventId();
         return res;
     }
 
@@ -230,7 +247,7 @@ public class SocketEvent
      * @return
      */
     public JSONObject toJSONObject()
-                    throws JSONException
+            throws JSONException
     {
         JSONObject json = super.toJSONObject();
         json.put( "socket", this.socket );
@@ -239,9 +256,10 @@ public class SocketEvent
         json.put( "dst", this.dst );
         json.put( "dst_port", this.dst_port );
         json.put( "socket_type", this.socket_type );
-        json.put( "size", this.size );
+        json.put( "dependencies", this.dependencies );
         if ( this.msgId != null )
         {
+            json.put( "size", this.size );
             json.put( "message", this.msgId );
         }
         return json;

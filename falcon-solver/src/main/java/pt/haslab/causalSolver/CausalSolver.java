@@ -253,7 +253,7 @@ public class CausalSolver
             {
                 for ( SocketEvent rcv : pair.getRcvList() )
                 {
-                    rcv.setDependency( snd );
+                    rcv.addDependency( snd );
                     String msgConstraint = solver.cLt( pair.getSnd().toString(), pair.getRcv().toString() );
                     solver.writeConstraint( solver.postNamedAssert( msgConstraint, tagSND_RCV + counterSND_RCV++ ) );
                 }
