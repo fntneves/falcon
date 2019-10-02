@@ -772,7 +772,7 @@ public enum TraceProcessor
         }
 
         // Add SND to the pending queue if not already present.
-        if ( hasRCVtoMatch && ( !sndEvents.isEmpty() && !sndEvents.peek().equals( snd ) ) )
+        if ( hasRCVtoMatch && ( sndEvents.isEmpty() || !sndEvents.peek().equals( snd ) ) )
             sndEvents.add( snd );
     }
 
@@ -875,7 +875,7 @@ public enum TraceProcessor
         }
 
         // Add RCV to the pending queue if not already present.
-        if ( hasSNDtoMatch && ( !rcvEvents.isEmpty() && !rcvEvents.peek().equals( rcv ) ) )
+        if ( hasSNDtoMatch && ( rcvEvents.isEmpty() || !rcvEvents.peek().equals( rcv ) ) )
             rcvEvents.add( rcv );
     }
 
