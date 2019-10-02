@@ -22,6 +22,12 @@
             <version>20090211</version>
         </dependency>
 
+        <dependency>
+            <groupId>pt.haslab</groupId>
+            <artifactId>falcon-taz</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+
     </dependencies>
 
     <build>
