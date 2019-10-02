@@ -17,6 +17,7 @@ function toShivizLogEvents(logObject) {
         }
 
         let parentNode = undefined;
+        let parentNodes = [];
 
         if (logEntry.dependency != null) {
             /*const recvVectorTimestamp = dependencies[logEntry.dependency];
@@ -25,6 +26,11 @@ function toShivizLogEvents(logObject) {
             parentNode = dependencies[logEntry.dependency];
             const recvVectorTimestamp = parentNode.getFirstLogEvent().getVectorTimestamp();
             vectorTimestamp = vectorTimestamp.update(recvVectorTimestamp);
+
+            var dependenciesLenght = logEntry.dependencies.length;
+            for (var d = 0; d < dependenciesLenght; d++) {
+                parentNodes.push(dependencies[logEntry.dependencies[d]]);
+            }
         }
 
         vectorTimestamp.incrementBy(logEntry.order - vectorTimestamp.getOwnTime());
@@ -40,7 +46,7 @@ function toShivizLogEvents(logObject) {
         const logEvent = new LogEvent(logEntry.type, vectorTimestamp, i, fields);
         logEvent.pid = logEntry.pid;
 
-        const modelNode = graph.addLogEvent(logEvent, parentNode);
+        const modelNode = graph.addLogEvent(logEvent, parentNode, parentNodes);
         logEvents.push(logEvent);
 
         if (["CONNECT", "SND", "CREATE", "END"].includes(logEntry.type)) {
@@ -132,6 +138,7 @@ function streamFieldsGenerator(logEntry) {
     fields["dst_port"] = logEntry.dst_port;
     fields["socket_type"] = logEntry.socket_type;
     fields["message"] = logEntry.message;
+    fields["dependencies"] = logEntry.dependencies;
 
     return fields;
 }

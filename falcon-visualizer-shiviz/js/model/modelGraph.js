@@ -178,11 +178,13 @@ function ModelGraph(logEvents) {
                     var node = connections[key];
                     var currParentOnHost = currNode.hostToParent[node.getHost()];
                     if (!currParentOnHost) {
+                        debugger;
                         currNode.addParent(node);
                         continue;
                     }
 
                     if (getTime(node) > getTime(currParentOnHost)) {
+                        debugger;
                         currNode.addParent(node);
                     }
 
@@ -296,7 +298,7 @@ ModelGraph.prototype = Object.create(AbstractGraph.prototype);
 ModelGraph.prototype.constructor = ModelGraph;
 
 
-ModelGraph.prototype.addLogEvent = function(logEvent, parentModelNode) {
+ModelGraph.prototype.addLogEvent = function(logEvent, parentModelNode, parentNodeList) {
     var host = logEvent.getHost();
     var pid = logEvent.pid;
     var node = new ModelNode([logEvent], pid);
@@ -310,8 +312,13 @@ ModelGraph.prototype.addLogEvent = function(logEvent, parentModelNode) {
     var lastNode = this.hostToTail[host];
     lastNode.insertPrev(node);
 
-    if (parentModelNode != undefined) {
-        node.addParent(parentModelNode);
+    // if (parentModelNode != undefined) {
+    //    node.addParent(parentModelNode);
+    //}
+
+    var parentsLenght = parentNodeList.length;
+    for (var p = 0; p < parentsLenght; p++) {
+        node.addParent(parentNodeList[p]);
     }
 
     return node;
