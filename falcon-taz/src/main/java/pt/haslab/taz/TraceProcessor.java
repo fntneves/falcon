@@ -49,7 +49,11 @@ public enum TraceProcessor
     private int eventNumber = 0;
 
     /* Map: message id -> pair of events (snd,rcv) */
-    public Map<String, MessageCausalPair> msgEvents;
+    public Map<String, MessageCausalPair> sndRcvPairs;
+
+    /* Counter representing the message id for traces from TCP connections.
+       The message id is increased whenever a pair (snd,rcv) is complete */
+    private long tcpMessageId = 0;
 
     /* Map: rcv event-> list of events of the message handler
      * (list starts with HANDLERBEGIN and ends with HANDLEREND) */
@@ -97,7 +101,7 @@ public enum TraceProcessor
 
     TraceProcessor()
     {
-        msgEvents = new HashMap<String, MessageCausalPair>();
+        sndRcvPairs = new HashMap<String, MessageCausalPair>();
         lockEvents = new HashMap<String, List<CausalPair<SyncEvent, SyncEvent>>>();
         eventsPerThread = new HashMap<String, SortedSet<Event>>();
         readEvents = new HashMap<String, List<RWEvent>>();
@@ -124,7 +128,7 @@ public enum TraceProcessor
      * @throws IOException
      */
     public void loadEventTrace( String pathToFile )
-                    throws JSONException, IOException
+            throws JSONException, IOException
     {
 
         logger.info( "Loading events from " + pathToFile );
@@ -206,7 +210,7 @@ public enum TraceProcessor
      * @throws JSONException
      */
     private void parseJSONEvent( JSONObject event )
-                    throws JSONException
+            throws JSONException
     {
         /* --- Parse required fields --- */
 
@@ -288,12 +292,8 @@ public enum TraceProcessor
                     if ( socketEvent.getSocketType() == SocketEvent.SocketType.UDP )
                     {
                         // Update existing message causal pair or create a new one if necessary.
-                        if ( !msgEvents.containsKey( socketEvent.getMessageId() ) )
-                        {
-                            msgEvents.put( socketEvent.getMessageId(), new MessageCausalPair() );
-                        }
-
-                        MessageCausalPair msgCausalPair = msgEvents.get( socketEvent.getMessageId() );
+                        sndRcvPairs.putIfAbsent(socketEvent.getMessageId(), new MessageCausalPair());
+                        MessageCausalPair msgCausalPair = sndRcvPairs.get( socketEvent.getMessageId() );
 
                         if ( type == EventType.SND )
                         {
@@ -369,8 +369,8 @@ public enum TraceProcessor
                         SocketEvent closeEvent = closeShutPair.getFirst();
                         SocketEvent shutdownEvent = closeShutPair.getSecond();
                         if ( closeEvent == null
-                                        || ( shutdownEvent != null && !shutdownEvent.getThread().equals(
-                                        socketEvent.getThread() ) ) )
+                                || ( shutdownEvent != null && !shutdownEvent.getThread().equals(
+                                socketEvent.getThread() ) ) )
                         {
                             closeShutPair.setFirst( socketEvent );
                         }
@@ -460,7 +460,7 @@ public enum TraceProcessor
                 // Get the last locking pair on lockVariable, if any.
                 List<CausalPair<SyncEvent, SyncEvent>> pairList = lockEvents.get( lockVariable );
                 CausalPair<SyncEvent, SyncEvent> lockPair =
-                                ( pairList != null ) ? pairList.get( pairList.size() - 1 ) : null;
+                        ( pairList != null ) ? pairList.get( pairList.size() - 1 ) : null;
 
                 if ( type == EventType.LOCK )
                 {
@@ -471,7 +471,7 @@ public enum TraceProcessor
                          * if the last lock pair has a corresponding UNLOCK.
                          */
                         Utils.insertInMapToLists( lockEvents, lockVariable,
-                                                  new CausalPair<SyncEvent, SyncEvent>( lockEvent, null ) );
+                                new CausalPair<SyncEvent, SyncEvent>( lockEvent, null ) );
                         eventsPerThread.get( thread ).add( lockEvent );
                     }
                 }
@@ -480,7 +480,7 @@ public enum TraceProcessor
                     if ( lockPair == null )
                     {
                         Utils.insertInMapToLists( lockEvents, lockVariable,
-                                                  new CausalPair<SyncEvent, SyncEvent>( null, lockEvent ) );
+                                new CausalPair<SyncEvent, SyncEvent>( null, lockEvent ) );
                     }
                     else
                     {
@@ -555,9 +555,9 @@ public enum TraceProcessor
 
                     // Add events to the message handler until reaching the HANDLEREND delimiter.
                     while ( nextEvent != null
-                                    && nextEvent.getType() != EventType.HNDLEND
-                                    && nestedCounter >= 0
-                                    && fastIt.hasNext() )
+                            && nextEvent.getType() != EventType.HNDLEND
+                            && nestedCounter >= 0
+                            && fastIt.hasNext() )
                     {
                         handlerList.add( nextEvent );
 
@@ -591,63 +591,6 @@ public enum TraceProcessor
     }
 
     /**
-     * Returns the SND event that originated a particular message (identified by its id).
-     *
-     * @param messageId the identifier of the message that represents a particular SND/RCV causal pair.
-     * @return the SocketEvent corresponding to the SND event that originated a given RCV event.
-     */
-    public SocketEvent sndFromMessageId( String messageId )
-    {
-        MessageCausalPair pair = msgEvents.get( messageId );
-        if ( pair == null )
-            return null;
-
-        return pair.getSnd();
-    }
-
-    /**
-     * Returns the UNLOCK event that matches with a given LOCK event.
-     *
-     * @param lockEvent an object representing a particular LOCK event.
-     * @return the UNLOCK event that is causally-related to the LOCK event passed as input.
-     */
-    public SyncEvent getCorrespondingUnlock( SyncEvent lockEvent )
-    {
-        String thread = lockEvent.getThread();
-        List<CausalPair<SyncEvent, SyncEvent>> pairs = lockEvents.get( lockEvent.getVariable() );
-        for ( CausalPair<SyncEvent, SyncEvent> se : pairs )
-        {
-            if ( se.getFirst().equals( lockEvent ) )
-            {
-                return se.getSecond();
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Returns the JOIN event that happens after a given END event.
-     *
-     * @param endEvent an object representing a particular END event.
-     * @return the JOIN event that is causally-related to the END event passed as input.
-     */
-    public ThreadCreationEvent getCorrespondingJoin( ThreadCreationEvent endEvent )
-    {
-        List<ThreadCreationEvent> joins = joinEvents.get( endEvent.getThread() );
-        String childThread = endEvent.getChildThread();
-        if ( joins == null )
-            return null;
-        for ( ThreadCreationEvent join : joins )
-        {
-            if ( join != null && childThread.equals( join.getChildThread() ) )
-            {
-                return join;
-            }
-        }
-        return null;
-    }
-
-    /**
      * Given the identifier of a socket channel, the method returns a queue with SND events
      * (respectively RCV events) waiting to be matched with RCV events (respectively SND events) on the same channel.
      * If no such queue exists, the method creates and returns a new empty one.
@@ -662,7 +605,7 @@ public enum TraceProcessor
             Deque<SocketEvent> sndEvents = new ArrayDeque<SocketEvent>();
             Deque<SocketEvent> rcvEvents = new ArrayDeque<SocketEvent>();
             CausalPair<Deque<SocketEvent>, Deque<SocketEvent>> pendingEventsPair =
-                            new CausalPair<Deque<SocketEvent>, Deque<SocketEvent>>( sndEvents, rcvEvents );
+                    new CausalPair<Deque<SocketEvent>, Deque<SocketEvent>>( sndEvents, rcvEvents );
 
             pendingEventsSndRcv.put( socketChannelId, pendingEventsPair );
 
@@ -683,97 +626,32 @@ public enum TraceProcessor
      */
     private void handleSndSocketEvent( SocketEvent snd )
     {
-        CausalPair<Deque<SocketEvent>, Deque<SocketEvent>> eventPairs =
-                        getOrCreatePartialEventsPairs( snd.getDirectedSocket() );
-        Deque<SocketEvent> sndEvents = eventPairs.getFirst();
-        Deque<SocketEvent> rcvEvents = eventPairs.getSecond();
+        CausalPair<Deque<SocketEvent>, Deque<SocketEvent>> pendingSndRcvEvents = getOrCreatePartialEventsPairs( snd.getDirectedSocket() );
+        Deque<SocketEvent> pendingSndEvents = pendingSndRcvEvents.getFirst();
+        Deque<SocketEvent> pendingRcvEvents = pendingSndRcvEvents.getSecond();
 
         /*
-         * Enqueue SND if there's no RCV event to match with or there are already
-         * other SND events in the pending queue.
+         * Enqueue SND if there's no RCV event to match with at the moment.
          */
-        if ( rcvEvents.size() == 0 || sndEvents.size() > 0 )
+        if( pendingRcvEvents.isEmpty() && !sndRcvPairs.containsKey( String.valueOf(tcpMessageId) ) )
         {
-            sndEvents.add( snd );
+            pendingSndEvents.add( snd );
+
             return;
         }
 
-        SocketEvent rcv = rcvEvents.peek();
-        String msgId = computeMessageId( snd, rcv );
+        // Add SND event to the (newly created) causal pair and attempt to rebalance its SND/RCV bytes
+        String msgId = computeMessageId( snd );
+        sndRcvPairs.putIfAbsent(msgId, new MessageCausalPair());
+        MessageCausalPair causalPair = sndRcvPairs.get( msgId );
+        causalPair.addSnd(snd);
 
-        // Create new causal pair if necessary.
-        if ( !msgEvents.containsKey( msgId ) )
+        rebalanceSndRcvCausalPair(causalPair, pendingSndEvents, pendingRcvEvents);
+
+        if(causalPair.isFinished())
         {
-            MessageCausalPair socketPair = new MessageCausalPair();
-            msgEvents.put( msgId, socketPair );
+            tcpMessageId++;
         }
-
-        /*
-         * Flag that indicates whether the socket pair ([SND], [RCV]) is complete,
-         * meaning that all bytes sent were received as well.
-         */
-        boolean hasRCVtoMatch = true;
-
-        /*
-         * Pair this SND with the pending enqueued RCV events and, if there are bytes remaining
-         * at the end, add the SND event to the pending queue.
-         */
-        while ( rcvEvents.size() > 0 && hasRCVtoMatch )
-        {
-            rcv = rcvEvents.peek();
-
-            if ( rcv.getMessageId() == null )
-            {
-                msgId = computeMessageId( snd, rcv );
-            }
-
-            MessageCausalPair socketPair = msgEvents.get( msgId );
-
-            if ( snd.getSize() > rcv.getSize() )
-            {
-                // Move partitioned RCV from the pending queue to the causal pair.
-                rcvEvents.pop();
-                socketPair.addRcv( rcv );
-
-                // Subtract read bytes from SND event.
-                snd.setSize( snd.getSize() - rcv.getSize() );
-            }
-            else if ( rcv.getSize() == snd.getSize() )
-            {
-                // Move partitioned RCV from the pending queue to the causal pair.
-                rcvEvents.pop();
-                socketPair.addRcv( rcv );
-
-                // Move SND from the pending queue to the causal pair.
-                if ( !sndEvents.isEmpty() && sndEvents.peek().equals( snd ) )
-                    sndEvents.pop();
-
-                socketPair.addSnd( snd );
-
-                // Rebalance bytes sent/received.
-                socketPair.recomputeSize();
-
-                hasRCVtoMatch = false;
-            }
-            else
-            {
-                // Subtract sent bytes from RCV event.
-                rcv.setSize( rcv.getSize() - snd.getSize() );
-
-                // Add partitioned SND to the causal pair.
-                socketPair.addSnd( snd );
-
-                /*
-                 * Account for case in which there was already a pending RCV in the queue
-                 * that is larger than the incoming SND.
-                 */
-                hasRCVtoMatch = false;
-            }
-        }
-
-        // Add SND to the pending queue if not already present.
-        if ( hasRCVtoMatch && ( sndEvents.isEmpty() || !sndEvents.peek().equals( snd ) ) )
-            sndEvents.add( snd );
     }
 
     /**
@@ -787,137 +665,79 @@ public enum TraceProcessor
      */
     private void handleRcvSocketEvent( SocketEvent rcv )
     {
-        CausalPair<Deque<SocketEvent>, Deque<SocketEvent>> eventPairs =
-                        getOrCreatePartialEventsPairs( rcv.getDirectedSocket() );
-        Deque<SocketEvent> sndEvents = eventPairs.getFirst();
-        Deque<SocketEvent> rcvEvents = eventPairs.getSecond();
+        CausalPair<Deque<SocketEvent>, Deque<SocketEvent>> eventPairs = getOrCreatePartialEventsPairs( rcv.getDirectedSocket() );
+        Deque<SocketEvent> pendingSndEvents = eventPairs.getFirst();
+        Deque<SocketEvent> pendingRcvEvents = eventPairs.getSecond();
 
         /*
-         * Enqueue RCV if there's no SND event to match with or there are already
-         * other RCV events in the pending queue.
+         * Enqueue RCV if there's no SND event to match with at the moment.
          */
-        if ( sndEvents.size() == 0 || rcvEvents.size() > 0 )
+        if( pendingSndEvents.isEmpty() && !sndRcvPairs.containsKey( String.valueOf(tcpMessageId) ) )
         {
-            rcvEvents.add( rcv );
+            pendingRcvEvents.add( rcv );
+
             return;
         }
 
-        SocketEvent snd = sndEvents.peek();
-        String msgId = computeMessageId( snd, rcv );
+        // Add RCV event to the (newly created) causal pair and attempt to rebalance its SND/RCV bytes
+        String msgId = computeMessageId( rcv );
+        sndRcvPairs.putIfAbsent(msgId, new MessageCausalPair());
+        MessageCausalPair causalPair = sndRcvPairs.get( msgId );
+        causalPair.addRcv(rcv);
 
-        // Create new causal pair if necessary.
-        if ( !msgEvents.containsKey( msgId ) )
+        rebalanceSndRcvCausalPair(causalPair, pendingSndEvents, pendingRcvEvents);
+
+        if(causalPair.isFinished())
         {
-            MessageCausalPair socketPair = new MessageCausalPair();
-            msgEvents.put( msgId, socketPair );
+            tcpMessageId++;
         }
-
-        /*
-         * Flag that indicates whether the socket pair ([SND], [RCV]) is complete,
-         * meaning that all bytes sent were received as well.
-         */
-        boolean hasSNDtoMatch = true;
-
-        /*
-         * Pair this RCV with the pending enqueued SND events and, if there are bytes remaining
-         * at the end, add the RCV event to the pending queue.
-         */
-        while ( sndEvents.size() > 0 && hasSNDtoMatch )
-        {
-            snd = sndEvents.peek();
-            if ( snd.getMessageId() == null )
-            {
-                msgId = computeMessageId( snd, rcv );
-            }
-
-            MessageCausalPair socketPair = msgEvents.get( msgId );
-
-            if ( rcv.getSize() > snd.getSize() )
-            {
-                // Move partitioned SND from the pending queue to the causal pair.
-                sndEvents.pop();
-                socketPair.addSnd( snd );
-
-                // Subtract read bytes from RCV event.
-                rcv.setSize( rcv.getSize() - snd.getSize() );
-            }
-            else if ( rcv.getSize() == snd.getSize() )
-            {
-                // Move (partitioned) SND from the pending queue to the causal pair.
-                sndEvents.pop();
-                socketPair.addSnd( snd );
-
-                // Move RCV from the pending queue to the causal pair.
-                if ( !rcvEvents.isEmpty() && rcvEvents.peek().equals( rcv ) )
-                    rcvEvents.pop();
-
-                socketPair.addRcv( rcv );
-
-                // Rebalance bytes sent/received.
-                socketPair.recomputeSize();
-
-                hasSNDtoMatch = false;
-            }
-            else
-            {
-                // Subtract sent bytes from SND event.
-                snd.setSize( snd.getSize() - rcv.getSize() );
-
-                // Add partitioned RCV to the causal pair
-                socketPair.addRcv( rcv );
-
-                /*
-                 * Account for case in which there was already a pending SND in the queue
-                 * that is larger than the incoming RCV.
-                 */
-                hasSNDtoMatch = false;
-            }
-        }
-
-        // Add RCV to the pending queue if not already present.
-        if ( hasSNDtoMatch && ( rcvEvents.isEmpty() || !rcvEvents.peek().equals( rcv ) ) )
-            rcvEvents.add( rcv );
     }
 
     /**
-     * Compute the message id for a pair of SND and RCV events (potentially partitioned).
-     * The message id is computed as follows:
-     * i) msgId = SND's event id if SND's bytes >= RCV's bytes
-     * ii) msgId = RCV's event id if RCV's bytes > SND's bytes
+     * Rebalance a SND-RCV causal pair by adding SND or RCV events to it such that the number of bytes sent matches
+     * that of bytes received.
      *
-     * @param snd a given SND event.
-     * @param rcv the RCV event that is causally-related to the SND event.
-     * @return a unique identifier representing the message pair (SND,RCV).
+     * @param sndRcvPair
+     * @param pendingSndEvents
+     * @param pendingRcvEvents
      */
-    public String computeMessageId( SocketEvent snd, SocketEvent rcv )
+    public void rebalanceSndRcvCausalPair(MessageCausalPair sndRcvPair,
+                                          Deque<SocketEvent> pendingSndEvents,
+                                          Deque<SocketEvent> pendingRcvEvents)
     {
-        String msgId = String.valueOf( snd.getEventId() );
-
-        // Case i) message id is equal to SND's event id because SND's bytes >= RCV's bytes.
-        if ( snd.getSize() >= rcv.getSize() )
+        /*
+            We can add events to a SND-RCV causal pair when:
+            - there are pending SND events and the pair has more bytes received than sent
+            - there are pending RCV events and the pair has more bytes sent than received
+         */
+        while( (!pendingSndEvents.isEmpty() && sndRcvPair.hasRcvBytesToMatch()) ||
+                (!pendingRcvEvents.isEmpty() && sndRcvPair.hasSndBytesToMatch()))
         {
-            /*
-             * Account for cases in which RCV's size == SND's size because RCV's bytes were already decremented:
-             *  i) rcv.msgId == null -> use SND's event id as message Id.
-             * ii) rcv.msgId != null -> RCV's bytes were decremented, thus use RCV's event id as message Id.
-             */
-            if ( rcv.getMessageId() == null )
+            if(!pendingSndEvents.isEmpty() && sndRcvPair.hasRcvBytesToMatch())
             {
-                rcv.setMessageId( msgId );
+                SocketEvent pendingSnd = pendingSndEvents.pop();
+                computeMessageId(pendingSnd);
+                sndRcvPair.addSnd(pendingSnd);
             }
-            else
+            if(!pendingRcvEvents.isEmpty() && sndRcvPair.hasSndBytesToMatch())
             {
-                msgId = rcv.getMessageId();
+                SocketEvent pendingRcv = pendingRcvEvents.pop();
+                computeMessageId(pendingRcv);
+                sndRcvPair.addRcv(pendingRcv);
             }
-
-            snd.setMessageId( msgId );
         }
-        // Case ii) message id is equal to RCV's event id because RCV's bytes > SND's bytes.
-        else
+    }
+
+    /**
+     * Compute the message id for a pair of SND and RCV events.
+     *
+     */
+    public String computeMessageId( SocketEvent... socketEvents )
+    {
+        String msgId = String.valueOf( tcpMessageId );
+        for(int i = 0; i < socketEvents.length; i++)
         {
-            msgId = String.valueOf( rcv.getEventId() );
-            snd.setMessageId( msgId );
-            rcv.setMessageId( msgId );
+            socketEvents[i].setMessageId(msgId);
         }
 
         return msgId;
@@ -930,7 +750,7 @@ public enum TraceProcessor
      */
     public void aggregateAllPartitionedMessages()
     {
-        for ( MessageCausalPair pair : msgEvents.values() )
+        for ( MessageCausalPair pair : sndRcvPairs.values() )
         {
             pair.aggregatePartitionedMessages();
         }
@@ -959,7 +779,7 @@ public enum TraceProcessor
 
         debugMsg = new StringBuilder();
         debugMsg.append( "SEND/RECEIVE EVENTS\n" );
-        for ( MessageCausalPair se : msgEvents.values() )
+        for ( MessageCausalPair se : sndRcvPairs.values() )
         {
             debugMsg.append( se.toString() + "\n" );
         }

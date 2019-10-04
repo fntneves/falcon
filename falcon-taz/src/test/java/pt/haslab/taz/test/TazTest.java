@@ -25,11 +25,10 @@ public class TazTest
 
     public static void main( String args[] )
     {
-
         try
         {
             TraceProcessor processor = TraceProcessor.INSTANCE;
-            File file = new File( processor.getClass().getClassLoader().getResource( "testEventTrace.txt" ).getFile() );
+            File file = new File( processor.getClass().getClassLoader().getResource( "test2.txt" ).getFile() );
             System.out.println( "Test file: " + file.getAbsolutePath() );
             processor.loadEventTrace( file.getAbsolutePath() );
         }
@@ -106,8 +105,8 @@ public class TazTest
         assertTrue( "#Locking pairs = " + countLockPairs + " (expected " + expectedLockPairs + ")",
                     countLockPairs == expectedLockPairs );
 
-        assertTrue( "#SND/RCV pairs = " + processor.msgEvents.values().size() + " (expected " + expectedSndRcv + ")",
-                    processor.msgEvents.values().size() == expectedSndRcv );
+        assertTrue( "#SND/RCV pairs = " + processor.sndRcvPairs.values().size() + " (expected " + expectedSndRcv + ")",
+                    processor.sndRcvPairs.values().size() == expectedSndRcv );
 
         assertTrue( "#CONNECT/ACCEPT pairs = " + processor.connAcptEvents.values().size() + " (expected "
                                     + expectedConnAcpt + ")",
@@ -181,12 +180,12 @@ public class TazTest
         int expectedSndRcvEventsAfter = 6;
         //------
 
-        assertTrue( "#SND/RCV pairs before = " + processor.msgEvents.values().size() + " (expected "
+        assertTrue( "#SND/RCV pairs before = " + processor.sndRcvPairs.values().size() + " (expected "
                                     + expectedSndRcvPairsBefore + ")",
-                    processor.msgEvents.values().size() == expectedSndRcvPairsBefore );
+                    processor.sndRcvPairs.values().size() == expectedSndRcvPairsBefore );
 
         int countEvents = 0;
-        for ( MessageCausalPair pair : processor.msgEvents.values() )
+        for ( MessageCausalPair pair : processor.sndRcvPairs.values() )
         {
             for ( SocketEvent snd : pair.getSndList() )
                 countEvents++;
@@ -200,12 +199,12 @@ public class TazTest
 
         processor.aggregateAllPartitionedMessages();
 
-        assertTrue( "#SND/RCV pairs after = " + processor.msgEvents.values().size() + " (expected "
+        assertTrue( "#SND/RCV pairs after = " + processor.sndRcvPairs.values().size() + " (expected "
                                     + expectedSndRcvPairsAfter + ")",
-                    processor.msgEvents.values().size() == expectedSndRcvPairsAfter );
+                    processor.sndRcvPairs.values().size() == expectedSndRcvPairsAfter );
 
         countEvents = 0;
-        for ( MessageCausalPair pair : processor.msgEvents.values() )
+        for ( MessageCausalPair pair : processor.sndRcvPairs.values() )
         {
             for ( SocketEvent snd : pair.getSndList() )
                 countEvents++;

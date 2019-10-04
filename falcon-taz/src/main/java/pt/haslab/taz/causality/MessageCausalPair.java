@@ -1,9 +1,8 @@
 package pt.haslab.taz.causality;
 
-import pt.haslab.taz.events.SocketEvent;
-
 import java.util.ArrayList;
 import java.util.List;
+import pt.haslab.taz.events.SocketEvent;
 
 /**
  * Represents a causal pair (SND,RCV) for a given message exchanged between two processes. The causal pair is defined
@@ -16,16 +15,30 @@ public class MessageCausalPair
 
     private List<SocketEvent> rcvList;
 
+    private int sndBytes;
+
+    private int rcvBytes;
+
     public MessageCausalPair()
     {
         sndList = new ArrayList<SocketEvent>();
         rcvList = new ArrayList<SocketEvent>();
+        sndBytes = 0;
+        rcvBytes = 0;
     }
 
     public MessageCausalPair( List<SocketEvent> sndList, List<SocketEvent> rcvList )
     {
         this.sndList = sndList;
         this.rcvList = rcvList;
+        this.sndBytes = sndList
+                .stream()
+                .mapToInt(snd -> snd.getSize())
+                .sum();
+        this.rcvBytes = rcvList
+                .stream()
+                .mapToInt(rcv -> rcv.getSize())
+                .sum();
     }
 
     public List<SocketEvent> getSndList()
@@ -51,19 +64,29 @@ public class MessageCausalPair
     public void addSnd( SocketEvent snd )
     {
         this.sndList.add( snd );
+        this.sndBytes += snd.getSize();
     }
 
     public void addRcv( SocketEvent rcv )
     {
         this.rcvList.add( rcv );
+        this.rcvBytes += rcv.getSize();
     }
 
-    public SocketEvent getSnd()
-    {
-        if ( this.sndList.isEmpty() )
-            return null;
+    public int getSndBytes() {
+        return sndBytes;
+    }
 
-        return sndList.get( 0 );
+    public void setSndBytes(int sndBytes) {
+        this.sndBytes = sndBytes;
+    }
+
+    public int getRcvBytes() {
+        return rcvBytes;
+    }
+
+    public void setRcvBytes(int rcvBytes) {
+        this.rcvBytes = rcvBytes;
     }
 
     public SocketEvent getSnd( int index )
@@ -72,14 +95,6 @@ public class MessageCausalPair
             return null;
 
         return sndList.get( index );
-    }
-
-    public SocketEvent getRcv()
-    {
-        if ( this.rcvList.isEmpty() )
-            return null;
-
-        return rcvList.get( 0 );
     }
 
     public SocketEvent getRcv( int index )
@@ -108,34 +123,6 @@ public class MessageCausalPair
     public boolean hasRcvPartioned()
     {
         return this.rcvList.size() > 1;
-    }
-
-    /**
-     * For cases in which the message has a partitioned sending or reception, the method
-     * ensures that the overall size (in bytes) of the SND and RCV events is identical.
-     */
-    public void recomputeSize()
-    {
-        if ( hasSndPartioned() )
-        {
-            int sndSize = 0;
-            for ( SocketEvent sendEvent : sndList )
-            {
-                sndSize += sendEvent.getSize();
-            }
-
-            rcvList.get( 0 ).setSize( sndSize );
-        }
-        else if ( hasRcvPartioned() )
-        {
-            int rcvSize = 0;
-            for ( SocketEvent rcvEvent : rcvList )
-            {
-                rcvSize += rcvEvent.getSize();
-            }
-
-            sndList.get( 0 ).setSize( rcvSize );
-        }
     }
 
     /**
@@ -173,6 +160,18 @@ public class MessageCausalPair
             rcvList.clear();
             rcvList.add( firstRcv );
         }
+    }
+
+    public boolean hasRcvBytesToMatch() {
+        return rcvBytes > sndBytes;
+    }
+
+    public boolean hasSndBytesToMatch() {
+        return sndBytes > rcvBytes;
+    }
+
+    public boolean isFinished() {
+        return sndBytes == rcvBytes;
     }
 
     @Override
