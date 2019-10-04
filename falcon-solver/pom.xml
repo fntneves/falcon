@@ -8,31 +8,41 @@
     <artifactId>falcon-solver</artifactId>
     <version>1.0-SNAPSHOT</version>
 
-    <dependencies>
+    <properties>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>1.8</maven.compiler.source>
 
+        <slf4j.version>1.7.10</slf4j.version>
+        <json.version>20090211</json.version>
+        <commons-lang3.version>3.9</commons-lang3.version>
+        <falcon-taz.version>1.0-SNAPSHOT</falcon-taz.version>
+    </properties>
+
+    <dependencies>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
-            <version>1.7.10</version>
+            <version>${slf4j.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
-            <version>20090211</version>
+            <version>${json.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons-lang3.version}</version>
         </dependency>
 
         <dependency>
             <groupId>pt.haslab</groupId>
             <artifactId>falcon-taz</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>${falcon-taz.version}</version>
         </dependency>
     </dependencies>
-
-    <properties>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <maven.compiler.source>1.8</maven.compiler.source>
-    </properties>
 
     <build>
         <plugins>

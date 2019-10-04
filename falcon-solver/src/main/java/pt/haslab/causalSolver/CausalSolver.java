@@ -1,5 +1,6 @@
 package pt.haslab.causalSolver;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -244,9 +245,9 @@ public class CausalSolver
         String tagSND_RCV = "SR_";
         int counterSND_RCV = 0;
         solver.writeComment( "COMMUNICATION CONSTRAINTS - SEND / RECEIVE" );
-        for ( MessageCausalPair pair : trace.msgEvents.values() )
+        for ( MessageCausalPair pair : trace.sndRcvPairs.values() )
         {
-            if ( pair.getSnd() == null && pair.getRcv() == null )
+            if ( ObjectUtils.isEmpty(pair.getSndList()) && ObjectUtils.isEmpty(pair.getRcvList()) )
                 continue;
 
             for ( SocketEvent snd : pair.getSndList() )
