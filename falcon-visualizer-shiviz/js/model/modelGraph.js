@@ -178,13 +178,11 @@ function ModelGraph(logEvents) {
                     var node = connections[key];
                     var currParentOnHost = currNode.hostToParent[node.getHost()];
                     if (!currParentOnHost) {
-                        debugger;
                         currNode.addParent(node);
                         continue;
                     }
 
                     if (getTime(node) > getTime(currParentOnHost)) {
-                        debugger;
                         currNode.addParent(node);
                     }
 
