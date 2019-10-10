@@ -160,7 +160,6 @@ public class CausalSolver
             genTimestampConstraints();
         }
         genCausalOrderFunction();
-        solver.flush();
     }
 
     /**

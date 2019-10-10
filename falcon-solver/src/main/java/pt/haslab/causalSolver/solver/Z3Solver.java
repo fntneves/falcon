@@ -1,5 +1,8 @@
 package pt.haslab.causalSolver.solver;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import pt.haslab.causalSolver.CausalSolver;
 import pt.haslab.causalSolver.stats.Stats;
 
 import java.io.BufferedReader;
@@ -19,6 +22,8 @@ import java.util.Set;
 public class Z3Solver
                 implements Solver
 {
+    private static Logger logger = LoggerFactory.getLogger( Z3Solver.class );
+
     private static Z3Solver instance = null;
 
     private static Process z3Process;
@@ -94,6 +99,8 @@ public class Z3Solver
         try
         {
             ret = reader.readLine();
+            logger.info("Read line from solver output: " + ret);
+
         }
         catch ( IOException e )
         {
@@ -110,6 +117,7 @@ public class Z3Solver
             writeConstraint( checkSat() );
             writeConstraint( "(get-model)" );
             writeConstraint( "(get-unsat-core)" );
+            outfile.flush();
             writer.flush();
 
             isSat = readOutputLine();
