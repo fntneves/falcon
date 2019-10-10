@@ -359,15 +359,19 @@ AbstractNode.prototype.remove = function() {
     this.next = null;
 
     for (var host in this.hostToParent) {
-        var otherNode = this.hostToParent[host];
-        delete otherNode.hostToChild[this.host];
-        this.notifyGraph(new RemoveFamilyEvent(otherNode, this));
+        for (var i = 0; i < this.hostToParent[host].length; i++) {
+            var otherNode = this.hostToParent[host][i];
+            delete otherNode.hostToChild[this.host];
+            this.notifyGraph(new RemoveFamilyEvent(otherNode, this));
+        }
     }
 
     for (var host in this.hostToChild) {
-        var otherNode = this.hostToChild[host];
-        delete otherNode.hostToParent[this.host];
-        this.notifyGraph(new RemoveFamilyEvent(this, otherNode));
+        for (var i = 0; i < this.hostToChild[host].length; i++) {
+            var otherNode = this.hostToChild[host][i];
+            delete otherNode.hostToParent[this.host];
+            this.notifyGraph(new RemoveFamilyEvent(this, otherNode));
+        }
     }
 
     this.hostToChild = {};
@@ -507,9 +511,11 @@ AbstractNode.prototype.getChildByHost = function(host) {
  * @param {String} host
  */
 AbstractNode.prototype.removeChildByHost = function(host) {
-    var node = this.getChildByHost(host);
-    if (node != null) {
-        this.removeChild(node);
+    var nodes = this.getChildByHost(host);
+    if (nodes != null) {
+        for (var i = 0; i < nodes.length; i++) {
+            this.removeChild(nodes[i]);
+        }
     }
 };
 
@@ -520,9 +526,11 @@ AbstractNode.prototype.removeChildByHost = function(host) {
  * @param {String} host
  */
 AbstractNode.prototype.removeParentByHost = function(host) {
-    var node = this.getParentByHost(host);
-    if (node != null) {
-        this.removeParent(node);
+    var nodes = this.getParentByHost(host);
+    if (nodes != null) {
+        for (var i = 0; i < nodes.length; i++) {
+            this.removeParent(nodes[i]);
+        }
     }
 };
 
@@ -555,8 +563,13 @@ AbstractNode.prototype.addChild = function(node) {
         throw new Exception("AbstractNode.prototype.addChild: A node cannot be the child of another node who has the same host");
     }
 
-    if (this.getChildByHost(node.host) == node) {
-        return;
+    nodes = this.getChildByHost(node.host);
+    if (nodes != null) {
+        for (var i = 0; i < nodes.lenght; i++) {
+            if (nodes[i] == node) {
+                return;
+            }
+        }
     }
 
     //this.removeChildByHost(node.host);
@@ -606,8 +619,13 @@ AbstractNode.prototype.addParent = function(node) {
         throw new Exception("AbstractNode.prototype.addParent: A node cannot be the parent of another node who has the same host");
     }
 
-    if (this.getParentByHost(node.host) == node) {
-        return;
+    nodes = this.getParentByHost(node.host);
+    if (nodes != null) {
+        for (var i = 0; i < nodes.lenght; i++) {
+            if (nodes[i] == node) {
+              return;
+            }
+        }
     }
 
     //this.removeParentByHost(node.host);
@@ -637,7 +655,7 @@ AbstractNode.prototype.addParent = function(node) {
  * @param {AbstractNode} node
  */
 AbstractNode.prototype.removeChild = function(node) {
-    if (this.hostToChild[node.host] != node) {
+    if (!this.hostToChild[node.host].includes(node)) {
         return;
     }
 
@@ -655,7 +673,7 @@ AbstractNode.prototype.removeChild = function(node) {
  * @param {AbstractNode} node
  */
 AbstractNode.prototype.removeParent = function(node) {
-    if (this.hostToParent[node.host] != node) {
+    if (!this.hostToParent[node.host].includes(node)) {
         return;
     }
 
