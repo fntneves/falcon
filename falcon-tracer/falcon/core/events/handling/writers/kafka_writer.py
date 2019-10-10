@@ -9,7 +9,7 @@ from falcon.core.events.base_event import EventType
 class KafkaWriter:
     def __init__(self, servers):
         self._servers = servers
-        self._topics = ['socket_events', 'process_events']
+        self._topics = ['events']
         self._client = None
         self._partitions_count = {}
 
@@ -36,17 +36,8 @@ class KafkaWriter:
         self._client.close()
 
     def topic_for_event(self, event):
-        topic = None
-        key = None
-
-        if EventType.is_process(event._type):
-            topic = 'process_events'
-            key = event._host
-        elif EventType.is_socket(event._type):
-            topic = 'socket_events'
-            key = event._socket_id
-        else:
-            raise ValueError('Event type ['+event._type+'] is invalid.')
+        topic = self._topics[0]
+        key = event._host
 
         return {
             'name': topic,
