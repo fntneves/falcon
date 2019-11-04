@@ -18,10 +18,11 @@ from falcon import util
 logging.config.fileConfig(pkg_resources.resource_filename('falcon', '../conf/logging.ini'))
 
 class Tracer:
-    def __init__(self, pid=0, should_signal=False):
+    def __init__(self, pid=None, comm=None, should_signal=False):
         self.pid = pid
+        self.comm = comm
         self.on_ready_callback = None
-        if should_signal:
+        if should_signal and pid is not None:
             self.on_ready_callback = lambda : os.kill(pid, signal.SIGCONT)
 
     def run(self):
@@ -31,7 +32,8 @@ class Tracer:
 
         with open(program_filepath, 'r') as program_file:
             program = BpfProgram(text=program_file.read())
-            program.filter_pid(self.pid)
+            program.filter_pid(self.pid or 0)
+            program.filter_comm(self.comm)
 
             logging.info('Creating and booting event dispatcher and handlers...')
 
@@ -93,13 +95,15 @@ def main():
 
     parser = argparse.ArgumentParser(prog='falcon-tracer', description='This program is the tracer of the Falcon pipeline tool.')
 
+    parser.add_argument('--comm', default=None,
+                        help="filter events of the given COMM.")
     parser.add_argument('--pid', type=int, nargs='?', default=None,
                         help="filter events of the given PID.")
     parser.add_argument('--signal', action='store_true',
                         help="send SIGCONT signal to the given PID.")
     args, cmd = parser.parse_known_args()
 
-    if args.pid is None:
+    if args.pid is None and args.comm is None:
         exit = False
         program_exited = False
         tracer_exited = False
@@ -138,9 +142,8 @@ def main():
                 if e.errno != errno.EINTR:
                     raise
     else:
-        target_pid = args.pid
         util.write_pid(pid_file)
-        Tracer(target_pid, args.signal).run()
+        Tracer(args.pid, args.comm, args.signal).run()
         util.clean_pid(pid_file)
 
 if __name__ == '__main__':

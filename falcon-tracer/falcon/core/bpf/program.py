@@ -38,6 +38,17 @@ class BpfProgram():
         self._contents = self._contents.replace(
             '//PID_FILTER//', str(pid))
 
+    def filter_comm(self, comm):
+        logging.info('Filtering events from COMM [' + str(comm) + ']')
+
+        if comm is None:
+            filter = 'NULL'
+        else:
+            filter = '"' + comm + '"'
+
+        self._contents = self._contents.replace(
+            '//COMM_FILTER//', filter)
+
     def open_event_buffer(self, name, handler):
         self._bpf[name].open_perf_buffer(handler, page_cnt=self._perf_buffer_size)
 

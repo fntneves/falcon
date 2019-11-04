@@ -8,6 +8,7 @@
 #include <linux/types.h>
 
 #define PID_FILTER //PID_FILTER//
+#define COMM_FILTER //COMM_FILTER//
 
 enum event_type {
     SOCKET_SEND = 8,
@@ -50,6 +51,12 @@ struct event_info_t {
     };
 };
 
+struct pid_info_t
+{
+    u32 kpid;
+    char comm[TASK_COMM_LEN];
+};
+
 // The following structures are used to keep data while switching from enter
 // to exit syscall points, for instance to keep function variables that
 // would be needed later. At the end, this structure should be empty.
@@ -67,12 +74,90 @@ BPF_HASH(exited_pids, u32, u64);
 BPF_PERF_OUTPUT(events);
 
 // Helper functions.
-int static skip_pid(u32 pid) {
-    if (PID_FILTER == 0 || trace_pids.lookup(&pid) != NULL || pid == PID_FILTER) {
+struct pid_info_t static pid_info()
+{
+    struct pid_info_t process_info = {};
+    process_info.kpid = bpf_get_current_pid_tgid();
+    bpf_get_current_comm(&process_info.comm, sizeof(process_info.comm));
+
+    return process_info;
+}
+
+int static comm_equals(const char str1[TASK_COMM_LEN], const char str2[TASK_COMM_LEN])
+{
+    if (str1[0] != str2[0])
+        return 0;
+    if (str1[1] != str2[1])
+        return 0;
+    if (str1[2] != str2[2])
+        return 0;
+    if (str1[3] != str2[3])
+        return 0;
+    if (str1[4] != str2[4])
+        return 0;
+    if (str1[5] != str2[5])
+        return 0;
+    if (str1[6] != str2[6])
+        return 0;
+    if (str1[7] != str2[7])
+        return 0;
+    if (str1[8] != str2[8])
+        return 0;
+    if (str1[9] != str2[9])
+        return 0;
+    if (str1[10] != str2[10])
+        return 0;
+    if (str1[11] != str2[11])
+        return 0;
+    if (str1[12] != str2[12])
+        return 0;
+    if (str1[13] != str2[13])
+        return 0;
+    if (str1[14] != str2[14])
+        return 0;
+    if (str1[15] != str2[15])
+        return 0;
+
+    return 1;
+}
+
+int static skip_comm_struct(struct pid_info_t process_info)
+{
+    char comm[TASK_COMM_LEN];
+
+    if (COMM_FILTER != NULL)
+    {
+        strcpy(comm, COMM_FILTER);
+
+        return comm_equals(comm, process_info.comm) == 0;
+    }
+
+    return 0;
+}
+
+int static skip_pid(u32 pid)
+{
+    if ((COMM_FILTER == NULL && PID_FILTER == 0) || trace_pids.lookup(&pid) != NULL || pid == PID_FILTER)
+    {
         return 0;
     }
 
     return 1;
+}
+
+int static skip_pid_struct(struct pid_info_t process_info)
+{
+    return skip_pid(process_info.kpid);
+}
+
+int static skip(struct pid_info_t process_info)
+{
+    int skip_pid = skip_pid_struct(process_info);
+    int skip_comm = skip_comm_struct(process_info);
+
+    if (skip_pid == 1 && skip_comm == 1) return 1;
+
+    return 0;
 }
 
 void static emit_socket_connect(struct pt_regs *ctx, u64 timestamp, struct socket_info_t *skp)
@@ -244,8 +329,9 @@ struct socket_info_t static socket_info(struct sock * skp) {
  */
 int entry__tcp_connect(struct pt_regs *ctx, struct sock * sk) {
     u32 kpid = bpf_get_current_pid_tgid();
+    struct pid_info_t proc_info = pid_info();
 
-    if (skip_pid(kpid)) {
+    if (skip(proc_info)) {
         return 1;
     }
 
@@ -287,8 +373,9 @@ int exit__tcp_connect(struct pt_regs *ctx) {
 int exit__inet_csk_accept(struct pt_regs *ctx)
 {
     u32 kpid = bpf_get_current_pid_tgid();
+    struct pid_info_t proc_info = pid_info();
 
-    if (skip_pid(kpid)) {
+    if (skip(proc_info)) {
         return 1;
     }
 
@@ -308,8 +395,9 @@ int exit__inet_csk_accept(struct pt_regs *ctx)
  */
 int entry__sock_sendmsg(struct pt_regs *ctx, struct socket * sock) {
     u32 kpid = bpf_get_current_pid_tgid();
+    struct pid_info_t proc_info = pid_info();
 
-    if (skip_pid(kpid)) {
+    if (skip(proc_info)) {
         return 1;
     }
 
@@ -353,8 +441,9 @@ int exit__sock_sendmsg(struct pt_regs *ctx) {
 int entry__sock_recvmsg(struct pt_regs *ctx, struct socket *sock, struct msghdr *msg)
 {
     u32 kpid = bpf_get_current_pid_tgid();
+    struct pid_info_t proc_info = pid_info();
 
-    if (skip_pid(kpid)) {
+    if (skip(proc_info)) {
         return 1;
     }
 
@@ -410,7 +499,11 @@ struct sched_process_fork
 
 int on_fork(struct sched_process_fork * args)
 {
-    if (skip_pid(args->parent_pid))
+    struct pid_info_t process_info = {};
+    process_info.kpid = args->parent_pid;
+    bpf_probe_read(&process_info.comm, sizeof(process_info.comm), &args->parent_comm);
+
+    if (skip(process_info))
     {
         return 1;
     }
@@ -431,17 +524,26 @@ int entry__wake_up_new_task(struct pt_regs *ctx, struct task_struct *p)
 {
     u32 kpid = p->pid;
 
-    if (skip_pid(kpid))
+    struct pid_info_t process_info = {};
+    process_info.kpid = p->pid;
+    bpf_probe_read(&process_info.comm, sizeof(process_info.comm), &p->comm);
+
+    if (skip(process_info))
     {
         return 1;
     }
 
     u64 *fork_ktime = forked_pids.lookup(&kpid);
+    u64 fork_actual_ktime = 0;
 
-    if (fork_ktime != NULL) {
-        emit_process_start(ctx, *fork_ktime, kpid, p->tgid);
+    if (fork_ktime == NULL) {
+        fork_actual_ktime = bpf_ktime_get_ns();
+    } else {
+        fork_actual_ktime = *fork_ktime;
         forked_pids.delete(&kpid);
     }
+
+    emit_process_start(ctx, fork_actual_ktime, kpid, p->tgid);
 
     return 0;
 }
@@ -458,7 +560,11 @@ struct sched_process_exit
 
 int on_exit(struct sched_process_exit *args)
 {
-    if (skip_pid(args->pid))
+    struct pid_info_t process_info = {};
+    process_info.kpid = args->pid;
+    bpf_probe_read(&process_info.comm, sizeof(process_info.comm), &args->comm);
+
+    if (skip(process_info))
     {
         return 1;
     }
@@ -478,8 +584,9 @@ int on_exit(struct sched_process_exit *args)
 int exit__do_wait(struct pt_regs *ctx)
 {
     u32 kpid = bpf_get_current_pid_tgid();
+    struct pid_info_t proc_info = pid_info();
 
-    if (skip_pid(kpid)) {
+    if (skip(proc_info)) {
         return 1;
     }
 
@@ -503,8 +610,9 @@ int exit__sys_fsync(struct pt_regs *ctx)
 {
     u32 kpid = bpf_get_current_pid_tgid();
     int return_value = PT_REGS_RC(ctx);
+    struct pid_info_t proc_info = pid_info();
 
-    if (skip_pid(kpid) || return_value < 0)
+    if (skip(proc_info) || return_value < 0)
     {
         return 1;
     }
