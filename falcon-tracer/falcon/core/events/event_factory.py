@@ -1,5 +1,6 @@
 from falcon.core.events.types import *
 from falcon.core.events.base_event import EventType
+import psutil
 
 
 class EventFactory:
@@ -32,6 +33,11 @@ class EventFactory:
 
         event._ktime = data.ktime
 
+        try:
+            event._data['cmdline'] = " ".join(psutil.Process(event._pid).cmdline())
+        except psutil.NoSuchProcess as e:
+            pass
+
         return event
 
     @staticmethod
@@ -49,5 +55,10 @@ class EventFactory:
             event = FSync(data.pid, data.tgid, data.comm)
 
         event._ktime = data.ktime
+
+        try:
+            event._data['cmdline'] = " ".join(psutil.Process(event._pid).cmdline())
+        except psutil.NoSuchProcess as e:
+            pass
 
         return event
