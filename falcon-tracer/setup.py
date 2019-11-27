@@ -28,8 +28,7 @@ setup(
         'flatbuffers',
         'python-dotenv',
         'sortedcontainers',
-        'psutil',
-        'timeloop'
+        'psutil'
     ],
     test_suite='nose.collector',
     tests_require=['nose'],

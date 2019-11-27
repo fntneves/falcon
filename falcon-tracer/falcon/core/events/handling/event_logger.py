@@ -1,29 +1,47 @@
 import logging
 import threading
 import copy
-import uuid
+import time
 from falcon.core.events.event_factory import EventFactory, EventType
 from falcon.core.events.types import SocketSend, SocketReceive, SocketConnect
 from falcon.core.events.handling.base_handler import BaseHandler
 from falcon.core.events.handling.event_dispatcher import EventDispatcher
-from timeloop import Timeloop
-from datetime import timedelta
 from sortedcontainers import SortedSet
 
-tl = Timeloop()
+class SynchronizedEventQueue(object):
+    def __init__(self, key):
+        self.key = key
+        self.queue = SortedSet(key=self.key)
+        self.lock = threading.RLock()
+
+    def add(self, item):
+        with self.lock:
+            self.queue.add(item)
+
+    def __len__(self):
+        with self.lock:
+            return len(self.queue)
+
+    def drain_all(self):
+        with self.lock:
+            queue_copy = self.queue
+            self.queue = SortedSet(key=self.key)
+
+        return queue_copy
 
 class FalconEventLogger(BaseHandler):
+
     def __init__(self, writer):
-        self._flush_running = False
-        self._flush_lock = threading.RLock()
-        ktime = lambda event: event._ktime
-        self._events = SortedSet(key=ktime)
-        self._last_flushed_ktime = 0
+        self._events = SynchronizedEventQueue(lambda event: event._ktime)
+        self._flusher = threading.Thread(name='flusher', target=self._run_periodic_flush)
         self._writer = writer
         self._writes = 0
         self._events_counter = 0
         self._events_written = 0
         self._events_discarded = 0
+        self._last_flushed_ktime = 0
+        self._flush_task_running = False
+        self._flush_lock = threading.RLock()
         super(FalconEventLogger, self).__init__()
 
     def boot(self):
@@ -36,26 +54,26 @@ class FalconEventLogger(BaseHandler):
         if self._to_discard(event):
             return
 
-        if event._ktime < self._last_flushed_ktime:
-            logging.ingo("Discarding out of order event...")
-            self._events_discarded = self._events_discarded + 1
-
+        # Acquire lock to check last flushed ktime.
         with self._flush_lock:
-            self._events.add(event)
+            if event._ktime < self._last_flushed_ktime:
+                logging.info("Discarding out of order event...")
+                self._events_discarded = self._events_discarded + 1
 
+        self._events.add(event)
         self._events_counter = self._events_counter + 1
 
-        if not self._flush_running:
-            tl.start()
-            self._flush_running = True
+        if not self._flush_task_running:
+            self._flush_task_running = True
+            self._flusher.start()
 
     def shutdown(self):
         logging.info('Shutting down FalconEventLogger handler...')
-        logging.info('Waiting for flusher to terminate...')
-        tl.stop()
+        logging.info('Waiting flusher to terminate...')
+        self._flush_task_running = False
+        self._flusher.join()
 
         logging.info('Flushing pending %s events...' % len(self._events))
-
         self._flush()
 
         self._writer.close()
@@ -70,14 +88,22 @@ class FalconEventLogger(BaseHandler):
 
         return False
 
-    @tl.job(interval=timedelta(seconds=3))
     def _flush(self):
+        logging.debug('Flushing events...')
         with self._flush_lock:
-            events = copy.copy(self._events)
-            if len(events) < 0:
+            events = self._events.drain_all()
+            if len(events) > 0:
                 self._last_flushed_ktime = events[-1]._ktime
 
         for event in events:
             self._writer.write(event)
             self._events_written = self._events_written + 1
+        logging.debug('Flushed %d events' % len(events))
+
+    def _run_periodic_flush(self):
+        while self._flush_task_running:
+            self._flush()
+            time.sleep(2)
+
+
 
