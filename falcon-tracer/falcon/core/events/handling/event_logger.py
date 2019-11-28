@@ -103,7 +103,7 @@ class FalconEventLogger(BaseHandler):
     def _run_periodic_flush(self):
         while self._flush_task_running:
             self._flush()
-            time.sleep(2)
+            time.usleep(.250)
 
 
 
