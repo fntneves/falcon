@@ -5,7 +5,6 @@ import time
 from falcon.core.events.event_factory import EventFactory, EventType
 from falcon.core.events.types import SocketSend, SocketReceive, SocketConnect
 from falcon.core.events.handling.base_handler import BaseHandler
-from falcon.core.events.handling.event_dispatcher import EventDispatcher
 from sortedcontainers import SortedSet
 
 class SynchronizedEventQueue(object):
