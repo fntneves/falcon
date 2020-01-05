@@ -457,9 +457,6 @@ int entry__sock_recvmsg(struct pt_regs *ctx, struct socket *sock, struct msghdr 
         return 1;
     }
 
-    u64 timestamp = bpf_ktime_get_ns();
-    entry_timestamps.update(&kpid, &timestamp);
-
     // Stash the current sock for the exit call.
     struct sock *sk = sock->sk;
 
@@ -476,14 +473,13 @@ int exit__sock_recvmsg(struct pt_regs *ctx)
 {
     u32 kpid = bpf_get_current_pid_tgid();
     int read_bytes = PT_REGS_RC(ctx);
-    struct sock **skpp = sock_handlers.lookup(&kpid);
-    u64 *timestamp = entry_timestamps.lookup(&kpid);
+    struct sock **skpp = sock_handlers.lookup(&kpid);;
 
-    if (read_bytes > 0 && skpp != NULL && timestamp != NULL)
+    if (read_bytes > 0 && skpp != NULL)
     {
         struct sock *skp = *skpp;
         struct socket_info_t sk = socket_info(skp);
-        emit_socket_receive(ctx, *timestamp, &sk, read_bytes);
+        emit_socket_receive(ctx, bpf_ktime_get_ns(), &sk, read_bytes);
     }
     else if (read_bytes <= 0)
     {

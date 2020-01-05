@@ -57,10 +57,10 @@ class BpfProgram():
             if event.startswith('re_'):
                 event = event[3:]
                 entry is not None and self._bpf.attach_kprobe(event_re=event, fn_name=entry)
-                exit is not None and self._bpf.attach_kretprobe(event_re=event, fn_name=exit)
+                exit is not None and self._bpf.attach_kretprobe(event_re=event, fn_name=exit, maxactive=100)
             else:
                 entry is not None and self._bpf.attach_kprobe(event=event, fn_name=entry)
-                exit is not None and self._bpf.attach_kretprobe(event=event, fn_name=exit)
+                exit is not None and self._bpf.attach_kretprobe(event=event, fn_name=exit, maxactive=100)
 
 
     def _attach_process_probes(self):
