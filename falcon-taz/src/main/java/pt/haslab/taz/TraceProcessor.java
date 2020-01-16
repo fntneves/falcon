@@ -545,9 +545,6 @@ public enum TraceProcessor
                 Event e = slowIt.next();
                 fastIt.next(); // advance fastIt to follow slowIt
 
-                if(!slowIt.hasNext())
-                    break;
-
                 // A message handler occurs when there is a HANDLERBEGIN event after a RCV event.
                 Event nextEvent = slowIt.next();
                 if ( e.getType() == EventType.RCV && nextEvent !=null && nextEvent.getType() == EventType.HNDLBEG )
