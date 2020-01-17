@@ -537,30 +537,27 @@ public enum TraceProcessor
 
             // Use a fast and a slow iterator to handle nested message handlers while iterating through the thread events.
             SortedSet<Event> threadEvents = eventsPerThread.get( thread );
-            Iterator<Event> slowIt = threadEvents.iterator();
-            Iterator<Event> fastIt = threadEvents.iterator();
+            Iterator<Event> it = threadEvents.iterator();
 
             // we already know that this has at least one element
-            Event e = slowIt.next();
-            fastIt.next(); // advance fastIt to follow slowIt
+            Event e = it.next();
 
-            while( slowIt.hasNext() )
+            while( it.hasNext() )
             {
-                Event nextEvent = slowIt.next();
-                fastIt.next(); // advance fastIt to follow slowIt
+                Event nextEvent = it.next();
                 // A message handler occurs when there is a HANDLERBEGIN event after a RCV event.
                 if ( e.getType() == EventType.RCV && nextEvent !=null && nextEvent.getType() == EventType.HNDLBEG )
                 {
                     int nestedCounter = 0;
                     int nextInvocations = 1;
-                    nextEvent = fastIt.next();
+                    nextEvent = it.next();
                     List<Event> handlerList = new ArrayList<Event>();
 
                     // Add events to the message handler until reaching the HANDLEREND delimiter.
                     while ( nextEvent != null
                             && nextEvent.getType() != EventType.HNDLEND
                             && nestedCounter >= 0
-                            && fastIt.hasNext() )
+                            && it.hasNext() )
                     {
                         handlerList.add( nextEvent );
 
@@ -574,13 +571,8 @@ public enum TraceProcessor
                             nestedCounter--; //last HANDLEREND will set nestedCounter to -1 and end the loop
                         }
 
-                        nextEvent = fastIt.next();
+                        nextEvent = it.next();
                         nextInvocations++;
-                    }
-
-                    // Advance slowIt to match fastIt
-                    for (; nextInvocations > 0; nextInvocations--) {
-                        slowIt.next();
                     }
 
                     handlerList.add( nextEvent ); //add HANDLEREND event
