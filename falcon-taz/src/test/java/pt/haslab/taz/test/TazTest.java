@@ -27,7 +27,7 @@ public class TazTest
     {
         try
         {
-            TraceProcessor processor = TraceProcessor.INSTANCE;
+            TraceProcessor processor = new TraceProcessor();
             File file = new File( processor.getClass().getClassLoader().getResource( "test2.txt" ).getFile() );
             System.out.println( "Test file: " + file.getAbsolutePath() );
             processor.loadEventTrace( file.getAbsolutePath() );
@@ -42,7 +42,7 @@ public class TazTest
     public void testTraceParsing()
                     throws IOException, JSONException
     {
-        TraceProcessor processor = TraceProcessor.INSTANCE;
+        TraceProcessor processor = new TraceProcessor();
         File file = new File( processor.getClass().getClassLoader().getResource( "testEventTrace.txt" ).getFile() );
         if ( processor.eventsPerThread.isEmpty() )
         {
@@ -165,7 +165,7 @@ public class TazTest
     public void testAggregateMessages()
                     throws IOException, JSONException
     {
-        TraceProcessor processor = TraceProcessor.INSTANCE;
+        TraceProcessor processor = new TraceProcessor();
         File file = new File( processor.getClass().getClassLoader().getResource( "testEventTrace.txt" ).getFile() );
         if ( processor.eventsPerThread.isEmpty() )
         {

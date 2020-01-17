@@ -38,11 +38,8 @@ import pt.haslab.taz.utils.Utils;
  * according to their type.
  * Created by nunomachado on 05/03/18.
  */
-public enum TraceProcessor
+public class TraceProcessor
 {
-    /* TraceProcessor is a singleton class implemented using the single-element enum type approach */
-    INSTANCE;
-
     private static Logger logger = LoggerFactory.getLogger( TraceProcessor.class );
 
     /* counts the number of events in the trace */
@@ -99,7 +96,7 @@ public enum TraceProcessor
     /* Map: socket channel -> pair of event lists ([snd],[rcv]) */
     private Map<String, CausalPair<Deque<SocketEvent>, Deque<SocketEvent>>> pendingEventsSndRcv;
 
-    TraceProcessor()
+    public TraceProcessor()
     {
         sndRcvPairs = new HashMap<String, MessageCausalPair>();
         lockEvents = new HashMap<String, List<CausalPair<SyncEvent, SyncEvent>>>();
