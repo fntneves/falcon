@@ -60,7 +60,7 @@ public enum TraceProcessor
     public Map<SocketEvent, List<Event>> handlerEvents;
 
     /* set indicating whether a given thread's trace has message handlers */
-    private HashSet hasHandlers;
+    public HashSet<String> hasHandlers;
 
     /* Map: socket id -> pair of events (connect,accept) */
     public Map<String, CausalPair<SocketEvent, SocketEvent>> connAcptEvents;
@@ -115,7 +115,7 @@ public enum TraceProcessor
         sortedByTimestamp = new TreeSet<Event>( new TimestampComparator() );
         pendingEventsSndRcv = new HashMap<String, CausalPair<Deque<SocketEvent>, Deque<SocketEvent>>>();
         handlerEvents = new HashMap<SocketEvent, List<Event>>();
-        hasHandlers = new HashSet();
+        hasHandlers = new HashSet<String>();
     }
 
     /**
@@ -540,21 +540,21 @@ public enum TraceProcessor
             Iterator<Event> slowIt = threadEvents.iterator();
             Iterator<Event> fastIt = threadEvents.iterator();
 
+            // we already know that this has at least one element
+            Event e = slowIt.next();
+            fastIt.next(); // advance fastIt to follow slowIt
+
             while( slowIt.hasNext() )
             {
-                Event e = slowIt.next();
-                if(!slowIt.hasNext())
-                    break;
-
-                fastIt.next(); // advance fastIt to follow slowIt
-
-                // A message handler occurs when there is a HANDLERBEGIN event after a RCV event.
                 Event nextEvent = slowIt.next();
+                fastIt.next(); // advance fastIt to follow slowIt
+                // A message handler occurs when there is a HANDLERBEGIN event after a RCV event.
                 if ( e.getType() == EventType.RCV && nextEvent !=null && nextEvent.getType() == EventType.HNDLBEG )
                 {
-                    List<Event> handlerList = new ArrayList<Event>();
-                    nextEvent = fastIt.next();
                     int nestedCounter = 0;
+                    int nextInvocations = 1;
+                    nextEvent = fastIt.next();
+                    List<Event> handlerList = new ArrayList<Event>();
 
                     // Add events to the message handler until reaching the HANDLEREND delimiter.
                     while ( nextEvent != null
@@ -575,10 +575,18 @@ public enum TraceProcessor
                         }
 
                         nextEvent = fastIt.next();
+                        nextInvocations++;
                     }
+
+                    // Advance slowIt to match fastIt
+                    for (; nextInvocations > 0; nextInvocations--) {
+                        slowIt.next();
+                    }
+
                     handlerList.add( nextEvent ); //add HANDLEREND event
                     handlerEvents.put( (SocketEvent) e, handlerList );
                 }
+                e = nextEvent;
             }
         }
     }
