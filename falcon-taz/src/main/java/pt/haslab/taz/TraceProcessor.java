@@ -548,7 +548,6 @@ public enum TraceProcessor
                 if ( e.getType() == EventType.RCV && nextEvent !=null && nextEvent.getType() == EventType.HNDLBEG )
                 {
                     int nestedCounter = 0;
-                    int nextInvocations = 1;
                     List<Event> handlerList = new ArrayList<Event>();
                     handlerList.add(nextEvent); // Save the HANDLERBEGIN event
                     nextEvent = it.next();
@@ -572,7 +571,6 @@ public enum TraceProcessor
                         }
 
                         nextEvent = it.next();
-                        nextInvocations++;
                     }
 
                     handlerList.add( nextEvent ); //add HANDLEREND event
