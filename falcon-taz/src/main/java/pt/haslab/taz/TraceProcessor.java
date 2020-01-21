@@ -550,8 +550,9 @@ public enum TraceProcessor
                 {
                     int nestedCounter = 0;
                     int nextInvocations = 1;
-                    nextEvent = it.next();
                     List<Event> handlerList = new ArrayList<Event>();
+                    handlerList.add(nextEvent); // Save the HANDLERBEGIN event
+                    nextEvent = it.next();
 
                     // Add events to the message handler until reaching the HANDLEREND delimiter.
                     while ( nextEvent != null
