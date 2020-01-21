@@ -535,7 +535,6 @@ public enum TraceProcessor
             if ( !hasHandlers.contains( thread ) || eventsPerThread.get( thread ).size() <= 1 )
                 continue;
 
-            // Use a fast and a slow iterator to handle nested message handlers while iterating through the thread events.
             SortedSet<Event> threadEvents = eventsPerThread.get( thread );
             Iterator<Event> it = threadEvents.iterator();
 
