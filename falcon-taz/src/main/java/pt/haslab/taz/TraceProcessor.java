@@ -536,27 +536,27 @@ public enum TraceProcessor
                 continue;
 
             SortedSet<Event> threadEvents = eventsPerThread.get( thread );
-            Iterator<Event> it = threadEvents.iterator();
+            Iterator<Event> threadIt = threadEvents.iterator();
 
             // we already know that this has at least one element
-            Event e = it.next();
+            Event e = threadIt.next();
 
-            while( it.hasNext() )
+            while( threadIt.hasNext() )
             {
-                Event nextEvent = it.next();
+                Event nextEvent = threadIt.next();
                 // A message handler occurs when there is a HANDLERBEGIN event after a RCV event.
                 if ( e.getType() == EventType.RCV && nextEvent !=null && nextEvent.getType() == EventType.HNDLBEG )
                 {
                     int nestedCounter = 0;
                     List<Event> handlerList = new ArrayList<Event>();
                     handlerList.add(nextEvent); // Save the HANDLERBEGIN event
-                    nextEvent = it.next();
+                    nextEvent = threadIt.next();
 
                     // Add events to the message handler until reaching the HANDLEREND delimiter.
                     while ( nextEvent != null
                             && nextEvent.getType() != EventType.HNDLEND
                             && nestedCounter >= 0
-                            && it.hasNext() )
+                            && threadIt.hasNext() )
                     {
                         handlerList.add( nextEvent );
 
@@ -570,7 +570,7 @@ public enum TraceProcessor
                             nestedCounter--; //last HANDLEREND will set nestedCounter to -1 and end the loop
                         }
 
-                        nextEvent = it.next();
+                        nextEvent = threadIt.next();
                     }
 
                     handlerList.add( nextEvent ); //add HANDLEREND event
