@@ -60,7 +60,7 @@ public enum TraceProcessor
     public Map<SocketEvent, List<Event>> handlerEvents;
 
     /* set indicating whether a given thread's trace has message handlers */
-    public HashSet<String> hasHandlers;
+    private HashSet<String> hasHandlers;
 
     /* Map: socket id -> pair of events (connect,accept) */
     public Map<String, CausalPair<SocketEvent, SocketEvent>> connAcptEvents;
