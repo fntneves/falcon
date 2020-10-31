@@ -23,15 +23,7 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Properties;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * Created by nunomachado on 30/03/17.
@@ -255,53 +247,55 @@ public class CausalSolver
         int counterSND_RCV = 0;
         solver.writeComment( "COMMUNICATION CONSTRAINTS - SEND / RECEIVE" );
 
-        for ( MessageCausalPair pair : trace.sndRcvPairs.values() )
-        {
-            if ( ObjectUtils.isEmpty(pair.getSndList()) && ObjectUtils.isEmpty(pair.getRcvList()) )
-                continue;
-
-            Iterator<SocketEvent> rcvIterator = pair.getRcvList().iterator();
-            Iterator<SocketEvent> sndIterator = pair.getSndList().iterator();
-
-            while(sndIterator.hasNext() && rcvIterator.hasNext())
+        for (Stack<MessageCausalPair> pairs : trace.sndRcvPairs.values()) {
+            for ( MessageCausalPair pair : pairs )
             {
-                SocketEvent currentSnd = sndIterator.next();
-                SocketEvent currentRcv = rcvIterator.next();
-                int bytesSnd = currentSnd.getSize();
-                int bytesRcv = currentRcv.getSize();
+                if ( ObjectUtils.isEmpty(pair.getSndList()) && ObjectUtils.isEmpty(pair.getRcvList()) )
+                    continue;
 
-                while( bytesSnd >= bytesRcv && bytesRcv > 0) {
-                    addSndRcvConstraint(currentSnd, currentRcv, tagSND_RCV, counterSND_RCV++);
+                Iterator<SocketEvent> rcvIterator = pair.getRcvList().iterator();
+                Iterator<SocketEvent> sndIterator = pair.getSndList().iterator();
 
-                    bytesSnd -= bytesRcv;
-                    if(rcvIterator.hasNext())
-                    {
-                        currentRcv = rcvIterator.next();
-                        bytesRcv = currentRcv.getSize();
+                while(sndIterator.hasNext() && rcvIterator.hasNext())
+                {
+                    SocketEvent currentSnd = sndIterator.next();
+                    SocketEvent currentRcv = rcvIterator.next();
+                    int bytesSnd = currentSnd.getSize();
+                    int bytesRcv = currentRcv.getSize();
+
+                    while( bytesSnd >= bytesRcv && bytesRcv > 0) {
+                        addSndRcvConstraint(currentSnd, currentRcv, tagSND_RCV, counterSND_RCV++);
+
+                        bytesSnd -= bytesRcv;
+                        if(rcvIterator.hasNext())
+                        {
+                            currentRcv = rcvIterator.next();
+                            bytesRcv = currentRcv.getSize();
+                        }
+                        else
+                        {
+                            bytesRcv = 0;
+                        }
                     }
-                    else
-                    {
-                        bytesRcv = 0;
-                    }
-                }
 
-                while( bytesRcv >= bytesSnd && bytesSnd > 0) {
-                    addSndRcvConstraint(currentSnd, currentRcv, tagSND_RCV, counterSND_RCV++);
+                    while( bytesRcv >= bytesSnd && bytesSnd > 0) {
+                        addSndRcvConstraint(currentSnd, currentRcv, tagSND_RCV, counterSND_RCV++);
 
-                    bytesRcv -= bytesSnd;
-                    if(sndIterator.hasNext())
-                    {
-                        currentSnd = sndIterator.next();
-                        bytesSnd = currentSnd.getSize();
+                        bytesRcv -= bytesSnd;
+                        if(sndIterator.hasNext())
+                        {
+                            currentSnd = sndIterator.next();
+                            bytesSnd = currentSnd.getSize();
+                        }
+                        else
+                        {
+                            bytesSnd = 0;
+                        }
                     }
-                    else
-                    {
-                        bytesSnd = 0;
-                    }
-                }
 
-                if(!rcvIterator.hasNext() && bytesSnd > 0) {
-                    addSndRcvConstraint(currentSnd, currentRcv, tagSND_RCV, counterSND_RCV++);
+                    if(!rcvIterator.hasNext() && bytesSnd > 0) {
+                        addSndRcvConstraint(currentSnd, currentRcv, tagSND_RCV, counterSND_RCV++);
+                    }
                 }
             }
         }

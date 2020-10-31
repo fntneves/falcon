@@ -171,7 +171,7 @@ public class MessageCausalPair
     }
 
     public boolean isFinished() {
-        return sndBytes == rcvBytes;
+        return !this.sndList.isEmpty() && sndBytes == rcvBytes;
     }
 
     @Override
@@ -179,8 +179,13 @@ public class MessageCausalPair
     {
         int sndSize = 0;
         int rcvSize = 0;
+
+        if (sndList.isEmpty() && rcvList.isEmpty()) {
+            return "[]";
+        }
+
         StringBuilder strBuilder = new StringBuilder();
-        strBuilder.append( sndList.get( 0 ).getMessageId() + " => [ " );
+        strBuilder.append(  "[ " );
         for ( SocketEvent snd : sndList )
         {
             sndSize += snd.getSize();
